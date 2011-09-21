@@ -20,7 +20,7 @@ int main(int argc, const char** argv)
   
   if (argc < 2)
   {
-    printf("usage:\n%s <path to mp3 file>\n");
+    printf("usage:\n%s <path to mp3 file>\n", argv[0]);
     return -1;
   }  
 
@@ -59,9 +59,9 @@ int main(int argc, const char** argv)
   printf("Sample rate     : %f\n", sr);
   printf("Channels        : %d\n", channels);
   printf("bits per sample : %d\n", bps);
-  printf("Sample frames   : %d\n", sampleframes);
-  printf("Start frame     : %d\n", startframe);
-  printf("Stop frame      : %d\n", stopframe);
+  printf("Sample frames   : %lld\n", sampleframes);
+  printf("Start frame     : %lld\n", startframe);
+  printf("Stop frame      : %lld\n", stopframe);
   printf("Tempo           : %f\n", tempo);
   printf("Tag             : %d\n", tag);
   printf("Time sig num    : %d\n", tsn);
