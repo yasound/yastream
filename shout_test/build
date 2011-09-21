@@ -1,0 +1,1 @@
+g++ -I /usr/local/include -lmp3lame -lshout main.cpp
