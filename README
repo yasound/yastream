@@ -1,0 +1,2 @@
+build with
+g++ -DNGL_STATIC_BUILD -D_DEBUG -D__LINUX__ -I../nui3/include/ -lnui3 -lGL -lmp3lame -lshout  -lGLU src/main.cpp
