@@ -12,6 +12,30 @@
 #include "nglConsole.h"
 #include "nuiAudioDecoder.h"
 
+#include <lame/lame.h>
+
+void OnLameError(const char *format, va_list ap)
+{
+  nglString err;
+  err.CFormat(format, ap);
+  NGL_OUT("Lame error: %s\n", err.GetChars()); 
+}
+
+void OnLameDebug(const char *format, va_list ap)
+{
+  nglString err;
+  err.CFormat(format, ap);
+  NGL_OUT("Lame debug: %s\n", err.GetChars()); 
+}
+
+void OnLameMsg(const char *format, va_list ap)
+{
+  nglString err;
+  err.CFormat(format, ap);
+  NGL_OUT("Lame message: %s\n", err.GetChars()); 
+}
+
+
 int main(int argc, const char** argv)
 {
   nuiInit(NULL);
@@ -68,24 +92,71 @@ int main(int argc, const char** argv)
   printf("Time sig denum  : %d\n", tsd);
   printf("Beats           : %f\n", beats);
   
+  // Init Lame:
+  NGL_OUT("Lame init\n");
+  //lame_get_version();
+  NGL_OUT("version %s\n", get_lame_version());
+  lame_global_flags* lame_flags = lame_init();
+  lame_set_in_samplerate(lame_flags, 44100);
+  lame_set_num_channels(lame_flags, 2);
+  lame_set_scale(lame_flags, 1.0f);
+  lame_set_out_samplerate(lame_flags, 44100);
+  lame_set_bWriteVbrTag(lame_flags, 0);
+  lame_set_quality(lame_flags, 7);
+  //lame_set_mode(lame_flags, 0);
+  lame_set_errorf(lame_flags, OnLameError);
+  lame_set_debugf(lame_flags, OnLameDebug);
+  lame_set_msgf(lame_flags, OnLameMsg);
+  lame_set_brate(lame_flags, 128); // 128Kbits
+  //lame_set_asm_optimizations(lame_flags, 1);
+  lame_init_params(lame_flags);
+  lame_print_config(lame_flags);
+  
+  
   printf("\n\nDecoding:\n\n");
  
-  uint32 frames = 4096;
-  float buffer[frames * sizeof(float) * channels];
+  const uint32 frames = 4096 * 8;
+  float bufferleft[frames * sizeof(float) * channels];
+  float bufferright[frames * sizeof(float) * channels];
+  std::vector<void*> buffers;
+  buffers.push_back(bufferleft);
+  buffers.push_back(bufferright);
+  const uint32 outbuffersize = frames;
+  uint8 outbuffer[outbuffersize];
   uint32 done = 0;
   uint32 r = 0;
   {
     nglTime start;
     do
     {
-      r = decoder.ReadIN(buffer, frames, eSampleFloat32);
-      //printf("%d (%d)\n", done, r);
-      printf(".");
+      r = decoder.ReadDE(buffers, frames, eSampleFloat32);
+      
+      
+      // Lame needs samples in [-32768, 32768] instead of [-1, 1]
+      for (uint32 i = 0; i < r; i++)
+      {
+        bufferleft[i] *= 32768;
+        bufferright[i] *= 32768;
+      }
+
+      // Encode with lame:
+      int res = lame_encode_buffer_float(lame_flags, bufferleft, bufferright, r, outbuffer, outbuffersize);
+      
+      //printf("in %d samples -> %d bytes\n", r, res);
+      //printf(".");
       done += r;
     } 
-    while (done < sampleframes && r == 4096);
+    while (done < sampleframes && r == frames);
+
+    lame_encode_flush(lame_flags, outbuffer, outbuffersize);
+    
+    double realtime = (double)done / 44100.0;
+    
     nglTime stop;
-    printf("\nDone in %f seconds (%d samples read)\n", done, (double)stop - (double)start);
+    
+    double t = (double)stop - (double)start;
+    double ratio = realtime / t;
+    printf("\nDone in %f seconds (%d samples read, %f seconds) %f X realtime \n", t, done, realtime, ratio);
   }
 
 
