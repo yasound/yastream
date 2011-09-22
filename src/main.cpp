@@ -17,27 +17,30 @@
 
 void OnLameError(const char *format, va_list ap)
 {
-  nglString err;
-  err.CFormat(format, ap);
-  NGL_OUT("Lame error: %s\n", err.GetChars()); 
+//  nglString err;
+//  err.CFormat(format, ap);
+//  NGL_OUT("Lame error: %s\n", err.GetChars()); 
+  vprintf("Lame error: %s\n", ap); 
 }
 
 void OnLameDebug(const char *format, va_list ap)
 {
-  nglString err;
-  err.CFormat(format, ap);
-  NGL_OUT("Lame debug: %s\n", err.GetChars()); 
+//  nglString err;
+//  err.CFormat(format, ap);
+//  NGL_OUT("Lame debug: %s\n", err.GetChars()); 
+  vprintf("Lame debug: %s\n", ap); 
 }
 
 void OnLameMsg(const char *format, va_list ap)
 {
-  nglString err;
-  err.CFormat(format, ap);
-  NGL_OUT("Lame message: %s\n", err.GetChars()); 
+//  nglString err;
+//  err.CFormat(format, ap);
+//  NGL_OUT("Lame message: %s\n", err.GetChars()); 
+  vprintf("Lame message: %s\n", ap); 
 }
 
 
-int main(int argc, const char** argv)
+int main(int argc, char** argv)
 {
   nuiInit(NULL);
   
