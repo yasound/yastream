@@ -13,6 +13,7 @@
 #include "nuiAudioDecoder.h"
 
 #include <lame/lame.h>
+#include <shout/shout.h>
 
 void OnLameError(const char *format, va_list ap)
 {
@@ -40,11 +41,11 @@ int main(int argc, const char** argv)
 {
   nuiInit(NULL);
   
-  printf("=================================\nnuiAudioDecoder tutorial\n");
+  NGL_OUT("=================================\nnuiAudioDecoder tutorial\n");
   
   if (argc < 2)
   {
-    printf("usage:\n%s <path to mp3 file>\n", argv[0]);
+    NGL_OUT("usage:\n%s <path to mp3 file>\n", argv[0]);
     return -1;
   }  
 
@@ -53,10 +54,35 @@ int main(int argc, const char** argv)
   
   if (!pStream)
   {
-    printf("Unable to open file '%s'\n", p.GetChars());
+    NGL_OUT("Unable to open file '%s'\n", p.GetChars());
     return -2;
   }
  
+
+  // Init shout cast lib:
+	shout_init();
+  
+	int major, minor, patch;
+	const char* shoutname = shout_version(&major, &minor, &patch);
+  
+	NGL_OUT("libshout version %d.%d.%d\n", major, minor, patch);
+  
+	shout_t* pShout = shout_new();
+  
+	shout_set_host(pShout, "192.168.1.109");
+	shout_set_port(pShout, 8000);
+	shout_set_protocol(pShout, SHOUT_PROTOCOL_HTTP);
+	shout_set_format(pShout, SHOUT_FORMAT_MP3);
+	shout_set_mount(pShout, "test.mp3");
+	shout_set_public(pShout, 1);
+	shout_set_user(pShout, "source");
+	shout_set_password(pShout, "hackme");
+	NGL_OUT("about to open conection\n");
+  
+	shout_open(pShout);
+  
+	NGL_OUT("connection open\n");
+	
   nuiAudioDecoder decoder(*pStream);
   
   nuiSampleInfo info;
@@ -65,7 +91,7 @@ int main(int argc, const char** argv)
   decoder.GetInfo(info);
   nglTime stop;
   
-  printf("nuiAudioDecoder::GetInfo() took %f seconds\n", (double)stop - (double)start);
+  NGL_OUT("nuiAudioDecoder::GetInfo() took %f seconds\n", (double)stop - (double)start);
   
   //nuiAudioFileFormat GetFileFormat() const;  
   double sr = info.GetSampleRate();
@@ -80,17 +106,17 @@ int main(int argc, const char** argv)
   uint8 tsd = info.GetTimeSignDenom();
   double beats = info.GetBeats();
 
-  printf("Sample rate     : %f\n", sr);
-  printf("Channels        : %d\n", channels);
-  printf("bits per sample : %d\n", bps);
-  printf("Sample frames   : %lld\n", sampleframes);
-  printf("Start frame     : %lld\n", startframe);
-  printf("Stop frame      : %lld\n", stopframe);
-  printf("Tempo           : %f\n", tempo);
-  printf("Tag             : %d\n", tag);
-  printf("Time sig num    : %d\n", tsn);
-  printf("Time sig denum  : %d\n", tsd);
-  printf("Beats           : %f\n", beats);
+  NGL_OUT("Sample rate     : %f\n", sr);
+  NGL_OUT("Channels        : %d\n", channels);
+  NGL_OUT("bits per sample : %d\n", bps);
+  NGL_OUT("Sample frames   : %lld\n", sampleframes);
+  NGL_OUT("Start frame     : %lld\n", startframe);
+  NGL_OUT("Stop frame      : %lld\n", stopframe);
+  NGL_OUT("Tempo           : %f\n", tempo);
+  NGL_OUT("Tag             : %d\n", tag);
+  NGL_OUT("Time sig num    : %d\n", tsn);
+  NGL_OUT("Time sig denum  : %d\n", tsd);
+  NGL_OUT("Beats           : %f\n", beats);
   
   // Init Lame:
   NGL_OUT("Lame init\n");
@@ -102,7 +128,7 @@ int main(int argc, const char** argv)
   lame_set_scale(lame_flags, 1.0f);
   lame_set_out_samplerate(lame_flags, 44100);
   lame_set_bWriteVbrTag(lame_flags, 0);
-  lame_set_quality(lame_flags, 7);
+  lame_set_quality(lame_flags, 0);
   //lame_set_mode(lame_flags, 0);
   lame_set_errorf(lame_flags, OnLameError);
   lame_set_debugf(lame_flags, OnLameDebug);
@@ -113,9 +139,9 @@ int main(int argc, const char** argv)
   lame_print_config(lame_flags);
   
   
-  printf("\n\nDecoding:\n\n");
+  NGL_OUT("\n\nDecoding:\n\n");
  
-  const uint32 frames = 4096 * 8;
+  const uint32 frames = 4096 * 16;
   float bufferleft[frames * sizeof(float) * channels];
   float bufferright[frames * sizeof(float) * channels];
   std::vector<void*> buffers;
@@ -142,8 +168,15 @@ int main(int argc, const char** argv)
       // Encode with lame:
       int res = lame_encode_buffer_float(lame_flags, bufferleft, bufferright, r, outbuffer, outbuffersize);
       
-      //printf("in %d samples -> %d bytes\n", r, res);
-      //printf(".");
+      
+      // Send to icecast2:
+      shout_send(pShout, outbuffer, res);
+//      check_error;
+      shout_sync(pShout);
+//      check_error;
+      
+      //NGL_OUT("in %d samples -> %d bytes\n", r, res);
+      //NGL_OUT(".");
       done += r;
     } 
     while (done < sampleframes && r == frames);
@@ -156,9 +189,13 @@ int main(int argc, const char** argv)
     
     double t = (double)stop - (double)start;
     double ratio = realtime / t;
-    printf("\nDone in %f seconds (%d samples read, %f seconds) %f X realtime \n", t, done, realtime, ratio);
+    NGL_OUT("\nDone in %f seconds (%d samples read, %f seconds) %f X realtime \n", t, done, realtime, ratio);
   }
 
+  // Close shout cast
+  shout_close(pShout);
+  shout_free(pShout);
+  shout_shutdown();
 
   delete pStream;
 
