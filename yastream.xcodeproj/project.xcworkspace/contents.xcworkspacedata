@@ -2,6 +2,9 @@
 <Workspace
    version = "1.0">
    <FileRef
+      location = "group:../../nui3/nui3.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "self:yastream.xcodeproj">
    </FileRef>
    <FileRef

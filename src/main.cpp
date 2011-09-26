@@ -40,7 +40,7 @@ void OnLameMsg(const char *format, va_list ap)
 }
 
 
-int main(int argc, char** argv)
+int main(int argc, const char** argv)
 {
   nuiInit(NULL);
   
