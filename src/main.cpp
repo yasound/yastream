@@ -10,13 +10,54 @@
 #include "nuiInit.h"
 
 #include "nglConsole.h"
-#include "nuiAudioDecoder.h"
+#include "Player.h"
 
+
+#define NEXT_ARG(arg) { if (argc == c) { printf("syntax error: expecting parameter after %s\n", argv[c-1]); return -1; } arg = argv[c++]; }
 
 int main(int argc, const char** argv)
 {
   nuiInit(NULL);
+
+  nglString StreamName = "Stream.mp3";
+  nglPath PlayListPath(ePathApp);
+  PlayListPath+= "test.lst";
   
+  nglString ServerIP = "94.100.167.5";
+  int ServerPort = 8000;
+  nglString ServerPassword = "hackme";
+
+  // Parse arguments:
+  int c = 1;
+  while (c < argc)
+  {
+    nglString arg = argv[c++];
+    
+    if (arg == "--ip")
+    {
+      NEXT_ARG(arg);
+      ServerIP = arg;
+    }
+    else if (arg == "--port")
+    {
+      NEXT_ARG(arg);
+      ServerPort = arg.GetInt();
+    }
+    else if (arg == "--pass")
+    {
+      NEXT_ARG(arg);
+      ServerPassword = arg;
+    }
+    else if (arg == "--playlist")
+    {
+      NEXT_ARG(arg);
+      PlayListPath = arg;
+    }
+  }
+  
+  
+  Player player(StreamName, PlayListPath, ServerIP, ServerPort, ServerPassword);
+  player.OnStart();
 
   nuiUninit();
   

@@ -132,7 +132,19 @@ void Player::OnStart()
       
       // Process the current voice:
       if (mpCurrentVoice)
+      {        
         mpCurrentVoice->Process(buffers, frames);
+        if (mpCurrentVoice->IsDone())
+        {
+          mpCurrentVoice->Release();
+          mpCurrentSong->Release();
+          
+          Song& rSong(mPlayList.GetNextSong());
+          nglPath path = rSong.mPath;
+          mpCurrentSong = dynamic_cast<nuiFileSound*>(nuiSoundManager::Instance.GetSound(path));
+          mpCurrentVoice = dynamic_cast<nuiFileVoice*>(mpCurrentSong->GetVoice());
+        }
+      }
       
       // Lame needs samples in [-32768, 32768] instead of [-1, 1]
       for (uint32 i = 0; i < r; i++)
@@ -164,3 +176,5 @@ void Player::OnStart()
     //      check_error;
   }
 }
+
+
