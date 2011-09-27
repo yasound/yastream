@@ -7,18 +7,19 @@
 
 
 #include "nui.h"
-#include "nuiInit.h"
 
-#include "nglConsole.h"
-#include "nuiAudioDecoder.h"
+#pragma once
 
-
-int main(int argc, const char** argv)
+//class Song:
+class Song
 {
-  nuiInit(NULL);
+public:
+  nglString mTitle;
+  nglString mArtist;
+  nglString mAlbum;
+  nglPath mPath;
   
+  double mDuration;
+  double mLastBroadcastTime;
+};
 
-  nuiUninit();
-  
-  return 0;
-}

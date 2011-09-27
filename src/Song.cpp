@@ -7,18 +7,7 @@
 
 
 #include "nui.h"
-#include "nuiInit.h"
-
-#include "nglConsole.h"
-#include "nuiAudioDecoder.h"
+#include "Song.h"
 
 
-int main(int argc, const char** argv)
-{
-  nuiInit(NULL);
-  
 
-  nuiUninit();
-  
-  return 0;
-}
