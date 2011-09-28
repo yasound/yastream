@@ -188,7 +188,7 @@ void Player::OnStart()
       }
 
       // Lame needs samples in [-32768, 32768] instead of [-1, 1]
-      for (uint32 i = 0; i < r; i++)
+      for (uint32 i = 0; i < frames; i++)
       {
         bufferleft[i] *= 32768;
         bufferright[i] *= 32768;
@@ -198,7 +198,7 @@ void Player::OnStart()
       res = lame_encode_buffer_float(mLameFlags, bufferleft, bufferright, frames, outbuffer, outbuffersize);
       if (res > 0)
       {
-        stream.Write(outbuffer, outbuffersize, 1);
+        stream.Write(outbuffer, res, 1);
         
         // Send to icecast2:
         shout_send(mpShout, outbuffer, res);
