@@ -14,6 +14,8 @@
 class Song
 {
 public:
+  Song(const nglPath& rPath);
+  
   nglString mTitle;
   nglString mArtist;
   nglString mAlbum;

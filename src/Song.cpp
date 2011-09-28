@@ -9,5 +9,11 @@
 #include "nui.h"
 #include "Song.h"
 
+Song::Song(const nglPath& rPath)
+  : mPath(rPath),
+    mDuration(0),
+    mLastBroadcastTime(0)
+{
+}
 
 

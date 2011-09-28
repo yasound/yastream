@@ -18,6 +18,8 @@
 int main(int argc, const char** argv)
 {
   nuiInit(NULL);
+  
+  App->GetLog().SetLevel("Player", 10000);
 
   nglString StreamName = "Stream.mp3";
   nglPath PlayListPath(ePathApp);
