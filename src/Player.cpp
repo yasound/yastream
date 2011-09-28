@@ -65,7 +65,7 @@ Player::Player(const nglString& rStreamName, const nglPath& rPlayListPath, const
 	shout_set_mount(mpShout, rStreamName.GetChars());
 	shout_set_public(mpShout, 1);
 	shout_set_user(mpShout, "source");
-	shout_set_password(mpShout, "hackme");
+	shout_set_password(mpShout, rServerPassword.GetChars());
 	NGL_LOG("Player", NGL_LOG_INFO, "about to open conection\n");
   
   shout_open(mpShout);
@@ -80,9 +80,9 @@ Player::Player(const nglString& rStreamName, const nglPath& rPlayListPath, const
   mLameFlags = lame_init();
   lame_set_in_samplerate(mLameFlags, 44100);
   lame_set_num_channels(mLameFlags, 2);
-  lame_set_scale(mLameFlags, 1.0f);
+  //lame_set_scale(mLameFlags, 1.0f);
   lame_set_out_samplerate(mLameFlags, 44100);
-  lame_set_bWriteVbrTag(mLameFlags, 0);
+  //lame_set_bWriteVbrTag(mLameFlags, 0);
   lame_set_quality(mLameFlags, 5);
   //lame_set_mode(mLameFlags, 0);
   lame_set_errorf(mLameFlags, OnLameError);

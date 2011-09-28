@@ -60,6 +60,10 @@
             argument = "--playlist /Users/meeloo/work/yastream/data/mp3/"
             isEnabled = "YES">
          </CommandLineArgument>
+         <CommandLineArgument
+            argument = "--password pipopipo"
+            isEnabled = "YES">
+         </CommandLineArgument>
       </CommandLineArguments>
       <AdditionalOptions>
          <AdditionalOption

@@ -45,7 +45,7 @@ int main(int argc, const char** argv)
       NEXT_ARG(arg);
       ServerPort = arg.GetInt();
     }
-    else if (arg == "--pass")
+    else if (arg == "--password")
     {
       NEXT_ARG(arg);
       ServerPassword = arg;
