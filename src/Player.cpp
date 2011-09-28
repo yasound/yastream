@@ -184,6 +184,8 @@ void Player::OnStart()
         mpCurrentVoice = dynamic_cast<nuiFileVoice*>(mpCurrentSong->GetVoice());
         NGL_ASSERT(mpCurrentVoice && mpCurrentVoice->IsValid());
         mpCurrentVoice->Acquire();
+        mpCurrentVoice->FadeIn(44100);
+        mpCurrentVoice->PostEvent(nuiVoiceEvent(nuiVoiceEvent::FadeOut, mpCurrentVoice->GetSampleFrames() - 44100));
         NGL_LOG("Player", NGL_LOG_INFO, "New song: %s\n", path.GetChars());
       }
 
