@@ -1,0 +1,1 @@
+g++  -g -DNGL_STATIC_BUILD -D_DEBUG -D__LINUX__ -I /usr/local/include -I ../nui3/include -lmp3lame -lshout -lnui3 -lGLU src/*.cpp -o yastream

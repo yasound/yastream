@@ -80,10 +80,10 @@ Player::Player(const nglString& rStreamName, const nglPath& rPlayListPath, const
   mLameFlags = lame_init();
   lame_set_in_samplerate(mLameFlags, 44100);
   lame_set_num_channels(mLameFlags, 2);
-  //lame_set_scale(mLameFlags, 1.0f);
+  lame_set_scale(mLameFlags, 1.0f);
   lame_set_out_samplerate(mLameFlags, 44100);
-  //lame_set_bWriteVbrTag(mLameFlags, 0);
-  lame_set_quality(mLameFlags, 5);
+  lame_set_bWriteVbrTag(mLameFlags, 0);
+  lame_set_quality(mLameFlags, 0);
   //lame_set_mode(mLameFlags, 0);
   lame_set_errorf(mLameFlags, OnLameError);
   lame_set_debugf(mLameFlags, OnLameDebug);
