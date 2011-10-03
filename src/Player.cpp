@@ -137,7 +137,7 @@ void Player::OnStart()
 {
   NGL_LOG("Player", NGL_LOG_INFO, "\n\nStreaming:\n\n");
   
-  nglOFile stream("/Users/meeloo/out.mp3", eOFileCreate);
+  //nglOFile stream("/Users/meeloo/out.mp3", eOFileCreate);
   //nglOFile bin("/Users/meeloo/out.bin", eOFileCreate);
   
   const uint32 frames = 4096 * 16;
@@ -178,6 +178,7 @@ void Player::OnStart()
       if (!mpCurrentVoice)
       {
         Song& rSong(mPlayList.GetNextSong());
+        rSong.mLastBroadcastTime = nglTime();
         nglPath path = rSong.mPath;
         mpCurrentSong = dynamic_cast<nuiFileSound*>(nuiSoundManager::Instance.GetSound(path));
         mpCurrentSong->Acquire();
@@ -200,7 +201,7 @@ void Player::OnStart()
       res = lame_encode_buffer_float(mLameFlags, bufferleft, bufferright, frames, outbuffer, outbuffersize);
       if (res > 0)
       {
-        stream.Write(outbuffer, res, 1);
+        //stream.Write(outbuffer, res, 1);
         
         // Send to icecast2:
         shout_send(mpShout, outbuffer, res);
