@@ -139,6 +139,7 @@ void Player::OnStart()
   
   //nglOFile stream("/Users/meeloo/out.mp3", eOFileCreate);
   //nglOFile bin("/Users/meeloo/out.bin", eOFileCreate);
+  srand(ToBelow(nglTime()));
   
   const uint32 frames = 4096 * 16;
   const uint32 channels = 2;
