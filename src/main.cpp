@@ -28,6 +28,7 @@ int main(int argc, const char** argv)
   nglString ServerIP = "94.100.167.5";
   int ServerPort = 8000;
   nglString ServerPassword = "hackme";
+  int BitRate = 192;
 
   // Parse arguments:
   int c = 1;
@@ -55,10 +56,20 @@ int main(int argc, const char** argv)
       NEXT_ARG(arg);
       PlayListPath = arg;
     }
+    else if (arg == "--name")
+    {
+      NEXT_ARG(arg);
+      StreamName = arg;
+    }
+    else if (arg == "--bitrate")
+    {
+      NEXT_ARG(arg);
+      BitRate = arg.GetInt();
+    }
   }
   
   
-  Player player(StreamName, PlayListPath, ServerIP, ServerPort, ServerPassword);
+  Player player(StreamName, PlayListPath, ServerIP, ServerPort, ServerPassword, BitRate);
   player.OnStart();
 
   nuiUninit();
