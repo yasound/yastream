@@ -22,7 +22,7 @@
 class Player : public nglThread
 {
 public:
-  Player(const nglString& rStreamName, const nglPath& rPlayListPath, const nglString& rServerIP, int ServerPort, const nglString& rServerPassword);
+  Player(const nglString& rStreamName, const nglPath& rPlayListPath, const nglString& rServerIP, int ServerPort, const nglString& rServerPassword, int BitRate);
   virtual ~Player();
 
   void OnStart();

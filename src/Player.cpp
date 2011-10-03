@@ -42,7 +42,7 @@ void OnLameMsg(const char *format, va_list ap)
 
 #define check_error if (shout_get_errno(mpShout) != SHOUTERR_SUCCESS) { NGL_LOG("Player", NGL_LOG_ERROR, "libshout error: %d '%s'", shout_get_errno(mpShout), shout_get_error(mpShout)); }
 
-Player::Player(const nglString& rStreamName, const nglPath& rPlayListPath, const nglString& rServerIP, int ServerPort, const nglString& rServerPassword)
+Player::Player(const nglString& rStreamName, const nglPath& rPlayListPath, const nglString& rServerIP, int ServerPort, const nglString& rServerPassword, int BitRate)
 {
   mShutDown = false;
   mpCurrentVoice = NULL;
@@ -88,7 +88,7 @@ Player::Player(const nglString& rStreamName, const nglPath& rPlayListPath, const
   lame_set_errorf(mLameFlags, OnLameError);
   lame_set_debugf(mLameFlags, OnLameDebug);
   lame_set_msgf(mLameFlags, OnLameMsg);
-  lame_set_brate(mLameFlags, 128); // 128Kbits
+  lame_set_brate(mLameFlags, BitRate);
   //lame_set_asm_optimizations(mLameFlags, 1);
   lame_init_params(mLameFlags);
   lame_print_config(mLameFlags);
