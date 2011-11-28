@@ -16,6 +16,7 @@ Mp3Parser::Mp3Parser(unsigned char* data, int nbBytes)
   mDataLength = nbBytes;
   
   mCurrentFrame = FindFirstFrame();
+  mDuration = 0;
 }
 
 Mp3Parser::~Mp3Parser()
@@ -42,6 +43,28 @@ bool Mp3Parser::GoToNextFrame()
   return true;
 }
 
+TimeMs Mp3Parser::GetDuration()
+{
+  if (mDuration == 0)
+  {
+    // store current frame
+    Mp3Frame frame = mCurrentFrame;
+    
+    ParseAll();
+    mDuration = mCurrentFrame.GetEndTime();
+    
+    // back to stored state
+    Reset();
+    bool ok = true;
+    while (ok && mCurrentFrame != frame) 
+    {
+      ok = GoToNextFrame();
+    }
+  }
+  
+  return mDuration;
+}
+
 
 void Mp3Parser::ParseAll()
 {
@@ -50,7 +73,7 @@ void Mp3Parser::ParseAll()
   bool ok = true;
   while (ok)
   {
-//    printf("---FRAME--- %s\n", mCurrentFrame.ToString().c_str());
+    printf("---FRAME--- %s\n", mCurrentFrame.ToString().c_str());
     ok = GoToNextFrame();
   }
 }

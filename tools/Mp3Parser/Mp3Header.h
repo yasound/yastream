@@ -63,14 +63,17 @@ public:
   static float sSamplerates[3][3];
   static int sSamplesPerFrame[2][3];
   
-  bool IsValid();
+  const bool IsValid() const;
   const std::string ToString() const;
   
-  int GetFrameByteLength();
-  int GetFrameHeaderByteLength();
-  int GetFrameDataByteLength();
+  const int GetFrameByteLength() const;
+  const int GetFrameHeaderByteLength() const;
+  const int GetFrameDataByteLength() const;
   
-  TimeMs GetFrameDuration();
+  const TimeMs GetFrameDuration() const;
+  
+  bool operator==(const Mp3Header& rHeader);
+  bool operator!=(const Mp3Header& rHeader);
   
   MpegAudioVersion mVersion;
   MpegLayer mLayer;
@@ -86,5 +89,5 @@ public:
   private:
   void Reset();
   void ParseHeaderData(unsigned char* data);
-  int GetSamplesPerFrame();
+  const int GetSamplesPerFrame() const;
 };

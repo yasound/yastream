@@ -1,0 +1,7 @@
+//
+// Prefix header for all source files of the 'testMp3Mix' target in the 'testMp3Mix' project
+//
+
+#ifdef __OBJC__
+  #import <Foundation/Foundation.h>
+#endif

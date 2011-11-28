@@ -18,7 +18,7 @@ public:
   const Mp3Frame& GetCurrentFrame();
   bool GoToNextFrame();
   
-  
+  TimeMs GetDuration();
   
   // for test purpose
   void ParseAll();
@@ -28,6 +28,7 @@ private:
   int mDataLength;
   
   Mp3Frame mCurrentFrame;
+  TimeMs mDuration;
   
   void Reset();
   

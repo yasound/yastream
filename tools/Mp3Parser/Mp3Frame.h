@@ -17,18 +17,21 @@ public:
   Mp3Frame(unsigned char* data, int bytePosition, TimeMs time);
   virtual ~Mp3Frame();
   
-  int GetBytePosition();
-  int GetByteLength();
-  int GetEndBytePosition();
+  const int GetBytePosition() const;
+  const int GetByteLength() const;
+  const int GetEndBytePosition() const;
   
-  TimeMs GetTime();
-  TimeMs GetDuration();
-  TimeMs GetEndTime();
+  const TimeMs GetTime() const;
+  const TimeMs GetDuration() const;
+  const TimeMs GetEndTime() const;
   
-  const Mp3Header& GetHeader();
+  const Mp3Header& GetHeader() const;
   
-  bool IsValid();
+  const bool IsValid() const;
   const std::string ToString() const;
+  
+  bool operator==(const Mp3Frame& rFrame);
+  bool operator!=(const Mp3Frame& rFrame);
   
 private:
   int mPosition;

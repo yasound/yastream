@@ -86,13 +86,13 @@ int Mp3Header::sSamplesPerFrame[2][3] =
   {384, 1152, 576}
 };
 
-int Mp3Header::GetFrameHeaderByteLength()
+const int Mp3Header::GetFrameHeaderByteLength() const
 {
   int size = 4;
   return size;
 }
 
-int Mp3Header::GetSamplesPerFrame()
+const int Mp3Header::GetSamplesPerFrame() const
 {
   int samplesPerFrame = 0;
   switch (mVersion) 
@@ -145,7 +145,7 @@ int Mp3Header::GetSamplesPerFrame()
   return samplesPerFrame;
 }
 
-int Mp3Header::GetFrameDataByteLength()
+const int Mp3Header::GetFrameDataByteLength() const
 {
   int bytes = (GetSamplesPerFrame() / mSamplerate) * (mBitrate * 1000.0 / 8.0);
   if (mUsePadding)
@@ -155,19 +155,19 @@ int Mp3Header::GetFrameDataByteLength()
   return bytes;
 }
 
-int Mp3Header::GetFrameByteLength()
+const int Mp3Header::GetFrameByteLength() const
 {
   int size = GetFrameHeaderByteLength() + GetFrameDataByteLength();
   return size;
 }
 
-TimeMs Mp3Header::GetFrameDuration()
+const TimeMs Mp3Header::GetFrameDuration() const
 {
   TimeMs durationMs = (GetSamplesPerFrame() / mSamplerate) * 1000;
   return durationMs;
 }
 
-bool Mp3Header::IsValid()
+const bool Mp3Header::IsValid() const
 {
   bool versionOK = mVersion != eMpegVersionUndefined;
   bool layerOK = mLayer != eMpegLayerUndefined;
@@ -178,6 +178,29 @@ bool Mp3Header::IsValid()
   
   bool valid = (versionOK && layerOK && channelOK && emphasisOK && bitrateOK && samplerateOK);
   return valid;
+}
+
+bool Mp3Header::operator==(const Mp3Header& rHeader)
+{
+  bool same = true;
+  same &= (mVersion == rHeader.mVersion);
+  same &= (mLayer == rHeader.mLayer);
+  same &= (mChannelMode == rHeader.mChannelMode);
+  same &= (mEmphasis == rHeader.mEmphasis);
+  same &= (mBitrate == rHeader.mBitrate);
+  same &= (mSamplerate == rHeader.mSamplerate);
+  same &= (mUseCRC == rHeader.mUseCRC);
+  same &= (mUsePadding == rHeader.mUsePadding);
+  same &= (mIsCopyrighted == rHeader.mIsCopyrighted);
+  same &= (mIsOriginal == rHeader.mIsOriginal);
+  
+  return same;
+}
+
+bool Mp3Header::operator!=(const Mp3Header& rHeader)
+{
+  bool different = !(*this == rHeader);
+  return different;
 }
 
 const std::string Mp3Header::ToString() const
