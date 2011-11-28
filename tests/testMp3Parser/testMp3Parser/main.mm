@@ -18,8 +18,7 @@ int main (int argc, const char * argv[])
     if (argc  < 2)
       return -1;
     
-//    NSString* file = [NSString stringWithCString:argv[1] encoding:NSUTF8StringEncoding];
-    NSString* file = @"/Users/mat/Desktop/src.mp3";
+    NSString* file = [NSString stringWithCString:argv[1] encoding:NSUTF8StringEncoding];
     NSData* data = [NSData dataWithContentsOfFile:file];
     if (!data)
       return -2;
