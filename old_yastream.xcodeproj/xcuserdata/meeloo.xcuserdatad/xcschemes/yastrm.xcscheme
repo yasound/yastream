@@ -15,7 +15,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "E511CA67142A257A0079F31F"
                BuildableName = "yastream"
-               BlueprintName = "yastream"
+               BlueprintName = "old_yastream"
                ReferencedContainer = "container:yastream.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -33,7 +33,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E511CA67142A257A0079F31F"
             BuildableName = "yastream"
-            BlueprintName = "yastream"
+            BlueprintName = "old_yastream"
             ReferencedContainer = "container:yastream.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -51,7 +51,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E511CA67142A257A0079F31F"
             BuildableName = "yastream"
-            BlueprintName = "yastream"
+            BlueprintName = "old_yastream"
             ReferencedContainer = "container:yastream.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -89,7 +89,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "E511CA67142A257A0079F31F"
             BuildableName = "yastream"
-            BlueprintName = "yastream"
+            BlueprintName = "old_yastream"
             ReferencedContainer = "container:yastream.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

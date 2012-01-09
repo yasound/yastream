@@ -251,9 +251,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		E511CA67142A257A0079F31F /* yastream */ = {
+		E511CA67142A257A0079F31F /* old_yastream */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E511CA72142A257A0079F31F /* Build configuration list for PBXNativeTarget "yastream" */;
+			buildConfigurationList = E511CA72142A257A0079F31F /* Build configuration list for PBXNativeTarget "old_yastream" */;
 			buildPhases = (
 				E511CA64142A257A0079F31F /* Sources */,
 				E511CA65142A257A0079F31F /* Frameworks */,
@@ -264,7 +264,7 @@
 			dependencies = (
 				E567346C1433292E00974A3C /* PBXTargetDependency */,
 			);
-			name = yastream;
+			name = old_yastream;
 			productName = yastrm;
 			productReference = E511CA68142A257A0079F31F /* yastream */;
 			productType = "com.apple.product-type.tool";
@@ -296,7 +296,7 @@
 			);
 			projectRoot = "";
 			targets = (
-				E511CA67142A257A0079F31F /* yastream */,
+				E511CA67142A257A0079F31F /* old_yastream */,
 			);
 		};
 /* End PBXProject section */
@@ -482,7 +482,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E511CA72142A257A0079F31F /* Build configuration list for PBXNativeTarget "yastream" */ = {
+		E511CA72142A257A0079F31F /* Build configuration list for PBXNativeTarget "old_yastream" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E511CA73142A257A0079F31F /* Debug */,
