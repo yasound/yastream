@@ -2,4 +2,34 @@
 <Bucket
    type = "1"
    version = "1.0">
+   <FileBreakpoints>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "1"
+         filePath = "src/main.cpp"
+         timestampString = "347910683.908382"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "249"
+         endingLineNumber = "249"
+         landmarkName = "OnNewClient(nuiTCPClient* pClient)"
+         landmarkType = "5">
+      </FileBreakpoint>
+      <FileBreakpoint
+         shouldBeEnabled = "Yes"
+         ignoreCount = "0"
+         continueAfterRunningActions = "No"
+         isPathRelative = "1"
+         filePath = "src/main.cpp"
+         timestampString = "347910683.908382"
+         startingColumnNumber = "9223372036854775807"
+         endingColumnNumber = "9223372036854775807"
+         startingLineNumber = "321"
+         endingLineNumber = "321"
+         landmarkName = "HandlerDelegate(nuiTCPClient* pClient)"
+         landmarkType = "7">
+      </FileBreakpoint>
+   </FileBreakpoints>
 </Bucket>

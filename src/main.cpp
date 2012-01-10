@@ -3,34 +3,36 @@
 #include "nuiTCPServer.h"
 #include "nuiTCPClient.h"
 
-class ServerThread : public nglThread
+class nuiHTTPHandler
 {
 public:
-  ServerThread(nuiTCPClient* pClient)
+  nuiHTTPHandler(nuiTCPClient* pClient)
   : mpClient(pClient)
   {
   }
   
-  virtual ~ServerThread()
+  virtual ~nuiHTTPHandler()
   {
     delete mpClient;
   }
   
-  void OnStart()
+  void Parse()
   {
     std::vector<uint8> data;
     nglChar cur = 0;
     State state = Request;
     while (mpClient->ReceiveAvailable(data))
     {
-      int32 index = 0;
+      size_t index = 0;
       while (index < data.size())
       {
         cur = data[index];
         if (state == Body)
         {
-          mBody.insert(mBody.end(), data.begin() + index, data.end());
-          index = 0;
+          std::vector<uint8> d(data.begin() + index, data.end());
+          NGL_OUT("...Body data... (%d)\n", d.size());
+          OnBodyData(d);
+          index = data.size();
         }
         else
         {
@@ -46,82 +48,90 @@ public:
             switch (state)
             {
               case Request:
+              {
+                mCurrentLine.Trim();
+                int pos = mCurrentLine.Find(' ');
+                if (pos < 0)
+                {
+                  // Error!
+                  return;
+                }
+                
+                mMethod = mCurrentLine.GetLeft(pos);
+                NGL_OUT("Method: %s\n", mMethod.GetChars());
+                if (!OnMethod(mMethod))
+                  return;
+                
+                while (mCurrentLine[pos] == ' ')
+                  pos++;
+                int pos2 = pos;
+                while (mCurrentLine[pos2] != ' ')
+                  pos2++;
+                mURL = mCurrentLine.Extract(pos, pos2 - pos);
+                NGL_OUT("URL: %s\n", mURL.GetChars());
+                if (!OnMethod(mURL))
+                  return;
+                
+                pos = pos2;
+                while (mCurrentLine[pos] == ' ')
+                  pos++;
+                pos2 = pos;
+                while (mCurrentLine[pos2] != '/')
+                  pos2++;
+                
+                mProtocol = mCurrentLine.Extract(pos, pos2 - pos);
+                mVersion = mCurrentLine.Extract(pos2 + 1);
+                mVersion.Trim();
+                NGL_OUT("Protocol: %s\n", mProtocol.GetChars());
+                NGL_OUT("Version: %s\n", mVersion.GetChars());
+                if (!OnProtocol(mProtocol, mVersion))
+                  return;
+                
+                state = Header;
+                
+                mCurrentLine.Wipe();
+              }
+                break;
+                
+              case Header:
+              {
+                if (mCurrentLine.IsEmpty())
+                {
+                  NGL_OUT("Start body...\n");
+                  if (!OnBodyStart())
+                    return;
+                  state = Body;
+                }
+                else
                 {
                   mCurrentLine.Trim();
-                  int pos = mCurrentLine.Find(' ');
+                  int pos = mCurrentLine.Find(':');
                   if (pos < 0)
                   {
                     // Error!
                     return;
                   }
                   
-                  mMethod = mCurrentLine.GetLeft(pos);
-                  NGL_OUT("Method: %s\n", mMethod.GetChars());
-                  OnMethod(mMethod);
+                  nglString key = mCurrentLine.GetLeft(pos);
+                  nglString value = mCurrentLine.Extract(pos + 1);
                   
-                  while (mCurrentLine[pos] == ' ')
-                    pos++;
-                  int pos2 = pos;
-                  while (mCurrentLine[pos2] != ' ')
-                    pos2++;
-                  mURL = mCurrentLine.Extract(pos, pos2 - pos);
-                  NGL_OUT("URL: %s\n", mURL.GetChars());
-                  OnMethod(mURL);
-
-                  pos = pos2;
-                  while (mCurrentLine[pos] == ' ')
-                    pos++;
-                  pos2 = pos;
-                  while (mCurrentLine[pos2] != '/')
-                    pos2++;
+                  key.Trim();
+                  value.Trim();
                   
-                  mProtocol = mCurrentLine.Extract(pos, pos2 - pos);
-                  mVersion = mCurrentLine.Extract(pos2+1);
-                  mVersion.Trim();
-                  NGL_OUT("Protocol: %s\n", mProtocol.GetChars());
-                  NGL_OUT("Version: %s\n", mVersion.GetChars());
-                  OnProtocol(mProtocol, mVersion);
+                  mHeaders[key] = value;
                   
+                  NGL_OUT("[%s]: '%s'\n", key.GetChars(), value.GetChars());
+                  
+                  if (!OnHeader(key, value))
+                    return;
                   
                   state = Header;
-                  
                   mCurrentLine.Wipe();
                 }
+              }
                 break;
-
-              case Header:
-                {
-                  if (mCurrentLine.IsEmpty())
-                  {
-                    NGL_OUT("Start body...\n");
-                    state = Body;
-                  }
-                  else
-                  {
-                    mCurrentLine.Trim();
-                    int pos = mCurrentLine.Find(':');
-                    if (pos < 0)
-                    {
-                      // Error!
-                      return;
-                    }
-                    
-                    nglString key = mCurrentLine.GetLeft(pos);
-                    nglString value = mCurrentLine.Extract(pos + 1);
-                    
-                    key.Trim();
-                    value.Trim();
-                    
-                    mHeaders[key] = value;
-
-                    NGL_OUT("[%s]: '%s'\n", key.GetChars(), value.GetChars());
-
-                    OnHeader(key, value);
-                    
-                    state = Header;
-                    mCurrentLine.Wipe();
-                  }
-                }
+              default:
+                NGL_ASSERT(0);
                 break;
             }
           }
@@ -133,28 +143,43 @@ public:
         
       }
     }
+    NGL_OUT("End body\n");
+    OnBodyEnd();
   }
   
-  void OnMethod(const nglString& rValue)
+  bool OnMethod(const nglString& rValue)
   {
-  }
-
-  void OnURL(const nglString& rValue)
-  {
-  }
-
-  void OnProtocol(const nglString& rValue, const nglString rVersion)
-  {
+    return true;
   }
   
-  void OnHeader(const nglString& rKey, const nglString& rValue)
+  bool OnURL(const nglString& rValue)
   {
+    return true;
   }
   
-  void OnBodyData(const std::vector<uint8>& rData)
+  bool OnProtocol(const nglString& rValue, const nglString rVersion)
   {
+    return true;
   }
   
+  bool OnHeader(const nglString& rKey, const nglString& rValue)
+  {
+    return true;
+  }
+  
+  bool OnBodyStart()
+  {
+    return true;
+  }
+  
+  bool OnBodyData(const std::vector<uint8>& rData)
+  {
+    return true;
+  }
+  
+  void OnBodyEnd()
+  {
+  }
   
 private:
   enum State
@@ -173,26 +198,145 @@ private:
   std::vector<uint8> mBody;
 };
 
+class nuiHTTPServerThread : public nglThread
+{
+public:
+  nuiHTTPServerThread(nuiHTTPHandler* pHandler)
+  : mpHandler(pHandler)
+  {
+  }
+  
+  virtual ~nuiHTTPServerThread()
+  {
+    delete mpHandler;
+  }
+  
+  void OnStart()
+  {
+    mpHandler->Parse();
+  }
+  
+private:
+  nuiHTTPHandler* mpHandler;
+};
+
+
+
+class nuiHTTPServer : public nuiTCPServer
+{
+public:
+  nuiHTTPServer()
+  {
+    SetHandlerDelegate(nuiMakeDelegate(this, &nuiHTTPServer::DefaultHandler));
+  }
+  virtual ~nuiHTTPServer()
+  {
+  }
+  
+  void AcceptConnections()
+  {
+    nuiTCPClient* pClient = NULL;
+    while ((pClient = Accept()))
+    {
+      OnNewClient(pClient);
+    }
+    
+  }
+  
+  void OnNewClient(nuiTCPClient* pClient)
+  {
+    NGL_OUT("Received new connection...\n");
+    nuiHTTPServerThread* pThread = new nuiHTTPServerThread(mDelegate(pClient));
+    pThread->Start();
+  }
+  
+  void SetHandlerDelegate(const nuiFastDelegate1<nuiTCPClient*, nuiHTTPHandler*>& rDelegate)
+  {
+    mDelegate = rDelegate;
+  }
+
+private:
+  nuiFastDelegate1<nuiTCPClient*, nuiHTTPHandler*> mDelegate;
+  
+  nuiHTTPHandler* DefaultHandler(nuiTCPClient* pClient)
+  {
+    return new nuiHTTPHandler(pClient);
+  }
+};
+
+///////////////////////////////////////////////////
+class HTTPHandler : public nuiHTTPHandler
+{
+public:
+  HTTPHandler(nuiTCPClient* pClient)
+  : nuiHTTPHandler(pClient)
+  {
+  }
+  
+  virtual ~HTTPHandler()
+  {
+  }
+  
+  bool OnMethod(const nglString& rValue)
+  {
+    return true;
+  }
+  
+  bool OnURL(const nglString& rValue)
+  {
+    return true;
+  }
+  
+  bool OnProtocol(const nglString& rValue, const nglString rVersion)
+  {
+    return true;
+  }
+  
+  bool OnHeader(const nglString& rKey, const nglString& rValue)
+  {
+    return true;
+  }
+  
+  bool OnBodyStart()
+  {
+    // 
+    printf("POUEEEEEEEEET\n");
+    return true;
+  }
+  
+  bool OnBodyData(const std::vector<uint8>& rData)
+  {
+    return true;
+  }
+  
+  void OnBodyEnd()
+  {
+  }
+  
+private:
+};
+
+nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient)
+{
+  return new HTTPHandler(pClient);
+}
+
 int main(int argc, const char** argv)
 {
   nuiInit(NULL);
   NGL_OUT("yasound streamer\n");
-  nuiTCPServer* pServer = new nuiTCPServer();
+  nuiHTTPServer* pServer = new nuiHTTPServer();
 
+  pServer->SetHandlerDelegate(HandlerDelegate);
+  
   if (pServer->Bind(0, 8001))
   {
     pServer->Listen();
-    nuiTCPClient* pClient = NULL;
-    while ((pClient = pServer->Accept()))
-    {
-      NGL_OUT("Received new connection...\n");
-      ServerThread* pThread = new ServerThread(pClient);
-      pThread->Start();
-    }
+    pServer->AcceptConnections();
   }
   else
   {
-    NGL_OUT("Unable to bind port 80\n");
+    NGL_OUT("Unable to bind port 8001\n");
   }
 
   delete pServer;
@@ -200,3 +344,4 @@ int main(int argc, const char** argv)
   
   return 0;
 }
+
