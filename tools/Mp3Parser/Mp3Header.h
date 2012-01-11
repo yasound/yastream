@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "nui.h"
+#include "nglIStream.h"
 #include <string>
 
 enum MpegAudioVersion
@@ -53,7 +55,7 @@ class Mp3Header
 {
 public:
   Mp3Header();
-  Mp3Header(unsigned char* data);
+  Mp3Header(nglIStream& rStream, int position);
   virtual ~Mp3Header();
   
   static float GetBitrate(unsigned int bitrate_index, MpegAudioVersion version, MpegLayer layer);
@@ -86,8 +88,9 @@ public:
   bool mIsCopyrighted;
   bool mIsOriginal;
   
-  private:
+private:
   void Reset();
   void ParseHeaderData(unsigned char* data);
   const int GetSamplesPerFrame() const;
 };
+

@@ -8,13 +8,15 @@
 
 #pragma once
 
+#include "nui.h"
+#include "nglIStream.h"
 #include "Mp3Header.h"
 
 class Mp3Frame 
 {
 public:
   Mp3Frame();
-  Mp3Frame(unsigned char* data, int bytePosition, TimeMs time);
+  Mp3Frame(nglIStream& rStream, int bytePosition, TimeMs time);
   virtual ~Mp3Frame();
   
   const int GetBytePosition() const;
@@ -32,6 +34,8 @@ public:
   
   bool operator==(const Mp3Frame& rFrame);
   bool operator!=(const Mp3Frame& rFrame);
+  
+  bool Read(std::vector<uint8>& rData);
   
 private:
   int mPosition;

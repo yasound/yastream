@@ -10,10 +10,10 @@
 #include <iostream>
 
 
-Mp3Parser::Mp3Parser(unsigned char* data, int nbBytes)
+Mp3Parser::Mp3Parser(nglIStream& rStream)
+: mrStream(rStream)
 {
-  mpData = data;
-  mDataLength = nbBytes;
+  mDataLength = mrStream.Available();
   
   mCurrentFrame = FindFirstFrame();
   mDuration = 0;
@@ -89,7 +89,7 @@ Mp3Frame Mp3Parser::FindNextFrame(Mp3Frame previous)
 {    
   int nextOffset = previous.GetEndBytePosition();
   TimeMs nextTime = previous.GetEndTime();
-  Mp3Frame next(mpData + nextOffset, nextOffset, nextTime);
+  Mp3Frame next(mrStream, nextOffset, nextTime);
   if (!next.IsValid())
   {
     next = ComputeNextFrame(previous);
@@ -120,7 +120,7 @@ Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
   int b = byteOffset;
   while (b < mDataLength - 4 && !frame.IsValid()) 
   {
-    Mp3Frame temp(mpData + b, b, time);
+    Mp3Frame temp(mrStream, b, time);
     if (temp.IsValid())
     {
       // found !
@@ -131,5 +131,20 @@ Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
   }
   
   return frame;
+}
+
+bool Mp3Parser::ReadFrameBytes(std::vector<uint8>& rData)
+{
+  mrStream.SetPos(mCurrentFrame.GetBytePosition());
+  int32 len = mCurrentFrame.GetByteLength();
+  rData.resize(len);
+  int32 res = mrStream.Read(&rData[0], len, 1);
+  if (len != res)
+  {
+    rData.resize(res);
+    return false;
+  }
+  GoToNextFrame();
+  return true;
 }
 

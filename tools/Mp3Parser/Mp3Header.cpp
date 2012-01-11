@@ -14,9 +14,13 @@ Mp3Header::Mp3Header()
   Reset();
 }
 
-Mp3Header::Mp3Header(unsigned char* data)
+Mp3Header::Mp3Header(nglIStream& rStream, int position)
 {
   Reset();
+  
+  rStream.SetPos(position);
+  unsigned char data[4];
+  rStream.Read(data, 4, 1);
   ParseHeaderData(data);
 }
 

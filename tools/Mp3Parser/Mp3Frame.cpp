@@ -15,10 +15,10 @@ Mp3Frame::Mp3Frame()
   mTime = 0;
 }
 
-Mp3Frame::Mp3Frame(unsigned char* data, int bytePosition, TimeMs time)
+Mp3Frame::Mp3Frame(nglIStream& rStream, int bytePosition, TimeMs time)
 : mPosition(bytePosition),
   mTime(time),
-  mHeader(data)
+  mHeader(rStream, bytePosition)
 {
 }
 

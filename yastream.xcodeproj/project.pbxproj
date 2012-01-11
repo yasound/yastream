@@ -9,6 +9,9 @@
 /* Begin PBXBuildFile section */
 		E567346D1433293500974A3C /* libnui3CocoaD.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E511CACC142A29460079F31F /* libnui3CocoaD.a */; };
 		E57200E214BB861200D8E91D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E57200E114BB861200D8E91D /* OpenGL.framework */; };
+		E5C3FA2D14BDA7EA00F4FB96 /* Mp3Frame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E5C3FA2714BDA7EA00F4FB96 /* Mp3Frame.cpp */; };
+		E5C3FA2E14BDA7EA00F4FB96 /* Mp3Header.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E5C3FA2914BDA7EA00F4FB96 /* Mp3Header.cpp */; };
+		E5C3FA2F14BDA7EA00F4FB96 /* Mp3Parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E5C3FA2B14BDA7EA00F4FB96 /* Mp3Parser.cpp */; };
 		E5D2CF22142A2A3100139E27 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E5D2CF21142A2A3100139E27 /* main.cpp */; };
 		E5D2CF26142A2B1200139E27 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E5D2CF25142A2B1200139E27 /* CoreFoundation.framework */; };
 		E5D2CF34142A2B6E00139E27 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E5D2CF29142A2B6E00139E27 /* Cocoa.framework */; };
@@ -120,6 +123,12 @@
 		E511CA80142A27E90079F31F /* nui3.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = nui3.xcodeproj; path = ../nui3/nui3.xcodeproj; sourceTree = "<group>"; };
 		E511CAAC142A28940079F31F /* libnui3Cocoa.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libnui3Cocoa.a; path = "../build/yastream-choruxlgpbempifzgqczddglodif/Build/Products/Default/libnui3Cocoa.a"; sourceTree = "<group>"; };
 		E57200E114BB861200D8E91D /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		E5C3FA2714BDA7EA00F4FB96 /* Mp3Frame.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mp3Frame.cpp; sourceTree = "<group>"; };
+		E5C3FA2814BDA7EA00F4FB96 /* Mp3Frame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp3Frame.h; sourceTree = "<group>"; };
+		E5C3FA2914BDA7EA00F4FB96 /* Mp3Header.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mp3Header.cpp; sourceTree = "<group>"; };
+		E5C3FA2A14BDA7EA00F4FB96 /* Mp3Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp3Header.h; sourceTree = "<group>"; };
+		E5C3FA2B14BDA7EA00F4FB96 /* Mp3Parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mp3Parser.cpp; sourceTree = "<group>"; };
+		E5C3FA2C14BDA7EA00F4FB96 /* Mp3Parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp3Parser.h; sourceTree = "<group>"; };
 		E5D2CF21142A2A3100139E27 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = src/main.cpp; sourceTree = "<group>"; };
 		E5D2CF25142A2B1200139E27 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		E5D2CF29142A2B6E00139E27 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -193,9 +202,24 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		E5C3FA2614BDA7EA00F4FB96 /* Mp3Parser */ = {
+			isa = PBXGroup;
+			children = (
+				E5C3FA2714BDA7EA00F4FB96 /* Mp3Frame.cpp */,
+				E5C3FA2814BDA7EA00F4FB96 /* Mp3Frame.h */,
+				E5C3FA2914BDA7EA00F4FB96 /* Mp3Header.cpp */,
+				E5C3FA2A14BDA7EA00F4FB96 /* Mp3Header.h */,
+				E5C3FA2B14BDA7EA00F4FB96 /* Mp3Parser.cpp */,
+				E5C3FA2C14BDA7EA00F4FB96 /* Mp3Parser.h */,
+			);
+			name = Mp3Parser;
+			path = tools/Mp3Parser;
+			sourceTree = "<group>";
+		};
 		E5D2CF20142A2A2500139E27 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				E5C3FA2614BDA7EA00F4FB96 /* Mp3Parser */,
 				E5D2CF21142A2A3100139E27 /* main.cpp */,
 			);
 			name = src;
@@ -340,6 +364,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				E5D2CF22142A2A3100139E27 /* main.cpp in Sources */,
+				E5C3FA2D14BDA7EA00F4FB96 /* Mp3Frame.cpp in Sources */,
+				E5C3FA2E14BDA7EA00F4FB96 /* Mp3Header.cpp in Sources */,
+				E5C3FA2F14BDA7EA00F4FB96 /* Mp3Parser.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -376,7 +403,10 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = ../nui3/include;
+				HEADER_SEARCH_PATHS = (
+					Tools,
+					../nui3/include,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -399,7 +429,10 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = ../nui3/include;
+				HEADER_SEARCH_PATHS = (
+					Tools,
+					../nui3/include,
+				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = macosx;
 			};

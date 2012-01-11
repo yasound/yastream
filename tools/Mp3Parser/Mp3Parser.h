@@ -7,12 +7,14 @@
 //
 
 #pragma once
+#include "nui.h"
+#include "nglIStream.h"
 #include "Mp3Frame.h"
 
 class Mp3Parser 
 {  
 public:
-  Mp3Parser(unsigned char* data, int nbBytes);
+  Mp3Parser(nglIStream& rStream);
   virtual ~Mp3Parser();
   
   const Mp3Frame& GetCurrentFrame();
@@ -24,7 +26,7 @@ public:
   void ParseAll();
   
 private:
-  unsigned char* mpData;
+  nglIStream& mrStream;
   int mDataLength;
   
   Mp3Frame mCurrentFrame;
@@ -38,4 +40,6 @@ private:
   Mp3Frame ComputeFirstFrame();
   Mp3Frame ComputeNextFrame(Mp3Frame previous);
   Mp3Frame ComputeNextFrame(int byteOffset, TimeMs time);
+  
+  bool ReadFrameBytes(std::vector<uint8>& rData);
 };
