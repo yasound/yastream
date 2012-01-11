@@ -10,6 +10,7 @@
 #include "nui.h"
 #include "nglIStream.h"
 #include "Mp3Frame.h"
+#include "Mp3Chunk.h"
 
 class Mp3Parser 
 {  
@@ -25,6 +26,8 @@ public:
   // for test purpose
   void ParseAll();
   
+  Mp3Chunk* GetChunk();
+  bool ReadFrameBytes(std::vector<uint8>& rData);
 private:
   nglIStream& mrStream;
   int mDataLength;
@@ -41,5 +44,4 @@ private:
   Mp3Frame ComputeNextFrame(Mp3Frame previous);
   Mp3Frame ComputeNextFrame(int byteOffset, TimeMs time);
   
-  bool ReadFrameBytes(std::vector<uint8>& rData);
 };

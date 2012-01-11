@@ -34,9 +34,7 @@ public:
   
   bool operator==(const Mp3Frame& rFrame);
   bool operator!=(const Mp3Frame& rFrame);
-  
-  bool Read(std::vector<uint8>& rData);
-  
+
 private:
   int mPosition;
   TimeMs mTime;

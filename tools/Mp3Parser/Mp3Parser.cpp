@@ -133,6 +133,17 @@ Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
   return frame;
 }
 
+Mp3Chunk* Mp3Parser::GetChunk()
+{
+  Mp3Chunk* pChunk = new Mp3Chunk();
+  pChunk->SetDuration(0.001 * (double)mCurrentFrame.GetDuration());
+  if (ReadFrameBytes(pChunk->GetData()))
+    return pChunk;
+  
+  delete pChunk;
+  return NULL;
+}
+
 bool Mp3Parser::ReadFrameBytes(std::vector<uint8>& rData)
 {
   mrStream.SetPos(mCurrentFrame.GetBytePosition());
@@ -144,7 +155,6 @@ bool Mp3Parser::ReadFrameBytes(std::vector<uint8>& rData)
     rData.resize(res);
     return false;
   }
-  GoToNextFrame();
   return true;
 }
 
