@@ -1,0 +1,18 @@
+<div id="metadata">
+  <p> <!-- Now Playing shows up here --> </p>
+</div>
+
+<script type="text/javascript" src="http://www.fastserv.com/player/player.js"></script>
+<div id="player"><a href="http://www.macromedia.com/go/getflashplayer">Get the Flash Player</a> to hear this stream.</div>
+<script type="text/javascript">
+    // SET THE FOLLOWING VARIABLES ACCORDING TO YOUR STREAM
+     var stream = 'http://ys-web01-vbo.alionis.net:8000/Stream.mp3';
+     var autostart = 'true';
+    // DO NOT EDIT ANYTHING BELOW THIS POINT
+     var so = new SWFObject('http://www.fastserv.com/player/player.swf','mpl','470','20','9');
+     so.addParam('allowscriptaccess','always');
+     so.addParam('allowfullscreen','false');
+     so.addVariable('autostart', autostart);
+     so.addVariable('file', stream);//+'%3Ftype%3D.flv');
+     so.write('player');
+</script>
