@@ -1,0 +1,289 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4085AB12147E8F5E000D3EBE /* libmp3lame.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4085AB11147E8F5E000D3EBE /* libmp3lame.dylib */; };
+		4085AB14147E8FA2000D3EBE /* libmpg123.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4085AB0F147E8F18000D3EBE /* libmpg123.0.dylib */; };
+		409F26AD147D45F60059A839 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 409F26AC147D45F60059A839 /* Foundation.framework */; };
+		409F26B0147D45F60059A839 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 409F26AF147D45F60059A839 /* main.mm */; };
+		409F26B4147D45F60059A839 /* testMp3Mix.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 409F26B3147D45F60059A839 /* testMp3Mix.1 */; };
+		409F26C1147D46020059A839 /* Mp3Frame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 409F26BB147D46020059A839 /* Mp3Frame.cpp */; };
+		409F26C2147D46020059A839 /* Mp3Header.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 409F26BD147D46020059A839 /* Mp3Header.cpp */; };
+		409F26C3147D46020059A839 /* Mp3Parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 409F26BF147D46020059A839 /* Mp3Parser.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		409F26A6147D45F60059A839 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				409F26B4147D45F60059A839 /* testMp3Mix.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		4085AB0F147E8F18000D3EBE /* libmpg123.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpg123.0.dylib; path = ../../../../../../../../opt/local/lib/libmpg123.0.dylib; sourceTree = "<group>"; };
+		4085AB11147E8F5E000D3EBE /* libmp3lame.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmp3lame.dylib; path = usr/local/lib/libmp3lame.dylib; sourceTree = SDKROOT; };
+		409F26A8147D45F60059A839 /* testMp3Mix */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testMp3Mix; sourceTree = BUILT_PRODUCTS_DIR; };
+		409F26AC147D45F60059A839 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		409F26AF147D45F60059A839 /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
+		409F26B2147D45F60059A839 /* testMp3Mix-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "testMp3Mix-Prefix.pch"; sourceTree = "<group>"; };
+		409F26B3147D45F60059A839 /* testMp3Mix.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = testMp3Mix.1; sourceTree = "<group>"; };
+		409F26BB147D46020059A839 /* Mp3Frame.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mp3Frame.cpp; sourceTree = "<group>"; };
+		409F26BC147D46020059A839 /* Mp3Frame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp3Frame.h; sourceTree = "<group>"; };
+		409F26BD147D46020059A839 /* Mp3Header.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mp3Header.cpp; sourceTree = "<group>"; };
+		409F26BE147D46020059A839 /* Mp3Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp3Header.h; sourceTree = "<group>"; };
+		409F26BF147D46020059A839 /* Mp3Parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mp3Parser.cpp; sourceTree = "<group>"; };
+		409F26C0147D46020059A839 /* Mp3Parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp3Parser.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		409F26A5147D45F60059A839 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4085AB14147E8FA2000D3EBE /* libmpg123.0.dylib in Frameworks */,
+				4085AB12147E8F5E000D3EBE /* libmp3lame.dylib in Frameworks */,
+				409F26AD147D45F60059A839 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		409F269D147D45F60059A839 = {
+			isa = PBXGroup;
+			children = (
+				4085AB11147E8F5E000D3EBE /* libmp3lame.dylib */,
+				4085AB0F147E8F18000D3EBE /* libmpg123.0.dylib */,
+				409F26AE147D45F60059A839 /* testMp3Mix */,
+				409F26AB147D45F60059A839 /* Frameworks */,
+				409F26A9147D45F60059A839 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		409F26A9147D45F60059A839 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				409F26A8147D45F60059A839 /* testMp3Mix */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		409F26AB147D45F60059A839 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				409F26AC147D45F60059A839 /* Foundation.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		409F26AE147D45F60059A839 /* testMp3Mix */ = {
+			isa = PBXGroup;
+			children = (
+				409F26AF147D45F60059A839 /* main.mm */,
+				409F26B3147D45F60059A839 /* testMp3Mix.1 */,
+				409F26BA147D46020059A839 /* Mp3Parser */,
+				409F26B1147D45F60059A839 /* Supporting Files */,
+			);
+			path = testMp3Mix;
+			sourceTree = "<group>";
+		};
+		409F26B1147D45F60059A839 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				409F26B2147D45F60059A839 /* testMp3Mix-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		409F26BA147D46020059A839 /* Mp3Parser */ = {
+			isa = PBXGroup;
+			children = (
+				409F26BB147D46020059A839 /* Mp3Frame.cpp */,
+				409F26BC147D46020059A839 /* Mp3Frame.h */,
+				409F26BD147D46020059A839 /* Mp3Header.cpp */,
+				409F26BE147D46020059A839 /* Mp3Header.h */,
+				409F26BF147D46020059A839 /* Mp3Parser.cpp */,
+				409F26C0147D46020059A839 /* Mp3Parser.h */,
+			);
+			name = Mp3Parser;
+			path = ../../../tools/Mp3Parser;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		409F26A7147D45F60059A839 /* testMp3Mix */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 409F26B7147D45F60059A839 /* Build configuration list for PBXNativeTarget "testMp3Mix" */;
+			buildPhases = (
+				409F26A4147D45F60059A839 /* Sources */,
+				409F26A5147D45F60059A839 /* Frameworks */,
+				409F26A6147D45F60059A839 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = testMp3Mix;
+			productName = testMp3Mix;
+			productReference = 409F26A8147D45F60059A839 /* testMp3Mix */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		409F269F147D45F60059A839 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+				ORGANIZATIONNAME = MXP4;
+			};
+			buildConfigurationList = 409F26A2147D45F60059A839 /* Build configuration list for PBXProject "testMp3Mix" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 409F269D147D45F60059A839;
+			productRefGroup = 409F26A9147D45F60059A839 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				409F26A7147D45F60059A839 /* testMp3Mix */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		409F26A4147D45F60059A839 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				409F26B0147D45F60059A839 /* main.mm in Sources */,
+				409F26C1147D46020059A839 /* Mp3Frame.cpp in Sources */,
+				409F26C2147D46020059A839 /* Mp3Header.cpp in Sources */,
+				409F26C3147D46020059A839 /* Mp3Parser.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		409F26B5147D45F60059A839 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		409F26B6147D45F60059A839 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		409F26B8147D45F60059A839 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "testMp3Mix/testMp3Mix-Prefix.pch";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/local/lib,
+				);
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WARNING_LDFLAGS = (
+					"-llame",
+					"-llibmpg123",
+				);
+			};
+			name = Debug;
+		};
+		409F26B9147D45F60059A839 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "testMp3Mix/testMp3Mix-Prefix.pch";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/local/lib,
+				);
+				OTHER_LDFLAGS = "";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WARNING_LDFLAGS = (
+					"-llame",
+					"-llibmpg123",
+				);
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		409F26A2147D45F60059A839 /* Build configuration list for PBXProject "testMp3Mix" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				409F26B5147D45F60059A839 /* Debug */,
+				409F26B6147D45F60059A839 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		409F26B7147D45F60059A839 /* Build configuration list for PBXNativeTarget "testMp3Mix" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				409F26B8147D45F60059A839 /* Debug */,
+				409F26B9147D45F60059A839 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 409F269F147D45F60059A839 /* Project object */;
+}

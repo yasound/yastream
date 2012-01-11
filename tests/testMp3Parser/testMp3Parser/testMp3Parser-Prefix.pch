@@ -1,0 +1,7 @@
+//
+// Prefix header for all source files of the 'testMp3Parser' target in the 'testMp3Parser' project
+//
+
+#ifdef __OBJC__
+  #import <Foundation/Foundation.h>
+#endif
