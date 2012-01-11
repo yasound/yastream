@@ -65,23 +65,30 @@ bool HTTPHandler::OnBodyStart()
   
   // Do the streaming:
   
-  while (mLive)
+  while (mLive && mpClient->IsConnected())
   {
     // GetNext chunk:
     Mp3Chunk* pChunk = NULL;
     
     pChunk = GetNextChunk();
+    int cnt = 0;
     while (!pChunk)
     {
+      cnt++;
       nglThread::MsSleep(10);
       pChunk = GetNextChunk();
     }
-    printf("^");
+//    if (cnt)
+//      printf("%d", cnt);
+    //printf("^");
+    //printf("%d", cnt);
     mpClient->Send(&pChunk->GetData()[0], pChunk->GetData().size());
     
     pChunk->Release();
   }
   
+  pRadio->UnregisterClient(this);
+
   return false;
 }
 
@@ -97,6 +104,7 @@ void HTTPHandler::OnBodyEnd()
 void HTTPHandler::AddChunk(Mp3Chunk* pChunk)
 {
   nglCriticalSectionGuard guard(mCS);
+  //printf("handle id = %d\n", pChunk->GetId());
   pChunk->Acquire();
   mChunks.push_back(pChunk);
 }

@@ -17,6 +17,7 @@ Mp3Parser::Mp3Parser(nglIStream& rStream)
   
   mCurrentFrame = FindFirstFrame();
   mDuration = 0;
+  mId = 0;
 }
 
 Mp3Parser::~Mp3Parser()
@@ -136,6 +137,7 @@ Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
 Mp3Chunk* Mp3Parser::GetChunk()
 {
   Mp3Chunk* pChunk = new Mp3Chunk();
+  pChunk->SetId(mId++);
   pChunk->SetDuration(0.001 * (double)mCurrentFrame.GetDuration());
   if (ReadFrameBytes(pChunk->GetData()))
     return pChunk;

@@ -40,6 +40,7 @@ private:
   nglThreadDelegate* mpThread;
   
   uint64 mTime;
+  double mBufferDuration;
   
   static nglCriticalSection gCS;
   typedef std::map<nglString, Radio*> RadioMap;

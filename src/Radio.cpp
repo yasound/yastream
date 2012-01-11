@@ -4,12 +4,12 @@
 #include "Radio.h"
 #include "HTTPHandler.h"
 
-#define IDEAL_CHUNK_COUNT 50
+#define IDEAL_BUFFER_SIZE 8
 
 ///////////////////////////////////////////////////
 //class Radio
 Radio::Radio(const nglString& rURL)
-: mURL(rURL), mLive(true), mpParser(NULL), mpStream(NULL)
+: mURL(rURL), mLive(true), mpParser(NULL), mpStream(NULL), mBufferDuration(0)
 {
   RegisterRadio(rURL, this);
   mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart));
@@ -25,6 +25,15 @@ void Radio::RegisterClient(HTTPHandler* pClient)
 {
   nglCriticalSectionGuard guard(mCS);
   mClients.push_back(pClient);
+
+  printf("Prepare the new client:\n");
+  // Fill the buffer:
+  for (std::deque<Mp3Chunk*>::const_iterator it = mChunks.begin(); it != mChunks.end(); ++it)
+  {
+    Mp3Chunk* pChunk = *it;
+    pClient->AddChunk(pChunk);
+    //printf("Chunk %f\n", pChunk->GetTime());
+  }
 }
 
 void Radio::UnregisterClient(HTTPHandler* pClient)
@@ -60,6 +69,9 @@ void Radio::AddChunk(Mp3Chunk* pChunk)
   nglCriticalSectionGuard guard(mCS);
   pChunk->Acquire();
   mChunks.push_back(pChunk);
+  mBufferDuration += pChunk->GetDuration();
+
+  //printf("AddChunk %p -> %f\n", pChunk, mBufferDuration);
   
   // Push the new chunk to the current connections:
   for (ClientList::const_iterator it = mClients.begin(); it != mClients.end(); ++it)
@@ -68,11 +80,12 @@ void Radio::AddChunk(Mp3Chunk* pChunk)
     pClient->AddChunk(pChunk);
   }
 
-  while (mChunks.size() > IDEAL_CHUNK_COUNT)
+  pChunk = mChunks.front();
+  if (mBufferDuration - pChunk->GetDuration() > IDEAL_BUFFER_SIZE)
   {
     // remove old chunks:
-    Mp3Chunk* pChunk = mChunks.back();
-    mChunks.pop_back();
+    mChunks.pop_front();
+    mBufferDuration -= pChunk->GetDuration();
     
     pChunk->Release();
   }
@@ -82,19 +95,18 @@ void Radio::OnStart()
 {
   LoadNextTrack();
 
-  double nexttime = 0;
+  double nexttime = nglTime();
   while (mLive)
   {
     bool cont = true;
-    while ((mChunks.size() < IDEAL_CHUNK_COUNT && cont) || nglTime() >= nexttime)
+    while ((mBufferDuration < IDEAL_BUFFER_SIZE && cont) || nglTime() >= nexttime)
     {
       Mp3Chunk* pChunk = new Mp3Chunk();
       pChunk = mpParser->GetChunk();
-      nexttime = nglTime() + pChunk->GetDuration();
       if (pChunk)
       {
         // Store this chunk locally for incomming connections and push it to current clients:
-        printf(".");
+        nexttime += pChunk->GetDuration();
         AddChunk(pChunk);
       }
       

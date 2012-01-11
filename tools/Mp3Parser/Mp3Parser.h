@@ -31,6 +31,7 @@ public:
 private:
   nglIStream& mrStream;
   int mDataLength;
+  int32 mId;
   
   Mp3Frame mCurrentFrame;
   TimeMs mDuration;
