@@ -21,7 +21,8 @@ public:
     std::vector<uint8> data;
     nglChar cur = 0;
     State state = Request;
-    while (mpClient->ReceiveAvailable(data))
+    data.resize(1024);
+    while (mpClient->Receive(data))
     {
       size_t index = 0;
       while (index < data.size())
@@ -147,41 +148,55 @@ public:
     OnBodyEnd();
   }
   
-  bool OnMethod(const nglString& rValue)
+  virtual bool OnMethod(const nglString& rValue)
   {
     return true;
   }
   
-  bool OnURL(const nglString& rValue)
+  virtual bool OnURL(const nglString& rValue)
   {
     return true;
   }
   
-  bool OnProtocol(const nglString& rValue, const nglString rVersion)
+  virtual bool OnProtocol(const nglString& rValue, const nglString rVersion)
   {
     return true;
   }
   
-  bool OnHeader(const nglString& rKey, const nglString& rValue)
+  virtual bool OnHeader(const nglString& rKey, const nglString& rValue)
   {
     return true;
   }
   
-  bool OnBodyStart()
+  virtual bool OnBodyStart()
   {
     return true;
   }
   
-  bool OnBodyData(const std::vector<uint8>& rData)
+  virtual bool OnBodyData(const std::vector<uint8>& rData)
   {
     return true;
   }
   
-  void OnBodyEnd()
+  virtual void OnBodyEnd()
   {
   }
   
-private:
+  bool ReplyLine(const nglString& rString)
+  {
+    bool res = mpClient->Send(rString);
+    res &= mpClient->Send("\r\n");
+    return res;
+  }
+
+  bool ReplyHeader(const nglString& rKey, const nglString& rValue)
+  {
+    nglString str;
+    str.Add(rKey).Add(": ").Add(rValue);
+    return ReplyLine(str);
+  }
+
+protected:
   enum State
   {
     Request,
@@ -204,6 +219,7 @@ public:
   nuiHTTPServerThread(nuiHTTPHandler* pHandler)
   : mpHandler(pHandler)
   {
+    SetAutoDelete(true);
   }
   
   virtual ~nuiHTTPServerThread()
@@ -236,9 +252,11 @@ public:
   void AcceptConnections()
   {
     nuiTCPClient* pClient = NULL;
+    Listen();
     while ((pClient = Accept()))
     {
       OnNewClient(pClient);
+      //Listen();
     }
     
   }
@@ -255,7 +273,7 @@ public:
     mDelegate = rDelegate;
   }
 
-private:
+protected:
   nuiFastDelegate1<nuiTCPClient*, nuiHTTPHandler*> mDelegate;
   
   nuiHTTPHandler* DefaultHandler(nuiTCPClient* pClient)
@@ -300,8 +318,52 @@ public:
   bool OnBodyStart()
   {
     // 
-    printf("POUEEEEEEEEET\n");
-    return true;
+
+    if (1)
+    {
+      
+      nglIStream* pStream = nglPath("/Users/meeloo/work/yastream/data/Money Talks.mp3").OpenRead();
+      if (!pStream)
+      {
+        ReplyLine("HTTP/1.1 404 Bleh");
+        ReplyHeader("Cache-Control", "no-cache");
+        ReplyHeader("Content-Type", "text/plain");
+        ReplyHeader("Server", "Yastream 1.0.0");
+        ReplyLine("");
+        ReplyLine("Unable to read file");
+        return false;
+      }
+
+      ReplyLine("HTTP/1.1 200 OK");
+      ReplyHeader("Cache-Control", "no-cache");
+      ReplyHeader("Content-Type", "audio/mpeg");
+      ReplyHeader("Server", "Yastream 1.0.0");
+      ReplyHeader("icy-name", "no name");
+      ReplyHeader("icy-pub", "1");
+      ReplyLine("");
+      
+      int total = 0;
+      while (pStream->Available() && mpClient->IsConnected())
+      {
+        uint8 buf[1024];
+        int done = pStream->Read(buf, 1024, 1);
+        total += done;
+        printf("send %d\n", total);
+        mpClient->Send(buf, done);
+        
+        if (total > 100 * 1024)
+          nglThread::MsSleep(70);
+      }
+    }
+    else
+    {
+      ReplyHeader("Cache-Control", "no-cache");
+      ReplyHeader("Content-Type", "text/plain");
+      ReplyHeader("Server", "Yastream 1.0.0");
+      ReplyLine("");
+      ReplyLine("Hello world!");
+    }
+    return false;
   }
   
   bool OnBodyData(const std::vector<uint8>& rData)
@@ -323,20 +385,34 @@ nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient)
 
 int main(int argc, const char** argv)
 {
+  struct sigaction act;
+  
+  // ignore SIGPIPE
+  act.sa_handler=SIG_IGN;
+  sigemptyset(&act.sa_mask);
+  act.sa_flags=0;
+  sigaction(SIGPIPE, &act, NULL); 
+  
+  // set my handler for SIGTERM
+//  act.sa_handler=catcher;
+//  sigemptyset(&act.sa_mask);
+//  act.sa_flags=0;
+//  sigaction(SIGTERM, &act, NULL);
+
   nuiInit(NULL);
   NGL_OUT("yasound streamer\n");
   nuiHTTPServer* pServer = new nuiHTTPServer();
 
   pServer->SetHandlerDelegate(HandlerDelegate);
-  
-  if (pServer->Bind(0, 8001))
+  int port = 8000;
+  signal(SIGPIPE, SIG_IGN);
+  if (pServer->Bind(0, port))
   {
-    pServer->Listen();
     pServer->AcceptConnections();
   }
   else
   {
-    NGL_OUT("Unable to bind port 8001\n");
+    NGL_OUT("Unable to bind port %d\n", port);
   }
 
   delete pServer;
