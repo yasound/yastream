@@ -33,11 +33,8 @@ solution "yastream"
 
         files
         {
-          "src/main.cpp",
-          "Tools/Mp3Parser/Mp3Parser.cpp",
-          "Tools/Mp3Parser/Mp3Frame.cpp",
-          "Tools/Mp3Parser/Mp3Header.cpp"
-
+          "src/*",
+          "Tools/Mp3Parser/*",
         }
 
         links

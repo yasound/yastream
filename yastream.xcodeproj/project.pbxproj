@@ -130,6 +130,7 @@
 		E573203E14BDE591008D488E /* HTTPHandler.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = HTTPHandler.cpp; path = src/HTTPHandler.cpp; sourceTree = "<group>"; };
 		E573203F14BDE591008D488E /* HTTPHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = HTTPHandler.h; path = src/HTTPHandler.h; sourceTree = "<group>"; };
 		E573204714BE0577008D488E /* Mp3Chunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp3Chunk.h; sourceTree = "<group>"; };
+		E573205A14BF20B0008D488E /* premake4.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = premake4.lua; sourceTree = "<group>"; };
 		E5C3FA2714BDA7EA00F4FB96 /* Mp3Frame.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mp3Frame.cpp; sourceTree = "<group>"; };
 		E5C3FA2814BDA7EA00F4FB96 /* Mp3Frame.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp3Frame.h; sourceTree = "<group>"; };
 		E5C3FA2914BDA7EA00F4FB96 /* Mp3Header.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mp3Header.cpp; sourceTree = "<group>"; };
@@ -227,6 +228,7 @@
 		E5D2CF20142A2A2500139E27 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				E573205A14BF20B0008D488E /* premake4.lua */,
 				E573203B14BDE0E0008D488E /* Radio.cpp */,
 				E573203C14BDE0E0008D488E /* Radio.h */,
 				E573203E14BDE591008D488E /* HTTPHandler.cpp */,

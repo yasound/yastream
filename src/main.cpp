@@ -15,6 +15,23 @@ int main(int argc, const char** argv)
 {
   nuiInit(NULL);
   NGL_OUT("yasound streamer\n");
+
+  int port = 8000;
+  for (int i = 1; i < argc; i++)
+  {
+    if (strcmp(argv[i], "-p") == 0)
+    {
+      i++;
+      if (i >= argc)
+      {
+        printf("ERROR: -p must be followed by a port number\n");
+        exit(1);
+      }
+
+      port = atoi(argv[i]);
+    }
+  }
+  
   nuiHTTPServer* pServer = new nuiHTTPServer();
 
   Radio* pRadio = new Radio("/test.mp3");
@@ -23,7 +40,6 @@ int main(int argc, const char** argv)
   //pRadio->Start();
   
   pServer->SetHandlerDelegate(HandlerDelegate);
-  int port = 8000;
   signal(SIGPIPE, SIG_IGN);
   if (pServer->Bind(0, port))
   {
