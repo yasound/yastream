@@ -5,7 +5,7 @@
 #include "nuiHTTP.h"
 #include "HTTPHandler.h"
 #include "Radio.h"
-
+#include <signal.h>
 nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient);
 nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient)
 {
@@ -17,7 +17,7 @@ int main(int argc, const char** argv)
   nuiInit(NULL);
   NGL_OUT("yasound streamer\n");
 
-  int port = 8000;
+  int port = 8001;
   for (int i = 1; i < argc; i++)
   {
     if (strcmp(argv[i], "-p") == 0)
@@ -42,8 +42,8 @@ int main(int argc, const char** argv)
   nuiHTTPServer* pServer = new nuiHTTPServer();
 
   Radio* pRadio = new Radio("fakeid");
-  pRadio->AddTrack("/Users/meeloo/work/yastream/data/Money Talks.mp3");
-  pRadio->AddTrack("/Users/meeloo/work/yastream/data/Thunderstruck.mp3");
+  //pRadio->AddTrack("/Users/meeloo/work/yastream/data/Money Talks.mp3");
+  //pRadio->AddTrack("/Users/meeloo/work/yastream/data/Thunderstruck.mp3");
   //pRadio->Start();
   
   pServer->SetHandlerDelegate(HandlerDelegate);

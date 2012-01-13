@@ -51,21 +51,25 @@ bool Radio::SetTrack(const nglPath& rPath)
 {
   nglIStream* pStream = rPath.OpenRead();
   if (!pStream)
+  {
+    NGL_OUT("Unable to open file %s\n", rPath.GetChars());
     return false;
-  
+  }
+
   Mp3Parser* pParser = new Mp3Parser(*pStream);
   if (!pParser->GetCurrentFrame().IsValid())
   {
+    NGL_OUT("Unable to parse mp3 file %s\n", rPath.GetChars());
     delete pParser;
     delete pStream;
     return false;
   }
-  
+
   delete mpParser;
   delete mpStream;
   mpParser = pParser;
   mpStream = pStream;
-  
+
   return true;
 }
 
@@ -77,7 +81,7 @@ void Radio::AddChunk(Mp3Chunk* pChunk)
   mBufferDuration += pChunk->GetDuration();
 
   //printf("AddChunk %p -> %f\n", pChunk, mBufferDuration);
-  
+
   // Push the new chunk to the current connections:
   for (ClientList::const_iterator it = mClients.begin(); it != mClients.end(); ++it)
   {
@@ -91,7 +95,7 @@ void Radio::AddChunk(Mp3Chunk* pChunk)
     // remove old chunks:
     mChunks.pop_front();
     mBufferDuration -= pChunk->GetDuration();
-    
+
     pChunk->Release();
   }
 }
@@ -106,22 +110,26 @@ void Radio::OnStart()
     bool cont = true;
     while ((mBufferDuration < IDEAL_BUFFER_SIZE && cont) || nglTime() >= nexttime)
     {
-      Mp3Chunk* pChunk = new Mp3Chunk();
-      pChunk = mpParser->GetChunk();
-      if (pChunk)
+      Mp3Chunk* pChunk = NULL;
+      if (mpParser)
       {
-        // Store this chunk locally for incomming connections and push it to current clients:
-        nexttime += pChunk->GetDuration();
-        AddChunk(pChunk);
+        pChunk = new Mp3Chunk();
+        pChunk = mpParser->GetChunk();
+        if (pChunk)
+        {
+          // Store this chunk locally for incomming connections and push it to current clients:
+          nexttime += pChunk->GetDuration();
+          AddChunk(pChunk);
+        }
       }
-      
-      if (!pChunk || !mpParser->GoToNextFrame())
+
+      if (!mpParser || !pChunk || !mpParser->GoToNextFrame())
       {
         LoadNextTrack();
         cont = true;
       }
     }
-    
+
     nglThread::MsSleep(10);
   }
 }
@@ -132,21 +140,24 @@ void Radio::LoadNextTrack()
   url.Format("https://dev.yasound.com/api/v1/radio/%s/get_next_song/", mID.GetChars());
   nuiHTTPRequest request(url);
   nuiHTTPResponse* pResponse = request.SendRequest();
-  //printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
-  //printf("data:\n %s\n\n", pResponse->GetBodyStr().GetChars());
+  printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
+  printf("data:\n %s\n", pResponse->GetBodyStr().GetChars());
 
   if (pResponse->GetStatusCode() == 200)
   {
     nglString p = pResponse->GetBodyStr();
     p.Insert('/', 6);
     p.Insert('/', 3);
-    
+
     nglPath path = "/space/new/medias/song";
     path += p;
-    
-    SetTrack(path);
-    //NGL_OUT("new path: %s", path.GetChars());
-    
+
+    NGL_OUT("new path: %s\n", path.GetChars());
+    if (SetTrack(path))
+    {
+      NGL_OUT("Ok!");
+    }
+
   }
   return;
 
@@ -157,7 +168,7 @@ void Radio::LoadNextTrack()
   {
     p = mTracks.front();
     mTracks.pop_front();
-    
+
     if (mTracks.empty())
       nglThread::MsSleep(10);
   }
@@ -176,7 +187,7 @@ std::map<nglString, Radio*> Radio::gRadios;
 Radio* Radio::GetRadio(const nglString& rURL)
 {
   nglCriticalSectionGuard guard(gCS);
-  
+
   RadioMap::const_iterator it = gRadios.find(rURL);
   if (it == gRadios.end())
   {
@@ -190,14 +201,14 @@ Radio* Radio::GetRadio(const nglString& rURL)
 void Radio::RegisterRadio(const nglString& rURL, Radio* pRadio)
 {
   nglCriticalSectionGuard guard(gCS);
-  
+
   gRadios[rURL] = pRadio;
 }
 
 void Radio::UnregisterRadio(const nglString& rURL)
 {
   nglCriticalSectionGuard guard(gCS);
-  
+
   RadioMap::const_iterator it = gRadios.find(rURL);
   if (it == gRadios.end())
   {

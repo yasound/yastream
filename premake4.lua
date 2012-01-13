@@ -5,7 +5,7 @@ solution "yastream"
     includedirs
     {
         "../nui3/include",
-        "Tools"
+        "tools"
     }
 
     defines { "_MINUI3_" }
@@ -34,7 +34,7 @@ solution "yastream"
         files
         {
           "src/*",
-          "Tools/Mp3Parser/*",
+          "tools/Mp3Parser/*",
         }
 
         links
