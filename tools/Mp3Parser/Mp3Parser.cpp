@@ -13,7 +13,7 @@
 Mp3Parser::Mp3Parser(nglIStream& rStream)
 : mrStream(rStream)
 {
-  mDataLength = mrStream.Available();
+  mDataLength = (int)mrStream.Available();
   
   mCurrentFrame = FindFirstFrame();
   mDuration = 0;

@@ -54,7 +54,8 @@ bool Radio::SetTrack(const nglPath& rPath)
     return false;
   
   Mp3Parser* pParser = new Mp3Parser(*pStream);
-  if (!pParser->GetCurrentFrame().IsValid())
+  bool valid = pParser->GetCurrentFrame().IsValid();
+  if (!valid)
   {
     delete pParser;
     delete pStream;
@@ -128,6 +129,7 @@ void Radio::OnStart()
 
 void Radio::LoadNextTrack()
 {
+#if 0
   nglString url;
   url.Format("https://dev.yasound.com/api/v1/radio/%s/get_next_song/", mID.GetChars());
   nuiHTTPRequest request(url);
@@ -148,19 +150,22 @@ void Radio::LoadNextTrack()
     //NGL_OUT("new path: %s", path.GetChars());
     
   }
-  return;
+  //return;
 
-#if 0
+#else
   nglPath p = mTracks.front();
   mTracks.pop_front();
   while (!SetTrack(p) && mLive)
   {
+    NGL_OUT("Skipping '%s'\n", p.GetChars());
     p = mTracks.front();
     mTracks.pop_front();
     
     if (mTracks.empty())
       nglThread::MsSleep(10);
   }
+  NGL_OUT("Started '%s'\n", p.GetChars());
+  
 #endif
 }
 
