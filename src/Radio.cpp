@@ -3,22 +3,27 @@
 #include "Mp3Parser/Mp3Parser.h"
 #include "Radio.h"
 #include "HTTPHandler.h"
+#include "nuiHTTP.h"
 
 #define IDEAL_BUFFER_SIZE 8
 
 ///////////////////////////////////////////////////
 //class Radio
-Radio::Radio(const nglString& rURL)
-: mURL(rURL), mLive(true), mpParser(NULL), mpStream(NULL), mBufferDuration(0)
+Radio::Radio(const nglString& rID)
+: mID(rID), mLive(true), mpParser(NULL), mpStream(NULL), mBufferDuration(0)
 {
-  RegisterRadio(rURL, this);
+  nglString URL;
+  URL.Add("/" + mID);
+  RegisterRadio(URL, this);
   mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart));
   mpThread->Start();
 }
 
 Radio::~Radio()
 {
-  UnregisterRadio(mURL);
+  nglString URL;
+  URL.Add("/" + mID);
+  UnregisterRadio(URL);
 }
 
 void Radio::RegisterClient(HTTPHandler* pClient)
@@ -123,6 +128,29 @@ void Radio::OnStart()
 
 void Radio::LoadNextTrack()
 {
+  nglString url;
+  url.Format("https://dev.yasound.com/api/v1/radio/%s/get_next_song/", mID.GetChars());
+  nuiHTTPRequest request(url);
+  nuiHTTPResponse* pResponse = request.SendRequest();
+  //printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
+  //printf("data:\n %s\n\n", pResponse->GetBodyStr().GetChars());
+
+  if (pResponse->GetStatusCode() == 200)
+  {
+    nglString p = pResponse->GetBodyStr();
+    p.Insert('/', 6);
+    p.Insert('/', 3);
+    
+    nglPath path = "/space/new/medias/song";
+    path += p;
+    
+    SetTrack(path);
+    //NGL_OUT("new path: %s", path.GetChars());
+    
+  }
+  return;
+
+#if 0
   nglPath p = mTracks.front();
   mTracks.pop_front();
   while (!SetTrack(p) && mLive)
@@ -133,6 +161,7 @@ void Radio::LoadNextTrack()
     if (mTracks.empty())
       nglThread::MsSleep(10);
   }
+#endif
 }
 
 void Radio::AddTrack(const nglPath& rPath)

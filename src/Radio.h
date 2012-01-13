@@ -11,7 +11,7 @@ class HTTPHandler;
 class Radio
 {
 public:
-  Radio(const nglString& rURL);
+  Radio(const nglString& rID);
   virtual ~Radio();
   
   void RegisterClient(HTTPHandler* pClient);
@@ -27,7 +27,7 @@ private:
 
   bool mLive;
   nglCriticalSection mCS;
-  nglString mURL;
+  nglString mID;
   typedef std::list<HTTPHandler*> ClientList;
   ClientList mClients;
   nglIStream* mpStream;

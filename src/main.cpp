@@ -2,6 +2,7 @@
 #include "nui.h"
 #include "nuiInit.h"
 #include "nuiHTTPServer.h"
+#include "nuiHTTP.h"
 #include "HTTPHandler.h"
 #include "Radio.h"
 
@@ -32,9 +33,15 @@ int main(int argc, const char** argv)
     }
   }
   
+//  nuiHTTPRequest request("https://dev.yasound.com/admin/");
+//  nuiHTTPResponse* pResponse = request.SendRequest();
+//  printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
+//  printf("data:\n %s\n\n", pResponse->GetBodyStr().GetChars());
+
+  
   nuiHTTPServer* pServer = new nuiHTTPServer();
 
-  Radio* pRadio = new Radio("/test.mp3");
+  Radio* pRadio = new Radio("fakeid");
   pRadio->AddTrack("/Users/meeloo/work/yastream/data/Money Talks.mp3");
   pRadio->AddTrack("/Users/meeloo/work/yastream/data/Thunderstruck.mp3");
   //pRadio->Start();
