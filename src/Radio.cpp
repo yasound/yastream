@@ -51,15 +51,12 @@ bool Radio::SetTrack(const nglPath& rPath)
 {
   nglIStream* pStream = rPath.OpenRead();
   if (!pStream)
-  {
-    NGL_OUT("Unable to open file %s\n", rPath.GetChars());
     return false;
-  }
 
   Mp3Parser* pParser = new Mp3Parser(*pStream);
-  if (!pParser->GetCurrentFrame().IsValid())
+  bool valid = pParser->GetCurrentFrame().IsValid();
+  if (!valid)
   {
-    NGL_OUT("Unable to parse mp3 file %s\n", rPath.GetChars());
     delete pParser;
     delete pStream;
     return false;
@@ -110,20 +107,16 @@ void Radio::OnStart()
     bool cont = true;
     while ((mBufferDuration < IDEAL_BUFFER_SIZE && cont) || nglTime() >= nexttime)
     {
-      Mp3Chunk* pChunk = NULL;
-      if (mpParser)
+      Mp3Chunk* pChunk = new Mp3Chunk();
+      pChunk = mpParser->GetChunk();
+      if (pChunk)
       {
-        pChunk = new Mp3Chunk();
-        pChunk = mpParser->GetChunk();
-        if (pChunk)
-        {
-          // Store this chunk locally for incomming connections and push it to current clients:
-          nexttime += pChunk->GetDuration();
-          AddChunk(pChunk);
-        }
+        // Store this chunk locally for incomming connections and push it to current clients:
+        nexttime += pChunk->GetDuration();
+        AddChunk(pChunk);
       }
 
-      if (!mpParser || !pChunk || !mpParser->GoToNextFrame())
+      if (!pChunk || !mpParser->GoToNextFrame())
       {
         LoadNextTrack();
         cont = true;
@@ -136,12 +129,29 @@ void Radio::OnStart()
 
 void Radio::LoadNextTrack()
 {
+  if (!mTracks.empty())
+  {
+    nglPath p = mTracks.front();
+    mTracks.pop_front();
+    while (!SetTrack(p) && mLive)
+    {
+      NGL_OUT("Skipping unreadable '%s'\n", p.GetChars());
+      p = mTracks.front();
+      mTracks.pop_front();
+
+      if (mTracks.empty())
+        nglThread::MsSleep(10);
+    }
+    NGL_OUT("Started '%s'\n", p.GetChars());
+    return;
+  }
+
   nglString url;
   url.Format("https://dev.yasound.com/api/v1/radio/%s/get_next_song/", mID.GetChars());
   nuiHTTPRequest request(url);
   nuiHTTPResponse* pResponse = request.SendRequest();
-  printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
-  printf("data:\n %s\n", pResponse->GetBodyStr().GetChars());
+  //printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
+  //printf("data:\n %s\n\n", pResponse->GetBodyStr().GetChars());
 
   if (pResponse->GetStatusCode() == 200)
   {
@@ -152,27 +162,12 @@ void Radio::LoadNextTrack()
     nglPath path = "/space/new/medias/song";
     path += p;
 
-    NGL_OUT("new path: %s\n", path.GetChars());
-    if (SetTrack(path))
-    {
-      NGL_OUT("Ok!");
-    }
+    SetTrack(path);
+    NGL_OUT("new song from server: %s\n", path.GetChars());
 
   }
-  return;
+  //return;
 
-#if 0
-  nglPath p = mTracks.front();
-  mTracks.pop_front();
-  while (!SetTrack(p) && mLive)
-  {
-    p = mTracks.front();
-    mTracks.pop_front();
-
-    if (mTracks.empty())
-      nglThread::MsSleep(10);
-  }
-#endif
 }
 
 void Radio::AddTrack(const nglPath& rPath)

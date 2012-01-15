@@ -20,11 +20,12 @@ Mp3Frame::Mp3Frame(nglIStream& rStream, int bytePosition, TimeMs time)
   mTime(time),
   mHeader(rStream, bytePosition)
 {
+  //printf("Mp3Frame\n");
 }
 
 Mp3Frame::~Mp3Frame()
 {
-  
+
 }
 
 const int Mp3Frame::GetBytePosition() const
@@ -91,21 +92,21 @@ bool Mp3Frame::operator!=(const Mp3Frame& rFrame)
 const std::string Mp3Frame::ToString() const
 {
   char temp[1024];
-  
+
   // position
   sprintf(temp, "position: '%d'  ", mPosition);
   std::string positionStr(temp);
-  
+
   // time
   sprintf(temp, "time: '%lu'  ", mTime);
   std::string timeStr(temp);
-  
+
   std::string s;
   s += positionStr;
   s += timeStr;
   s += "   ";
   s += mHeader.ToString();
-  
+
   return s;
 }
 

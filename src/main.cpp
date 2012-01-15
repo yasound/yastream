@@ -12,6 +12,11 @@ nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient)
   return new HTTPHandler(pClient);
 }
 
+void SigPipeSink(int signal)
+{
+  // Ignore...
+}
+
 int main(int argc, const char** argv)
 {
   nuiInit(NULL);
@@ -32,22 +37,24 @@ int main(int argc, const char** argv)
       port = atoi(argv[i]);
     }
   }
-  
+
 //  nuiHTTPRequest request("https://dev.yasound.com/admin/");
 //  nuiHTTPResponse* pResponse = request.SendRequest();
 //  printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
 //  printf("data:\n %s\n\n", pResponse->GetBodyStr().GetChars());
 
-  
+
   nuiHTTPServer* pServer = new nuiHTTPServer();
 
   Radio* pRadio = new Radio("fakeid");
   //pRadio->AddTrack("/Users/meeloo/work/yastream/data/Money Talks.mp3");
   //pRadio->AddTrack("/Users/meeloo/work/yastream/data/Thunderstruck.mp3");
-  //pRadio->Start();
-  
+  //pRadio->AddTrack("/Users/meeloo/work/yastream/data/ebc_preview64.mp3");
+  //pRadio->AddTrack("/Users/meeloo/work/yastream/data/ebc.mp3");
+  //pRadio->AddTrack("/space/new/medias/song/eca/c9f/ebc.mp3");
+
   pServer->SetHandlerDelegate(HandlerDelegate);
-  signal(SIGPIPE, SIG_IGN);
+  App->CatchSignal(SIGPIPE, SigPipeSink);
   if (pServer->Bind(0, port))
   {
     pServer->AcceptConnections();
@@ -59,7 +66,7 @@ int main(int argc, const char** argv)
 
   delete pServer;
   nuiUninit();
-  
+
   return 0;
 }
 

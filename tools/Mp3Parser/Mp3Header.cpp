@@ -11,17 +11,23 @@
 
 Mp3Header::Mp3Header()
 {
+  //printf("Mp3Header()\n");
+
   Reset();
 }
 
 Mp3Header::Mp3Header(nglIStream& rStream, int position)
 {
+  //printf("Mp3Header(stream + pos) [%d]\n", position);
   Reset();
-  
+
   rStream.SetPos(position);
   unsigned char data[4];
   rStream.Read(data, 4, 1);
+  //printf("Header frame %x %x %x %x\n", data[0], data[1], data[2], data[3]);
   ParseHeaderData(data);
+  //printf("Header:\n%s\n", ToString().c_str());
+
 }
 
 Mp3Header::~Mp3Header()
@@ -44,19 +50,24 @@ void Mp3Header::Reset()
 
 void Mp3Header::ParseHeaderData(unsigned char* data)
 {
+  //printf("ParseHeaderData\n");
+
   Reset();
   unsigned int b0 = data[0];
   unsigned int b1 = data[1];
   unsigned int b2 = data[2];
   unsigned int b3 = data[3];
   unsigned int val = b3 | (b2 << 8) | (b1 << 16) | (b0 << 24);
-  
+
   unsigned int sync = 0xffe00000;
   unsigned int res = (val & sync);
   bool ok = (res == sync);
   if (!ok)
+  {
+    //printf("res != sync (%x != %x)\n", res, sync);
+    //printf("ParseHeaderData broken\n");
     return;
-
+  }
   unsigned int version = (val >> 19) & 3;
   unsigned int layer = (val >> 17) & 3;
   unsigned int crc = (val >> 16) & 1;
@@ -67,24 +78,25 @@ void Mp3Header::ParseHeaderData(unsigned char* data)
   unsigned int copyright = (val >> 3) & 1;
   unsigned int original = (val >> 2) & 1;
   unsigned int emphasis = (val >> 0) & 3;
-  
-  
+
+
   mVersion = (MpegAudioVersion)version;
   mLayer = (MpegLayer)layer;
   mChannelMode = (MpegChannelMode)channelMode;
   mEmphasis = (MpegEmphasis)emphasis;
-  
+
   mBitrate = GetBitrate(bitrate_index, mVersion, mLayer);
   mSamplerate = GetSampleRate(samplerate_index, mVersion);
-  
+
   mUseCRC = crc;
   mUsePadding = padding;
-  
+
   mIsCopyrighted = copyright;
   mIsOriginal = original;
+  //printf("ParseHeaderData ok\n");
 }
 
-int Mp3Header::sSamplesPerFrame[2][3] = 
+int Mp3Header::sSamplesPerFrame[2][3] =
 {
   {384, 1152, 1152},
   {384, 1152, 576}
@@ -99,11 +111,11 @@ const int Mp3Header::GetFrameHeaderByteLength() const
 const int Mp3Header::GetSamplesPerFrame() const
 {
   int samplesPerFrame = 0;
-  switch (mVersion) 
+  switch (mVersion)
   {
     case eMpegVersion1:
     {
-      switch (mLayer) 
+      switch (mLayer)
       {
         case eMpegLayer1:
           samplesPerFrame = sSamplesPerFrame[0][0];
@@ -114,17 +126,17 @@ const int Mp3Header::GetSamplesPerFrame() const
         case eMpegLayer3:
           samplesPerFrame = sSamplesPerFrame[0][2];
           break;
-          
+
         default:
           break;
       }
     }
       break;
-      
+
     case eMpegVersion2:
     case eMpegVersion2_5:
     {
-      switch (mLayer) 
+      switch (mLayer)
       {
         case eMpegLayer1:
           samplesPerFrame = sSamplesPerFrame[1][0];
@@ -135,17 +147,17 @@ const int Mp3Header::GetSamplesPerFrame() const
         case eMpegLayer3:
           samplesPerFrame = sSamplesPerFrame[1][2];
           break;
-          
+
         default:
           break;
       }
     }
       break;
-      
+
     default:
       break;
   }
-  
+
   return samplesPerFrame;
 }
 
@@ -154,7 +166,7 @@ const int Mp3Header::GetFrameDataByteLength() const
   int bytes = (GetSamplesPerFrame() / mSamplerate) * (mBitrate * 1000.0 / 8.0);
   if (mUsePadding)
     bytes += 1;
-  
+
   bytes -= GetFrameHeaderByteLength();
   return bytes;
 }
@@ -179,7 +191,7 @@ const bool Mp3Header::IsValid() const
   bool emphasisOK = mEmphasis != eMpegEmphasisUndefined;
   bool bitrateOK = mBitrate != 0;
   bool samplerateOK = mSamplerate != 0;
-  
+
   bool valid = (versionOK && layerOK && channelOK && emphasisOK && bitrateOK && samplerateOK);
   return valid;
 }
@@ -197,7 +209,7 @@ bool Mp3Header::operator==(const Mp3Header& rHeader)
   same &= (mUsePadding == rHeader.mUsePadding);
   same &= (mIsCopyrighted == rHeader.mIsCopyrighted);
   same &= (mIsOriginal == rHeader.mIsOriginal);
-  
+
   return same;
 }
 
@@ -208,10 +220,10 @@ bool Mp3Header::operator!=(const Mp3Header& rHeader)
 }
 
 const std::string Mp3Header::ToString() const
-{ 
+{
   // version
   std::string versionStr = "version: '";
-  switch (mVersion) 
+  switch (mVersion)
   {
     case eMpegVersion1:
       versionStr += "v1";
@@ -228,15 +240,15 @@ const std::string Mp3Header::ToString() const
     case eMpegVersionUndefined:
       versionStr += "undefined";
       break;
-      
+
     default:
       break;
   }
   versionStr += "'  ";
-  
+
   // layer
   std::string layerStr = "layer: '";
-  switch (mLayer) 
+  switch (mLayer)
   {
     case eMpegLayer1:
       layerStr += "1";
@@ -253,15 +265,15 @@ const std::string Mp3Header::ToString() const
     case eMpegLayerUndefined:
       layerStr += "undefined";
       break;
-      
+
     default:
       break;
   }
   layerStr += "'  ";
-  
+
   // channel mode
   std::string channelStr = "channels: '";
-  switch (mChannelMode) 
+  switch (mChannelMode)
   {
     case eMpegStereo:
       channelStr += "stereo";
@@ -278,15 +290,15 @@ const std::string Mp3Header::ToString() const
     case eMpegChannelModeUndefined:
       channelStr += "undefined";
       break;
-      
+
     default:
       break;
   }
   channelStr += "'  ";
-  
+
   // emphasis
   std::string emphasisStr = "emphasis: '";
-  switch (mEmphasis) 
+  switch (mEmphasis)
   {
     case eMpegEmphasisNone:
       emphasisStr += "none";
@@ -303,38 +315,38 @@ const std::string Mp3Header::ToString() const
     case eMpegEmphasisUndefined:
       emphasisStr += "undefined";
       break;
-      
+
     default:
       break;
   }
   emphasisStr += "'  ";
-  
+
   char temp[1024];
-  
+
   // bit rate
   sprintf(temp, "bitrate: '%.1f kbps'  ", mBitrate);
   std::string bitrateStr(temp);
-  
+
   // sample rate
   sprintf(temp, "samplerate: '%.1f Hz'  ", mSamplerate);
   std::string samplerateStr(temp);
-  
+
   // crc
   sprintf(temp, "crc: '%s'  ", mUseCRC ? "yes" : "no");
   std::string crcStr(temp);
-  
+
   // padding
   sprintf(temp, "padding: '%s'  ", mUsePadding ? "yes" : "no");
   std::string paddingStr(temp);
-  
+
   // copyright
   sprintf(temp, "copyright: '%s'  ", mIsCopyrighted ? "yes" : "no");
   std::string copyrightStr(temp);
-  
+
   // original
   sprintf(temp, "original: '%s'  ", mIsOriginal ? "yes" : "no");
   std::string originalStr(temp);
-  
+
   std::string s;
   s += versionStr;
   s += layerStr;
@@ -351,7 +363,7 @@ const std::string Mp3Header::ToString() const
 
 
 
-float Mp3Header::sBitrates[5][16] = 
+float Mp3Header::sBitrates[5][16] =
 {
   {0, 32, 64, 96, 128, 160,192, 224, 256, 288, 320, 352, 384, 416, 448, -1},
   {0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, -1},
@@ -367,56 +379,56 @@ float Mp3Header::GetBitrate(unsigned int bitrate_index, MpegAudioVersion version
     return 0;
   if (bitrate_index == 15)
     return 0;
-  
+
   float bitrate = 0;
-  switch (version) 
+  switch (version)
   {
     case eMpegVersion1:
     {
-      switch (layer) 
+      switch (layer)
       {
         case eMpegLayer1:
           bitrate = sBitrates[0][bitrate_index];
           break;
-          
+
         case eMpegLayer2:
           bitrate = sBitrates[1][bitrate_index];
           break;
-          
+
         case eMpegLayer3:
           bitrate = sBitrates[2][bitrate_index];
           break;
-          
+
         default:
           break;
       }
     }
       break;
-      
+
     case eMpegVersion2:
     case eMpegVersion2_5:
     {
-      switch (layer) 
+      switch (layer)
       {
         case eMpegLayer1:
           bitrate = sBitrates[3][bitrate_index];
           break;
-          
+
         case eMpegLayer2:
         case eMpegLayer3:
           bitrate = sBitrates[4][bitrate_index];
           break;
-          
+
         default:
           break;
       }
     }
       break;
-      
+
     default:
       break;
   }
-  
+
   return bitrate;
 }
 
@@ -431,25 +443,25 @@ float Mp3Header::GetSampleRate(unsigned int samplerate_index, MpegAudioVersion v
 {
   if (samplerate_index == 3)
     return 0;
-  
+
   float samplerate = 0;
-  switch (version) 
+  switch (version)
   {
     case eMpegVersion1:
       samplerate = sSamplerates[0][samplerate_index];
       break;
-      
+
     case eMpegVersion2:
       samplerate = sSamplerates[1][samplerate_index];
       break;
-      
+
     case eMpegVersion2_5:
       samplerate = sSamplerates[2][samplerate_index];
       break;
-      
+
     default:
       break;
   }
-  
+
   return samplerate;
 }
