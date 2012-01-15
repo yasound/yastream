@@ -16,10 +16,19 @@ public:
   {
     mTime = nglTime();
     mId = -1;
+    
+    ngl_atomic_inc(mCount);
+    //uint64 c = ngl_atomic_read(mCount);
+    //if (!(c % 10))
+    //  printf("%lld mp3 chunks (+)\n", c);
   }
   
   ~Mp3Chunk()
   {
+    ngl_atomic_dec(mCount);
+    //uint64 c = ngl_atomic_read(mCount);
+    //if (!(c % 10))
+    //  printf("%lld mp3 chunks (-)\n", c);
   }
   
   std::vector<uint8>& GetData()
@@ -61,5 +70,6 @@ private:
   double mTime;
   double mDuration;
   long mId;
+  static nglAtomic mCount;
 };
 

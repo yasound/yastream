@@ -23,7 +23,7 @@ public:
   void AddTrack(const nglPath& rPath);
 private:
   bool SetTrack(const nglPath& rPath);
-  void LoadNextTrack();
+  bool LoadNextTrack();
 
   bool mLive;
   nglCriticalSection mCS;

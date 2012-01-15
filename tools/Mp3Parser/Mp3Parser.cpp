@@ -7,6 +7,7 @@
 //
 
 #include "Mp3Parser.h"
+#include "Mp3Chunk.h"
 #include <iostream>
 
 
@@ -164,3 +165,4 @@ bool Mp3Parser::ReadFrameBytes(std::vector<uint8>& rData)
   return true;
 }
 
+nglAtomic Mp3Chunk::mCount = 0;

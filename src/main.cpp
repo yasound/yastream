@@ -47,14 +47,18 @@ int main(int argc, const char** argv)
   nuiHTTPServer* pServer = new nuiHTTPServer();
 
   Radio* pRadio = new Radio("fakeid");
-  //pRadio->AddTrack("/Users/meeloo/work/yastream/data/Money Talks.mp3");
-  //pRadio->AddTrack("/Users/meeloo/work/yastream/data/Thunderstruck.mp3");
-  //pRadio->AddTrack("/Users/meeloo/work/yastream/data/ebc_preview64.mp3");
-  //pRadio->AddTrack("/Users/meeloo/work/yastream/data/ebc.mp3");
-  //pRadio->AddTrack("/space/new/medias/song/eca/c9f/ebc.mp3");
+  pRadio->AddTrack("/Users/meeloo/work/yastream/data/Money Talks.mp3");
+  pRadio->AddTrack("/Users/meeloo/work/yastream/data/Thunderstruck.mp3");
+  pRadio->AddTrack("/Users/meeloo/work/yastream/data/ebc_preview64.mp3");
+  pRadio->AddTrack("/Users/meeloo/work/yastream/data/ebc.mp3");
+  pRadio->AddTrack("/space/new/medias/song/eca/c9f/ebc.mp3");
 
   pServer->SetHandlerDelegate(HandlerDelegate);
+
+#if defined _MINUI3_
   App->CatchSignal(SIGPIPE, SigPipeSink);
+#endif
+  
   if (pServer->Bind(0, port))
   {
     pServer->AcceptConnections();

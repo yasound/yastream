@@ -29,6 +29,7 @@ Radio::~Radio()
 void Radio::RegisterClient(HTTPHandler* pClient)
 {
   nglCriticalSectionGuard guard(mCS);
+  mLive = true;
   mClients.push_back(pClient);
 
   printf("Prepare the new client:\n");
@@ -45,6 +46,12 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
 {
   nglCriticalSectionGuard guard(mCS);
   mClients.remove(pClient);
+  
+  if (mClients.empty())
+  {
+    //  Shutdown radio
+    mLive = false;
+  }
 }
 
 bool Radio::SetTrack(const nglPath& rPath)
@@ -107,8 +114,7 @@ void Radio::OnStart()
     bool cont = true;
     while ((mBufferDuration < IDEAL_BUFFER_SIZE && cont) || nglTime() >= nexttime)
     {
-      Mp3Chunk* pChunk = new Mp3Chunk();
-      pChunk = mpParser->GetChunk();
+      Mp3Chunk* pChunk = pChunk = mpParser->GetChunk();
       if (pChunk)
       {
         // Store this chunk locally for incomming connections and push it to current clients:
@@ -127,25 +133,9 @@ void Radio::OnStart()
   }
 }
 
-void Radio::LoadNextTrack()
+bool Radio::LoadNextTrack()
 {
-  if (!mTracks.empty())
-  {
-    nglPath p = mTracks.front();
-    mTracks.pop_front();
-    while (!SetTrack(p) && mLive)
-    {
-      NGL_OUT("Skipping unreadable '%s'\n", p.GetChars());
-      p = mTracks.front();
-      mTracks.pop_front();
-
-      if (mTracks.empty())
-        nglThread::MsSleep(10);
-    }
-    NGL_OUT("Started '%s'\n", p.GetChars());
-    return;
-  }
-
+  // Try to get the new track from the app server:
   nglString url;
   url.Format("https://dev.yasound.com/api/v1/radio/%s/get_next_song/", mID.GetChars());
   nuiHTTPRequest request(url);
@@ -162,12 +152,30 @@ void Radio::LoadNextTrack()
     nglPath path = "/space/new/medias/song";
     path += p;
 
-    SetTrack(path);
     NGL_OUT("new song from server: %s\n", path.GetChars());
-
+    if (SetTrack(path))
+      return true;
   }
-  //return;
 
+  // Otherwise load a track from 
+  if (!mTracks.empty())
+  {
+    nglPath p = mTracks.front();
+    mTracks.pop_front();
+    while (!SetTrack(p) && mLive)
+    {
+      NGL_OUT("Skipping unreadable '%s'\n", p.GetChars());
+      p = mTracks.front();
+      mTracks.pop_front();
+      
+      if (mTracks.empty())
+        return false;
+    }
+    NGL_OUT("Started '%s' from static track list\n", p.GetChars());
+    return true;
+  }
+
+  return false;
 }
 
 void Radio::AddTrack(const nglPath& rPath)
