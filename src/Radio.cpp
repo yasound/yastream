@@ -15,8 +15,12 @@ Radio::Radio(const nglString& rID)
   nglString URL;
   URL.Add("/" + mID);
   RegisterRadio(URL, this);
-  mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart));
+  size_t stacksize = 1024 * 512 * 1;
+  mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), nglThread::Normal, stacksize);
   mpThread->Start();
+  size_t size = mpThread->GetStackSize();
+
+  printf("New thread stack size: %ld (requested %ld)\n", size, stacksize);
 }
 
 Radio::~Radio()
@@ -46,7 +50,7 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
 {
   nglCriticalSectionGuard guard(mCS);
   mClients.remove(pClient);
-  
+
   if (mClients.empty())
   {
     //  Shutdown radio
@@ -157,7 +161,7 @@ bool Radio::LoadNextTrack()
       return true;
   }
 
-  // Otherwise load a track from 
+  // Otherwise load a track from
   if (!mTracks.empty())
   {
     nglPath p = mTracks.front();
@@ -167,7 +171,7 @@ bool Radio::LoadNextTrack()
       NGL_OUT("Skipping unreadable '%s'\n", p.GetChars());
       p = mTracks.front();
       mTracks.pop_front();
-      
+
       if (mTracks.empty())
         return false;
     }
