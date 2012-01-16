@@ -12,11 +12,10 @@
 Radio::Radio(const nglString& rID)
 : mID(rID), mLive(true), mpParser(NULL), mpStream(NULL), mBufferDuration(0)
 {
-  nglString URL;
-  URL.Add("/" + mID);
-  RegisterRadio(URL, this);
-  size_t stacksize = 1024 * 512 * 1;
+  RegisterRadio(mID, this);
+  size_t stacksize = 1024 * 1024 * 4;
   mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), nglThread::Normal, stacksize);
+  mpThread->SetAutoDelete(true);
   mpThread->Start();
   size_t size = mpThread->GetStackSize();
 
@@ -25,9 +24,7 @@ Radio::Radio(const nglString& rID)
 
 Radio::~Radio()
 {
-  nglString URL;
-  URL.Add("/" + mID);
-  UnregisterRadio(URL);
+  UnregisterRadio(mID);
 }
 
 void Radio::RegisterClient(HTTPHandler* pClient)
@@ -54,6 +51,7 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   if (mClients.empty())
   {
     //  Shutdown radio
+    printf("Shutting down radio %s\n", mID.GetChars());
     mLive = false;
   }
 }
@@ -110,17 +108,22 @@ void Radio::AddChunk(Mp3Chunk* pChunk)
 
 void Radio::OnStart()
 {
-  LoadNextTrack();
+  mLive = LoadNextTrack();
 
+  int64 chunk_count = 0;
   double nexttime = nglTime();
   while (mLive)
   {
-    bool cont = true;
-    while ((mBufferDuration < IDEAL_BUFFER_SIZE && cont) || nglTime() >= nexttime)
+    while ((mBufferDuration < IDEAL_BUFFER_SIZE && mLive) || nglTime() >= nexttime)
     {
-      Mp3Chunk* pChunk = pChunk = mpParser->GetChunk();
+      Mp3Chunk* pChunk = mpParser->GetChunk();
+
       if (pChunk)
       {
+        chunk_count++;
+        if (!(chunk_count % 500))
+          printf("%ld chunks\n", chunk_count);
+
         // Store this chunk locally for incomming connections and push it to current clients:
         nexttime += pChunk->GetDuration();
         AddChunk(pChunk);
@@ -128,13 +131,21 @@ void Radio::OnStart()
 
       if (!pChunk || !mpParser->GoToNextFrame())
       {
-        LoadNextTrack();
-        cont = true;
+        mLive = LoadNextTrack();
+
+        if (!mLive)
+        {
+          printf("Error while getting next song for radio '%s'. Shutting down...\n", mID.GetChars());
+        }
       }
     }
 
     nglThread::MsSleep(10);
   }
+
+  printf("radio '%s' is now offline\n", mID.GetChars());
+
+  delete this;
 }
 
 bool Radio::LoadNextTrack()
@@ -145,7 +156,7 @@ bool Radio::LoadNextTrack()
   nuiHTTPRequest request(url);
   nuiHTTPResponse* pResponse = request.SendRequest();
   //printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
-  //printf("data:\n %s\n\n", pResponse->GetBodyStr().GetChars());
+  printf("new trackid: %s\n", pResponse->GetBodyStr().GetChars());
 
   if (pResponse->GetStatusCode() == 200)
   {
@@ -156,29 +167,33 @@ bool Radio::LoadNextTrack()
     nglPath path = "/space/new/medias/song";
     path += p;
 
-    NGL_OUT("new song from server: %s\n", path.GetChars());
+    printf("new song from server: %s\n", path.GetChars());
     if (SetTrack(path))
       return true;
   }
 
-  // Otherwise load a track from
+  // Otherwise load a track from mTracks
   if (!mTracks.empty())
   {
     nglPath p = mTracks.front();
     mTracks.pop_front();
     while (!SetTrack(p) && mLive)
     {
-      NGL_OUT("Skipping unreadable '%s'\n", p.GetChars());
+      printf("Skipping unreadable '%s'\n", p.GetChars());
       p = mTracks.front();
       mTracks.pop_front();
 
       if (mTracks.empty())
+      {
+        printf("No more track in the list. Bailout...\n");
         return false;
+      }
     }
-    NGL_OUT("Started '%s' from static track list\n", p.GetChars());
+    printf("Started '%s' from static track list\n", p.GetChars());
     return true;
   }
 
+  printf("No more track in the list. Bailout...\n");
   return false;
 }
 
@@ -193,35 +208,43 @@ std::map<nglString, Radio*> Radio::gRadios;
 
 Radio* Radio::GetRadio(const nglString& rURL)
 {
+  printf("Getting radio %s\n", rURL.GetChars());
   nglCriticalSectionGuard guard(gCS);
 
   RadioMap::const_iterator it = gRadios.find(rURL);
   if (it == gRadios.end())
   {
     // Create the radio!
-    //return CreateRadio(rURL);
-    return NULL;
+    printf("Trying to create the radio '%s'\n", rURL.GetChars());
+    return CreateRadio(rURL);
+    //return NULL;
   }
+  printf("Getting existing radio %s\n", rURL.GetChars());
   return it->second;
 }
 
 void Radio::RegisterRadio(const nglString& rURL, Radio* pRadio)
 {
   nglCriticalSectionGuard guard(gCS);
+  RadioMap::const_iterator it = gRadios.find(rURL);
+  if (it != gRadios.end())
+    printf("ERROR: the radio '%s' is already registered\n", rURL.GetChars());
 
+  printf("Registering radio '%s'\n", rURL.GetChars());
   gRadios[rURL] = pRadio;
 }
 
 void Radio::UnregisterRadio(const nglString& rURL)
 {
   nglCriticalSectionGuard guard(gCS);
+  printf("Unregistering radio '%s'\n", rURL.GetChars());
 
   RadioMap::const_iterator it = gRadios.find(rURL);
   if (it == gRadios.end())
   {
-    Radio* pRadio = it->second;
-    delete pRadio;
+    printf("Error, radio '%s' was never registered\n", rURL.GetChars());
   }
+  gRadios.erase(rURL);
 }
 
 Radio* Radio::CreateRadio(const nglString& rURL)

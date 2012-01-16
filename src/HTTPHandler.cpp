@@ -36,6 +36,9 @@ bool HTTPHandler::OnHeader(const nglString& rKey, const nglString& rValue)
 
 bool HTTPHandler::OnBodyStart()
 {
+  if (mURL == "/favicon.ico")
+    return false; // We don't have a favicon right now...
+
   // Find the Radio:
   Radio* pRadio = Radio::GetRadio(mURL);
   if (!pRadio)
@@ -48,12 +51,12 @@ bool HTTPHandler::OnBodyStart()
     nglString str;
     str.Format("Unable to find %s on this server", mURL.GetChars());
     ReplyLine(str);
-    
+
     return false;
   }
-  
+
   pRadio->RegisterClient(this);
-  
+
   // Reply + Headers:
   ReplyLine("HTTP/1.1 200 OK");
   ReplyHeader("Cache-Control", "no-cache");
@@ -62,14 +65,14 @@ bool HTTPHandler::OnBodyStart()
   ReplyHeader("icy-name", "no name");
   ReplyHeader("icy-pub", "1");
   ReplyLine("");
-  
+
   // Do the streaming:
-  
+
   while (mLive && mpClient->IsConnected())
   {
     // GetNext chunk:
     Mp3Chunk* pChunk = NULL;
-    
+
     pChunk = GetNextChunk();
     int cnt = 0;
     while (!pChunk)
@@ -83,10 +86,10 @@ bool HTTPHandler::OnBodyStart()
     //printf("^");
     //printf("%d", cnt);
     mpClient->Send(&pChunk->GetData()[0], pChunk->GetData().size());
-    
+
     pChunk->Release();
   }
-  
+
   pRadio->UnregisterClient(this);
 
   return false;
@@ -112,12 +115,12 @@ void HTTPHandler::AddChunk(Mp3Chunk* pChunk)
 Mp3Chunk* HTTPHandler::GetNextChunk()
 {
   nglCriticalSectionGuard guard(mCS);
-  
+
   if (mChunks.empty())
     return NULL;
-  
+
   Mp3Chunk* pChunk = mChunks.front();
   mChunks.pop_front();
-  
+
   return pChunk;
 }
