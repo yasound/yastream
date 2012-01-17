@@ -5,7 +5,7 @@
 #include "HTTPHandler.h"
 #include "nuiHTTP.h"
 
-#define IDEAL_BUFFER_SIZE 8
+#define IDEAL_BUFFER_SIZE 12
 
 ///////////////////////////////////////////////////
 //class Radio
