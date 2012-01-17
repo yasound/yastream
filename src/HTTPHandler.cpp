@@ -2,7 +2,6 @@
 #include "nui.h"
 #include "HTTPHandler.h"
 #include "Radio.h"
-#include "nuiNetworkHost.h"
 
 ///////////////////////////////////////////////////
 //class HTTPHandler : public nuiHTTPHandler
@@ -37,34 +36,26 @@ bool HTTPHandler::OnHeader(const nglString& rKey, const nglString& rValue)
 
 bool HTTPHandler::OnBodyStart()
 {
-  nuiNetworkHost client(0, 0, nuiNetworkHost::eTCP);
-  bool res = mpClient->GetDistantHost(client);
-  if (!res)
-    return false;
-
-  uint32 ip = client.GetIP();
-  uint8* pIp = (uint8*)&ip;
-  nglString t = nglTime().GetLocalTimeStr("%a, %d %b %Y %H:%M:%S %z");
-  NGL_OUT("%d.%d.%d.%d %s \"%s\" %s", pIp[0], pIp[1], pIp[2], pIp[3], mMethod.GetChars(), mURL.GetChars(), t.GetChars());
-
   if (mURL == "/favicon.ico")
+  {
+    nglString str;
+    str.Format("Unable to find %s on this server", mURL.GetChars());
+    ReplyError(404, str);
     return false; // We don't have a favicon right now...
+  }
 
   // Find the Radio:
   Radio* pRadio = Radio::GetRadio(mURL);
-  if (!pRadio)
+  if (!pRadio || !pRadio->IsLive())
   {
-    ReplyLine("HTTP/1.1 404 Radio not found");
-    ReplyHeader("Cache-Control", "no-cache");
-    ReplyHeader("Content-Type", "text/plain");
-    ReplyHeader("Server", "Yastream 1.0.0");
-    ReplyLine("");
     nglString str;
     str.Format("Unable to find %s on this server", mURL.GetChars());
-    ReplyLine(str);
+    ReplyError(404, str);
 
     return false;
   }
+
+  Log(200);
 
   pRadio->RegisterClient(this);
 

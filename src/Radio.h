@@ -13,14 +13,16 @@ class Radio
 public:
   Radio(const nglString& rID);
   virtual ~Radio();
-  
+
   void RegisterClient(HTTPHandler* pClient);
   void UnregisterClient(HTTPHandler* pClient);
   void OnStart();
-  
+
   static Radio* GetRadio(const nglString& rURL);
-  
+
   void AddTrack(const nglPath& rPath);
+
+  bool IsLive() const;
 private:
   bool SetTrack(const nglPath& rPath);
   bool LoadNextTrack();
@@ -34,14 +36,14 @@ private:
   Mp3Parser* mpParser;
   std::deque<Mp3Chunk*> mChunks;
   void AddChunk(Mp3Chunk* pChunk);
-  
+
   std::deque<nglPath> mTracks;
-  
+
   nglThreadDelegate* mpThread;
-  
+
   uint64 mTime;
   double mBufferDuration;
-  
+
   static nglCriticalSection gCS;
   typedef std::map<nglString, Radio*> RadioMap;
   static RadioMap gRadios;

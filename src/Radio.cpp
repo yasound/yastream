@@ -10,10 +10,13 @@
 ///////////////////////////////////////////////////
 //class Radio
 Radio::Radio(const nglString& rID)
-: mID(rID), mLive(true), mpParser(NULL), mpStream(NULL), mBufferDuration(0)
+: mID(rID), mLive(false), mpParser(NULL), mpStream(NULL), mBufferDuration(0)
 {
   RegisterRadio(mID, this);
   size_t stacksize = 1024 * 1024 * 4;
+
+  mLive = LoadNextTrack();
+
   mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), nglThread::Normal, stacksize);
   mpThread->SetAutoDelete(true);
   mpThread->Start();
@@ -108,8 +111,6 @@ void Radio::AddChunk(Mp3Chunk* pChunk)
 
 void Radio::OnStart()
 {
-  mLive = LoadNextTrack();
-
   int64 chunk_count = 0;
   double nexttime = nglTime();
   while (mLive)
@@ -121,8 +122,8 @@ void Radio::OnStart()
       if (pChunk)
       {
         chunk_count++;
-        //if (!(chunk_count % 500))
-        //  printf("%ld chunks\n", chunk_count);
+        //if (!(chunk_count % 100))
+          //printf("%ld chunks\n", chunk_count);
 
         // Store this chunk locally for incomming connections and push it to current clients:
         nexttime += pChunk->GetDuration();
@@ -253,4 +254,9 @@ Radio* Radio::CreateRadio(const nglString& rURL)
   return pRadio;
 }
 
+bool Radio::IsLive() const
+{
+  nglCriticalSectionGuard guard(gCS);
+  return mLive;
+}
 
