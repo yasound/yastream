@@ -19,7 +19,7 @@ Radio::Radio(const nglString& rID)
   mpThread->Start();
   size_t size = mpThread->GetStackSize();
 
-  printf("New thread stack size: %ld (requested %ld)\n", size, stacksize);
+  //printf("New thread stack size: %ld (requested %ld)\n", size, stacksize);
 }
 
 Radio::~Radio()
@@ -33,7 +33,7 @@ void Radio::RegisterClient(HTTPHandler* pClient)
   mLive = true;
   mClients.push_back(pClient);
 
-  printf("Prepare the new client:\n");
+  //printf("Prepare the new client:\n");
   // Fill the buffer:
   for (std::deque<Mp3Chunk*>::const_iterator it = mChunks.begin(); it != mChunks.end(); ++it)
   {
@@ -51,7 +51,7 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   if (mClients.empty())
   {
     //  Shutdown radio
-    printf("Shutting down radio %s\n", mID.GetChars());
+    //printf("Shutting down radio %s\n", mID.GetChars());
     mLive = false;
   }
 }
@@ -121,8 +121,8 @@ void Radio::OnStart()
       if (pChunk)
       {
         chunk_count++;
-        if (!(chunk_count % 500))
-          printf("%ld chunks\n", chunk_count);
+        //if (!(chunk_count % 500))
+        //  printf("%ld chunks\n", chunk_count);
 
         // Store this chunk locally for incomming connections and push it to current clients:
         nexttime += pChunk->GetDuration();
@@ -143,7 +143,7 @@ void Radio::OnStart()
     nglThread::MsSleep(10);
   }
 
-  printf("radio '%s' is now offline\n", mID.GetChars());
+  //printf("radio '%s' is now offline\n", mID.GetChars());
 
   delete this;
 }
@@ -156,7 +156,7 @@ bool Radio::LoadNextTrack()
   nuiHTTPRequest request(url);
   nuiHTTPResponse* pResponse = request.SendRequest();
   //printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
-  printf("new trackid: %s\n", pResponse->GetBodyStr().GetChars());
+  //printf("new trackid: %s\n", pResponse->GetBodyStr().GetChars());
 
   if (pResponse->GetStatusCode() == 200)
   {
@@ -167,7 +167,7 @@ bool Radio::LoadNextTrack()
     nglPath path = "/space/new/medias/song";
     path += p;
 
-    printf("new song from server: %s\n", path.GetChars());
+    //printf("new song from server: %s\n", path.GetChars());
     if (SetTrack(path))
       return true;
   }
@@ -179,21 +179,21 @@ bool Radio::LoadNextTrack()
     mTracks.pop_front();
     while (!SetTrack(p) && mLive)
     {
-      printf("Skipping unreadable '%s'\n", p.GetChars());
+      //printf("Skipping unreadable '%s'\n", p.GetChars());
       p = mTracks.front();
       mTracks.pop_front();
 
       if (mTracks.empty())
       {
-        printf("No more track in the list. Bailout...\n");
+        //printf("No more track in the list. Bailout...\n");
         return false;
       }
     }
-    printf("Started '%s' from static track list\n", p.GetChars());
+    //printf("Started '%s' from static track list\n", p.GetChars());
     return true;
   }
 
-  printf("No more track in the list. Bailout...\n");
+  //printf("No more track in the list. Bailout...\n");
   return false;
 }
 
@@ -208,18 +208,18 @@ std::map<nglString, Radio*> Radio::gRadios;
 
 Radio* Radio::GetRadio(const nglString& rURL)
 {
-  printf("Getting radio %s\n", rURL.GetChars());
+  //printf("Getting radio %s\n", rURL.GetChars());
   nglCriticalSectionGuard guard(gCS);
 
   RadioMap::const_iterator it = gRadios.find(rURL);
   if (it == gRadios.end())
   {
     // Create the radio!
-    printf("Trying to create the radio '%s'\n", rURL.GetChars());
+    //printf("Trying to create the radio '%s'\n", rURL.GetChars());
     return CreateRadio(rURL);
     //return NULL;
   }
-  printf("Getting existing radio %s\n", rURL.GetChars());
+  //printf("Getting existing radio %s\n", rURL.GetChars());
   return it->second;
 }
 
@@ -230,19 +230,19 @@ void Radio::RegisterRadio(const nglString& rURL, Radio* pRadio)
   if (it != gRadios.end())
     printf("ERROR: the radio '%s' is already registered\n", rURL.GetChars());
 
-  printf("Registering radio '%s'\n", rURL.GetChars());
+  //printf("Registering radio '%s'\n", rURL.GetChars());
   gRadios[rURL] = pRadio;
 }
 
 void Radio::UnregisterRadio(const nglString& rURL)
 {
   nglCriticalSectionGuard guard(gCS);
-  printf("Unregistering radio '%s'\n", rURL.GetChars());
+  //printf("Unregistering radio '%s'\n", rURL.GetChars());
 
   RadioMap::const_iterator it = gRadios.find(rURL);
   if (it == gRadios.end())
   {
-    printf("Error, radio '%s' was never registered\n", rURL.GetChars());
+    //printf("Error, radio '%s' was never registered\n", rURL.GetChars());
   }
   gRadios.erase(rURL);
 }

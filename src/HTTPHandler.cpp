@@ -2,6 +2,7 @@
 #include "nui.h"
 #include "HTTPHandler.h"
 #include "Radio.h"
+#include "nuiNetworkHost.h"
 
 ///////////////////////////////////////////////////
 //class HTTPHandler : public nuiHTTPHandler
@@ -36,6 +37,16 @@ bool HTTPHandler::OnHeader(const nglString& rKey, const nglString& rValue)
 
 bool HTTPHandler::OnBodyStart()
 {
+  nuiNetworkHost client(0, 0, nuiNetworkHost::eTCP);
+  bool res = mpClient->GetDistantHost(client);
+  if (!res)
+    return false;
+
+  uint32 ip = client.GetIP();
+  uint8* pIp = (uint8*)&ip;
+  nglString t = nglTime().GetLocalTimeStr("%a, %d %b %Y %H:%M:%S %z");
+  NGL_OUT("%d.%d.%d.%d %s \"%s\" %s", pIp[0], pIp[1], pIp[2], pIp[3], mMethod.GetChars(), mURL.GetChars(), t.GetChars());
+
   if (mURL == "/favicon.ico")
     return false; // We don't have a favicon right now...
 
