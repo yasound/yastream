@@ -5,7 +5,7 @@
 #include "HTTPHandler.h"
 #include "nuiHTTP.h"
 
-#define IDEAL_BUFFER_SIZE 12
+#define IDEAL_BUFFER_SIZE 5
 
 ///////////////////////////////////////////////////
 //class Radio
@@ -112,6 +112,34 @@ void Radio::AddChunk(Mp3Chunk* pChunk)
 void Radio::OnStart()
 {
   int64 chunk_count = 0;
+
+  // Pre buffering:
+  while ((mBufferDuration < IDEAL_BUFFER_SIZE && mLive))
+  {
+    Mp3Chunk* pChunk = mpParser->GetChunk();
+
+    if (pChunk)
+    {
+      chunk_count++;
+      //if (!(chunk_count % 100))
+        //printf("%ld chunks\n", chunk_count);
+
+      // Store this chunk locally for incomming connections and push it to current clients:
+      AddChunk(pChunk);
+    }
+
+    if (!pChunk || !mpParser->GoToNextFrame())
+    {
+      mLive = LoadNextTrack();
+
+      if (!mLive)
+      {
+        printf("Error while getting next song for radio '%s'. Shutting down...\n", mID.GetChars());
+      }
+    }
+  }
+
+  // Do the actual regular streaming:
   double nexttime = nglTime();
   while (mLive)
   {
