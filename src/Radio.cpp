@@ -55,7 +55,7 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   {
     //  Shutdown radio
     //printf("Shutting down radio %s\n", mID.GetChars());
-    mLive = false;
+    //mLive = false;
   }
 }
 
@@ -184,19 +184,20 @@ bool Radio::LoadNextTrack()
   url.Format("https://dev.yasound.com/api/v1/radio/%s/get_next_song/", mID.GetChars());
   nuiHTTPRequest request(url);
   nuiHTTPResponse* pResponse = request.SendRequest();
-  //printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
-  //printf("new trackid: %s\n", pResponse->GetBodyStr().GetChars());
+  printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
+  printf("new trackid: %s\n", pResponse->GetBodyStr().GetChars());
 
   if (pResponse->GetStatusCode() == 200)
   {
     nglString p = pResponse->GetBodyStr();
+    //p.Insert("_preview64", 9);
     p.Insert('/', 6);
     p.Insert('/', 3);
 
     nglPath path = "/space/new/medias/song";
     path += p;
 
-    //printf("new song from server: %s\n", path.GetChars());
+    printf("new song from server: %s\n", path.GetChars());
     if (SetTrack(path))
       return true;
   }
@@ -222,7 +223,7 @@ bool Radio::LoadNextTrack()
     return true;
   }
 
-  //printf("No more track in the list. Bailout...\n");
+  printf("No more track in the list. Bailout...\n");
   return false;
 }
 
