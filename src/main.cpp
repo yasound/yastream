@@ -36,6 +36,23 @@ int main(int argc, const char** argv)
 
       port = atoi(argv[i]);
     }
+    else if (strcmp(argv[i], "--test") == 0)
+    {
+      Radio* pRadio = new Radio("matid");
+      nglPath current(ePathCurrent);
+      nglPath p = current + nglPath("/data");
+      pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
+      pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
+      pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
+      pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
+      
+//      pRadio->AddTrack(p + nglPath("/Money Talks.mp3"));
+//      pRadio->AddTrack(p + nglPath("/04 The Vagabound.mp3"));
+      pRadio->AddTrack(p + nglPath("/Radian.mp3"));
+      pRadio->Start();
+
+      printf("test mode ENABLED\n");
+    }
   }
 
 //  nuiHTTPRequest request("https://dev.yasound.com/admin/");

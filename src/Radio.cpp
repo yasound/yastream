@@ -10,19 +10,17 @@
 ///////////////////////////////////////////////////
 //class Radio
 Radio::Radio(const nglString& rID)
-: mID(rID), mLive(false), mpParser(NULL), mpStream(NULL), mBufferDuration(0)
+: mID(rID), 
+  mLive(false), 
+  mpParser(NULL), 
+  mpStream(NULL), 
+  mBufferDuration(0),
+  mpParserPreview(NULL), 
+  mpStreamPreview(NULL), 
+  mBufferDurationPreview(0)
 {
   RegisterRadio(mID, this);
-  size_t stacksize = 1024 * 1024 * 4;
-
-  mLive = LoadNextTrack();
-
-  mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), nglThread::Normal, stacksize);
-  mpThread->SetAutoDelete(true);
-  mpThread->Start();
-  size_t size = mpThread->GetStackSize();
-
-  //printf("New thread stack size: %ld (requested %ld)\n", size, stacksize);
+  mLive = true;
 }
 
 Radio::~Radio()
@@ -30,15 +28,33 @@ Radio::~Radio()
   UnregisterRadio(mID);
 }
 
-void Radio::RegisterClient(HTTPHandler* pClient)
+void Radio::Start()
+{
+  size_t stacksize = 1024 * 1024 * 4;
+  
+  mLive = LoadNextTrack();
+  
+  mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), nglThread::Normal, stacksize);
+  mpThread->SetAutoDelete(true);
+  mpThread->Start();
+  size_t size = mpThread->GetStackSize();
+  
+  //printf("New thread stack size: %ld (requested %ld)\n", size, stacksize);
+}
+
+void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 {
   nglCriticalSectionGuard guard(mCS);
+ 
+  ClientList& rClients            = highQuality ? mClients : mClientsPreview;
+  std::deque<Mp3Chunk*>& rChunks  = highQuality ? mChunks : mChunksPreview;
+  
   mLive = true;
-  mClients.push_back(pClient);
+  rClients.push_back(pClient);
 
   //printf("Prepare the new client:\n");
   // Fill the buffer:
-  for (std::deque<Mp3Chunk*>::const_iterator it = mChunks.begin(); it != mChunks.end(); ++it)
+  for (std::deque<Mp3Chunk*>::const_iterator it = rChunks.begin(); it != rChunks.end(); ++it)
   {
     Mp3Chunk* pChunk = *it;
     pClient->AddChunk(pChunk);
@@ -50,8 +66,9 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
 {
   nglCriticalSectionGuard guard(mCS);
   mClients.remove(pClient);
+  mClientsPreview.remove(pClient);
 
-  if (mClients.empty())
+  if (mClients.empty() && mClientsPreview.empty())
   {
     //  Shutdown radio
     //printf("Shutting down radio %s\n", mID.GetChars());
@@ -63,7 +80,17 @@ bool Radio::SetTrack(const nglPath& rPath)
 {
   nglIStream* pStream = rPath.OpenRead();
   if (!pStream)
+  {
     return false;
+  }
+  
+  nglPath previewPath = GetPreviewPath(rPath);
+  nglIStream* pStreamPreview = previewPath.OpenRead();
+  if (!pStreamPreview)
+  {
+    delete pStream;
+    return false;
+  }
 
   Mp3Parser* pParser = new Mp3Parser(*pStream);
   bool valid = pParser->GetCurrentFrame().IsValid();
@@ -71,52 +98,88 @@ bool Radio::SetTrack(const nglPath& rPath)
   {
     delete pParser;
     delete pStream;
+    delete pStreamPreview;
+    return false;
+  }
+  
+  Mp3Parser* pParserPreview = new Mp3Parser(*pStreamPreview);
+  valid = pParserPreview->GetCurrentFrame().IsValid();
+  if (!valid)
+  {
+    delete pParserPreview;
+    delete pStreamPreview;
+    delete pParser;
+    delete pStream;
     return false;
   }
 
   delete mpParser;
   delete mpStream;
+  delete mpParserPreview;
+  delete mpStreamPreview;
   mpParser = pParser;
   mpStream = pStream;
+  mpParserPreview = pParserPreview;
+  mpStreamPreview = pStreamPreview;
 
   return true;
 }
 
-void Radio::AddChunk(Mp3Chunk* pChunk)
+nglPath Radio::GetPreviewPath(const nglPath& rOriginalPath)
+{
+  nglString ext = rOriginalPath.GetExtension();
+  nglString base = rOriginalPath.GetRemovedExtension();
+  base += "_preview64";
+  base += ".";
+  base += ext;
+  nglPath previewPath(base);
+  printf("preview path %s\n", previewPath.GetPathName().GetChars());
+  return previewPath;
+}
+
+void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
 {
   nglCriticalSectionGuard guard(mCS);
   pChunk->Acquire();
-  mChunks.push_back(pChunk);
-  mBufferDuration += pChunk->GetDuration();
-
-  //printf("AddChunk %p -> %f\n", pChunk, mBufferDuration);
-
+  
+  ClientList& rClients            = previewMode ? mClientsPreview : mClients;
+  std::deque<Mp3Chunk*>& rChunks  = previewMode ? mChunksPreview : mChunks;
+  double& rBufferDuration         = previewMode ? mBufferDurationPreview : mBufferDuration;
+  
+  rChunks.push_back(pChunk);
+  rBufferDuration += pChunk->GetDuration();
+  
+  //printf("AddChunk %p -> %f\n", pChunk, rBufferDuration);
+  
   // Push the new chunk to the current connections:
-  for (ClientList::const_iterator it = mClients.begin(); it != mClients.end(); ++it)
+  for (ClientList::const_iterator it = rClients.begin(); it != rClients.end(); ++it)
   {
     HTTPHandler* pClient = *it;
     pClient->AddChunk(pChunk);
   }
-
-  pChunk = mChunks.front();
-  if (mBufferDuration - pChunk->GetDuration() > IDEAL_BUFFER_SIZE)
+  
+  pChunk = rChunks.front();
+  if (rBufferDuration - pChunk->GetDuration() > IDEAL_BUFFER_SIZE)
   {
     // remove old chunks:
-    mChunks.pop_front();
-    mBufferDuration -= pChunk->GetDuration();
-
+    rChunks.pop_front();
+    rBufferDuration -= pChunk->GetDuration();
+    
     pChunk->Release();
   }
 }
 
+
 void Radio::OnStart()
 {
   int64 chunk_count = 0;
+  int64 chunk_count_preview = 0;
 
   // Pre buffering:
   while ((mBufferDuration < IDEAL_BUFFER_SIZE && mLive))
   {
     Mp3Chunk* pChunk = mpParser->GetChunk();
+    Mp3Chunk* pChunkPreview = mpParserPreview->GetChunk();
 
     if (pChunk)
     {
@@ -125,10 +188,23 @@ void Radio::OnStart()
         //printf("%ld chunks\n", chunk_count);
 
       // Store this chunk locally for incomming connections and push it to current clients:
-      AddChunk(pChunk);
+      AddChunk(pChunk, false);
     }
+    
+    if (pChunkPreview)
+    {
+      chunk_count_preview++;
+      //if (!(chunk_count_preview % 100))
+      //printf("%ld chunks preview\n", chunk_count_preview);
+      
+      // Store this chunk locally for incomming connections and push it to current clients:
+      AddChunk(pChunkPreview, true);
+    }
+    
+    bool nextFrameOK = mpParser->GoToNextFrame();
+    bool nextFramePreviewOK = mpParserPreview->GoToNextFrame();
 
-    if (!pChunk || !mpParser->GoToNextFrame())
+    if (!pChunk || !nextFrameOK)
     {
       mLive = LoadNextTrack();
 
@@ -146,6 +222,7 @@ void Radio::OnStart()
     while ((mBufferDuration < IDEAL_BUFFER_SIZE && mLive) || nglTime() >= nexttime)
     {
       Mp3Chunk* pChunk = mpParser->GetChunk();
+      Mp3Chunk* pChunkPreview = mpParserPreview->GetChunk();
 
       if (pChunk)
       {
@@ -155,10 +232,23 @@ void Radio::OnStart()
 
         // Store this chunk locally for incomming connections and push it to current clients:
         nexttime += pChunk->GetDuration();
-        AddChunk(pChunk);
+        AddChunk(pChunk, false);
       }
+      
+      if (pChunkPreview)
+      {
+        chunk_count_preview++;
+        //if (!(chunk_count_preview % 100))
+        //printf("%ld chunks preview\n", chunk_count_preview);
+        
+        // Store this chunk locally for incomming connections and push it to current clients:
+        AddChunk(pChunkPreview, true);
+      }
+      
+      bool nextFrameOK = mpParser->GoToNextFrame();
+      bool nextFramePreviewOK = mpParserPreview->GoToNextFrame();
 
-      if (!pChunk || !mpParser->GoToNextFrame())
+      if (!pChunk || !nextFrameOK)
       {
         mLive = LoadNextTrack();
 
@@ -178,14 +268,14 @@ void Radio::OnStart()
 }
 
 bool Radio::LoadNextTrack()
-{
+{  
   // Try to get the new track from the app server:
   nglString url;
   url.Format("https://dev.yasound.com/api/v1/radio/%s/get_next_song/", mID.GetChars());
   nuiHTTPRequest request(url);
   nuiHTTPResponse* pResponse = request.SendRequest();
-  printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
-  printf("new trackid: %s\n", pResponse->GetBodyStr().GetChars());
+//  printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
+//  printf("new trackid: %s\n", pResponse->GetBodyStr().GetChars());
 
   if (pResponse->GetStatusCode() == 200)
   {
@@ -209,7 +299,7 @@ bool Radio::LoadNextTrack()
     mTracks.pop_front();
     while (!SetTrack(p) && mLive)
     {
-      //printf("Skipping unreadable '%s'\n", p.GetChars());
+//      printf("Skipping unreadable '%s'\n", p.GetChars());
       p = mTracks.front();
       mTracks.pop_front();
 
@@ -219,7 +309,7 @@ bool Radio::LoadNextTrack()
         return false;
       }
     }
-    //printf("Started '%s' from static track list\n", p.GetChars());
+//    printf("Started '%s' from static track list\n", p.GetChars());
     return true;
   }
 
@@ -280,6 +370,7 @@ void Radio::UnregisterRadio(const nglString& rURL)
 Radio* Radio::CreateRadio(const nglString& rURL)
 {
   Radio* pRadio = new Radio(rURL);
+  pRadio->Start();
   return pRadio;
 }
 

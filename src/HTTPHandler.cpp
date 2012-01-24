@@ -43,9 +43,23 @@ bool HTTPHandler::OnBodyStart()
     ReplyError(404, str);
     return false; // We don't have a favicon right now...
   }
+  
+  
+  std::vector<nglString> tokens;
+  mURL.Tokenize(tokens, "/");
+  nglString radioID = tokens[0];
+  bool hq = false;
+  if (tokens.size() > 1)
+  {
+    if (tokens[1] == "hq")
+    {
+      // #FIXME: check if the user is allowed to play high quality stream
+      hq = true;
+    }
+  }
 
   // Find the Radio:
-  Radio* pRadio = Radio::GetRadio(mURL);
+  Radio* pRadio = Radio::GetRadio(radioID);
   if (!pRadio || !pRadio->IsLive())
   {
     nglString str;
@@ -57,7 +71,7 @@ bool HTTPHandler::OnBodyStart()
 
   Log(200);
 
-  pRadio->RegisterClient(this);
+  pRadio->RegisterClient(this, hq);
 
   // Reply + Headers:
   ReplyLine("HTTP/1.1 200 OK");

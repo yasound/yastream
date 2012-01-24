@@ -13,8 +13,10 @@ class Radio
 public:
   Radio(const nglString& rID);
   virtual ~Radio();
+  
+  void Start();
 
-  void RegisterClient(HTTPHandler* pClient);
+  void RegisterClient(HTTPHandler* pClient, bool highQuality = false);
   void UnregisterClient(HTTPHandler* pClient);
   void OnStart();
 
@@ -23,6 +25,7 @@ public:
   void AddTrack(const nglPath& rPath);
 
   bool IsLive() const;
+  
 private:
   bool SetTrack(const nglPath& rPath);
   bool LoadNextTrack();
@@ -30,19 +33,29 @@ private:
   bool mLive;
   nglCriticalSection mCS;
   nglString mID;
+  
   typedef std::list<HTTPHandler*> ClientList;
-  ClientList mClients;
+  
   nglIStream* mpStream;
   Mp3Parser* mpParser;
   std::deque<Mp3Chunk*> mChunks;
-  void AddChunk(Mp3Chunk* pChunk);
+  double mBufferDuration;
+  ClientList mClients;
+  
+  nglIStream* mpStreamPreview;
+  Mp3Parser* mpParserPreview;
+  std::deque<Mp3Chunk*> mChunksPreview;
+  double mBufferDurationPreview;
+  ClientList mClientsPreview;
+  
+  void AddChunk(Mp3Chunk* pChunk, bool previewMode);
+  nglPath GetPreviewPath(const nglPath& rOriginalPath);
 
   std::deque<nglPath> mTracks;
 
   nglThreadDelegate* mpThread;
 
-  uint64 mTime;
-  double mBufferDuration;
+//  uint64 mTime;
 
   static nglCriticalSection gCS;
   typedef std::map<nglString, Radio*> RadioMap;
