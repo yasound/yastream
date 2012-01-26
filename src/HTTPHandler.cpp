@@ -2,6 +2,11 @@
 #include "nui.h"
 #include "HTTPHandler.h"
 #include "Radio.h"
+#include "nuiHTTP.h"
+#include "nuiNetworkHost.h"
+
+#define SUBSCRIPTION_NONE "none"
+#define SUBSCRIPTION_PREMIUM "premium"
 
 ///////////////////////////////////////////////////
 //class HTTPHandler : public nuiHTTPHandler
@@ -31,6 +36,35 @@ bool HTTPHandler::OnProtocol(const nglString& rValue, const nglString rVersion)
 
 bool HTTPHandler::OnHeader(const nglString& rKey, const nglString& rValue)
 {
+  if (rKey == "Cookie")
+  {
+    std::vector<nglString> cookies;
+    rValue.Tokenize(cookies, "; ");
+    for (uint32 i = 0; i < cookies.size(); i++)
+    {
+      nglString cookie = cookies[i];
+      std::vector<nglString> tokens;
+      cookie.Tokenize(tokens, "=");
+      if (tokens.size() == 2)
+      {
+        if (tokens[0] == "username")
+        {
+          mUsername = tokens[1];
+        }
+        else if (tokens[0] == "api_key")
+        {
+          mApiKey = tokens[1];
+        }
+      }
+    }
+    
+    if (mUsername.IsEmpty() || mApiKey.IsEmpty())
+    {
+      // username or api_key is not specified => anonymous user
+      mUsername = nglString::Empty;
+      mApiKey = nglString::Empty;
+    }
+  }
   return true;
 }
 
@@ -47,19 +81,31 @@ bool HTTPHandler::OnBodyStart()
   
   std::vector<nglString> tokens;
   mURL.Tokenize(tokens, "/");
-  nglString radioID = tokens[0];
+  mRadioID = tokens[0];
   bool hq = false;
   if (tokens.size() > 1)
   {
     if (tokens[1] == "hq")
     {
-      // #FIXME: check if the user is allowed to play high quality stream
-      hq = true;
+      // check if the user is allowed to play high quality stream
+      nglString url;
+      url.Format("https://dev.yasound.com/api/v1/subscription/?username=%s&api_key=%s", mUsername.GetChars(), mApiKey.GetChars());
+      nuiHTTPRequest request(url);
+      nuiHTTPResponse* pResponse = request.SendRequest();
+    
+      if (pResponse->GetStatusCode() == 200)
+      {
+        nglString subscription = pResponse->GetBodyStr();
+        hq = (subscription == SUBSCRIPTION_PREMIUM);
+        
+        if (!hq)
+          printf("user '%s' requested high quality but did not subscribe!\n", mUsername.GetChars());
+      }
     }
   }
 
   // Find the Radio:
-  Radio* pRadio = Radio::GetRadio(radioID);
+  Radio* pRadio = Radio::GetRadio(mRadioID);
   if (!pRadio || !pRadio->IsLive())
   {
     nglString str;
@@ -71,7 +117,9 @@ bool HTTPHandler::OnBodyStart()
 
   Log(200);
 
+  
   pRadio->RegisterClient(this, hq);
+  SendListenStatus(eStartListen);
 
   // Reply + Headers:
   ReplyLine("HTTP/1.1 200 OK");
@@ -106,6 +154,7 @@ bool HTTPHandler::OnBodyStart()
     pChunk->Release();
   }
 
+  SendListenStatus(eStopListen);
   pRadio->UnregisterClient(this);
 
   return false;
@@ -140,3 +189,37 @@ Mp3Chunk* HTTPHandler::GetNextChunk()
 
   return pChunk;
 }
+
+void HTTPHandler::SendListenStatus(ListenStatus status)
+{  
+  nglString statusStr;
+  if (status == eStartListen)
+    statusStr = "start_listening";
+  else if (status == eStopListen)
+    statusStr = "stop_listening";
+  
+  nglString params;
+  if (!mUsername.IsEmpty() && !mApiKey.IsEmpty())
+    params.Format("?username=%s&api_key=%s", mUsername.GetChars(), mApiKey.GetChars());
+  else
+  {
+    nglString address;
+    nuiNetworkHost client(0, 0, nuiNetworkHost::eTCP);
+    bool res = mpClient->GetDistantHost(client);
+    if (res)
+    { 
+      uint32 ip = client.GetIP();
+      int port = client.GetPort();
+      address.Format("%d:%d", ip, port);
+    }
+    params.Format("?address=%s", address.GetChars());
+  }
+  
+  nglString url;
+  url.Format("https://dev.yasound.com/api/v1/radio/%s/%s/%s", mRadioID.GetChars(), statusStr.GetChars(), params.GetChars());
+  nuiHTTPRequest request(url, "POST");
+  nuiHTTPResponse* pResponse = request.SendRequest();
+  printf("Listen Status (url:'%s')  response = %d - '%s'\n", url.GetChars(), pResponse->GetStatusCode(), pResponse->GetBodyStr().GetChars());
+}
+
+

@@ -28,6 +28,17 @@ private:
   
   Mp3Chunk* GetNextChunk();
   
+  enum ListenStatus
+  {
+    eStartListen = 0,
+    eStopListen
+  };
+  
+  void SendListenStatus(ListenStatus status);
+  
   bool mLive;
+  nglString mUsername;
+  nglString mApiKey;
+  nglString mRadioID;
 };
 
