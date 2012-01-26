@@ -219,16 +219,24 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
   url.Format("https://dev.yasound.com/api/v1/radio/%s/%s/%s", mRadioID.GetChars(), statusStr.GetChars(), params.GetChars());
   nuiHTTPRequest request(url, "POST");
   nuiHTTPResponse* pResponse = request.SendRequest();
-//  printf("Listen Status (url:'%s')  response = %d - '%s'\n", url.GetChars(), pResponse->GetStatusCode(), pResponse->GetBodyStr().GetChars());
   
+  /*
   nglString log;
-  log.Format("(url:'%s')  response = %d - '%s'\n", url.GetChars(), pResponse->GetStatusCode(), pResponse->GetBodyStr().GetChars());
-  
+  log = "\n(url:";
+  log += url;
+  log += ") response = ";
+  log += pResponse->GetStatusCode();
+  log += " - ";
+  log += pResponse->GetBodyStr();
+  log += " ###END###";
+
+  printf("log length : %d\n", log.GetLength());
   nglPath logPath = nglPath(ePathCurrent);
   logPath += "/log/ListenStatus.log";
-  nglIOStream* pFile = logPath.OpenWrite(false);
+  nglIOFile* pFile = new nglIOFile(logPath, eOFileAppend);
   pFile->WriteText(log);
   delete pFile;
+  */
 }
 
 

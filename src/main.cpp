@@ -6,6 +6,7 @@
 #include "HTTPHandler.h"
 #include "Radio.h"
 #include <signal.h>
+
 nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient);
 nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient)
 {
@@ -15,12 +16,17 @@ nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient)
 void SigPipeSink(int signal)
 {
   // Ignore...
+  //printf("SigPipe!\n");
 }
 
 int main(int argc, const char** argv)
 {
   nuiInit(NULL);
   NGL_OUT("yasound streamer\n");
+
+#if defined _MINUI3_
+  App->CatchSignal(SIGPIPE, SigPipeSink);
+#endif
 
   int port = 8001;
   for (int i = 1; i < argc; i++)
@@ -72,9 +78,6 @@ int main(int argc, const char** argv)
 
   pServer->SetHandlerDelegate(HandlerDelegate);
 
-#if defined _MINUI3_
-  App->CatchSignal(SIGPIPE, SigPipeSink);
-#endif
 
   if (pServer->Bind(0, port))
   {
