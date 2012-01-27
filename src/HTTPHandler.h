@@ -40,5 +40,6 @@ private:
   nglString mUsername;
   nglString mApiKey;
   nglString mRadioID;
+  nglTime mStartTime;
 };
 

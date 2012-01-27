@@ -215,6 +215,20 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
     params.Format("?address=%s", address.GetChars());
   }
   
+  if (status == eStartListen)
+  {
+    mStartTime = nglTime();
+  }
+  else if (status == eStopListen)
+  {
+    nglTime now;
+    nglTime duration = now - mStartTime;
+    int32 seconds = ToBelow(now.GetValue());
+    nglString durationParam;
+    durationParam.Format("&listening_duration=%d", seconds);
+    params += durationParam;
+  }
+  
   nglString url;
   url.Format("https://dev.yasound.com/api/v1/radio/%s/%s/%s", mRadioID.GetChars(), statusStr.GetChars(), params.GetChars());
   nuiHTTPRequest request(url, "POST");
