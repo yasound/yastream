@@ -10,13 +10,13 @@
 ///////////////////////////////////////////////////
 //class Radio
 Radio::Radio(const nglString& rID)
-: mID(rID), 
-  mLive(false), 
-  mpParser(NULL), 
-  mpStream(NULL), 
+: mID(rID),
+  mLive(false),
+  mpParser(NULL),
+  mpStream(NULL),
   mBufferDuration(0),
-  mpParserPreview(NULL), 
-  mpStreamPreview(NULL), 
+  mpParserPreview(NULL),
+  mpStreamPreview(NULL),
   mBufferDurationPreview(0)
 {
   RegisterRadio(mID, this);
@@ -31,24 +31,24 @@ Radio::~Radio()
 void Radio::Start()
 {
   size_t stacksize = 1024 * 1024 * 4;
-  
+
   mLive = LoadNextTrack();
-  
+
   mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), nglThread::Normal, stacksize);
   mpThread->SetAutoDelete(true);
   mpThread->Start();
   size_t size = mpThread->GetStackSize();
-  
+
   //printf("New thread stack size: %ld (requested %ld)\n", size, stacksize);
 }
 
 void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 {
   nglCriticalSectionGuard guard(mCS);
- 
+
   ClientList& rClients            = highQuality ? mClients : mClientsPreview;
   std::deque<Mp3Chunk*>& rChunks  = highQuality ? mChunks : mChunksPreview;
-  
+
   mLive = true;
   rClients.push_back(pClient);
 
@@ -83,7 +83,7 @@ bool Radio::SetTrack(const nglPath& rPath)
   {
     return false;
   }
-  
+
   nglPath previewPath = GetPreviewPath(rPath);
   nglIStream* pStreamPreview = previewPath.OpenRead();
   if (!pStreamPreview)
@@ -101,7 +101,7 @@ bool Radio::SetTrack(const nglPath& rPath)
     delete pStreamPreview;
     return false;
   }
-  
+
   Mp3Parser* pParserPreview = new Mp3Parser(*pStreamPreview);
   valid = pParserPreview->GetCurrentFrame().IsValid();
   if (!valid)
@@ -141,44 +141,45 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
 {
   nglCriticalSectionGuard guard(mCS);
   pChunk->Acquire();
-  
+
   ClientList& rClients            = previewMode ? mClientsPreview : mClients;
   std::deque<Mp3Chunk*>& rChunks  = previewMode ? mChunksPreview : mChunks;
   double& rBufferDuration         = previewMode ? mBufferDurationPreview : mBufferDuration;
-  
+
   rChunks.push_back(pChunk);
   rBufferDuration += pChunk->GetDuration();
-  
+
   //printf("AddChunk %p -> %f\n", pChunk, rBufferDuration);
-  
+
   // Push the new chunk to the current connections:
   for (ClientList::const_iterator it = rClients.begin(); it != rClients.end(); ++it)
   {
     HTTPHandler* pClient = *it;
     pClient->AddChunk(pChunk);
   }
-  
+
   pChunk = rChunks.front();
   if (rBufferDuration - pChunk->GetDuration() > IDEAL_BUFFER_SIZE)
   {
     // remove old chunks:
     rChunks.pop_front();
     rBufferDuration -= pChunk->GetDuration();
-    
+
     pChunk->Release();
   }
 }
 
-
-void Radio::OnStart()
+void Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 {
-  int64 chunk_count = 0;
-  int64 chunk_count_preview = 0;
-
-  // Pre buffering:
-  while ((mBufferDuration < IDEAL_BUFFER_SIZE && mLive))
+  for (int32 i = 0; i < 13; i++)
   {
-    Mp3Chunk* pChunk = mpParser->GetChunk();
+    bool nextFrameOK = true;
+    bool nextFramePreviewOK = true;
+    bool skip = i > 11;
+    Mp3Chunk* pChunk = NULL;
+    if (!skip)
+      pChunk = mpParser->GetChunk();
+
     Mp3Chunk* pChunkPreview = mpParserPreview->GetChunk();
 
     if (pChunk)
@@ -190,21 +191,22 @@ void Radio::OnStart()
       // Store this chunk locally for incomming connections and push it to current clients:
       AddChunk(pChunk, false);
     }
-    
+
     if (pChunkPreview)
     {
       chunk_count_preview++;
       //if (!(chunk_count_preview % 100))
       //printf("%ld chunks preview\n", chunk_count_preview);
-      
+
       // Store this chunk locally for incomming connections and push it to current clients:
       AddChunk(pChunkPreview, true);
     }
-    
-    bool nextFrameOK = mpParser->GoToNextFrame();
-    bool nextFramePreviewOK = mpParserPreview->GoToNextFrame();
 
-    if (!pChunk || !nextFrameOK)
+    if (!skip)
+     nextFrameOK = mpParser->GoToNextFrame();
+    nextFramePreviewOK = mpParserPreview->GoToNextFrame();
+
+    if ((!skip && !pChunk) || !nextFrameOK)
     {
       mLive = LoadNextTrack();
 
@@ -215,48 +217,30 @@ void Radio::OnStart()
     }
   }
 
+  //printf("mBufferDurationPreview: %f / mBufferDuration: %f\n", mBufferDurationPreview, mBufferDuration);
+}
+
+void Radio::OnStart()
+{
+  int64 chunk_count = 0;
+  int64 chunk_count_preview = 0;
+
+  // the preview if 64k while the hq is 192k. For some reasons, the chunks are not of the same duration in between preview and HQ: 12 HQ chunks = 13 Preview chunks. So let's skip one HQ every 13 LQ:
+  int counter = 0;
+
+  // Pre buffering:
+  while ((mBufferDurationPreview < IDEAL_BUFFER_SIZE && mLive))
+  {
+    ReadSet(chunk_count_preview, chunk_count);
+  }
+
   // Do the actual regular streaming:
   double nexttime = nglTime();
   while (mLive)
   {
-    while ((mBufferDuration < IDEAL_BUFFER_SIZE && mLive) || nglTime() >= nexttime)
+    while ((mBufferDurationPreview < IDEAL_BUFFER_SIZE && mLive) || nglTime() >= nexttime)
     {
-      Mp3Chunk* pChunk = mpParser->GetChunk();
-      Mp3Chunk* pChunkPreview = mpParserPreview->GetChunk();
-
-      if (pChunk)
-      {
-        chunk_count++;
-        //if (!(chunk_count % 100))
-          //printf("%ld chunks\n", chunk_count);
-
-        // Store this chunk locally for incomming connections and push it to current clients:
-        nexttime += pChunk->GetDuration();
-        AddChunk(pChunk, false);
-      }
-      
-      if (pChunkPreview)
-      {
-        chunk_count_preview++;
-        //if (!(chunk_count_preview % 100))
-        //printf("%ld chunks preview\n", chunk_count_preview);
-        
-        // Store this chunk locally for incomming connections and push it to current clients:
-        AddChunk(pChunkPreview, true);
-      }
-      
-      bool nextFrameOK = mpParser->GoToNextFrame();
-      bool nextFramePreviewOK = mpParserPreview->GoToNextFrame();
-
-      if (!pChunk || !nextFrameOK)
-      {
-        mLive = LoadNextTrack();
-
-        if (!mLive)
-        {
-          printf("Error while getting next song for radio '%s'. Shutting down...\n", mID.GetChars());
-        }
-      }
+      ReadSet(chunk_count_preview, chunk_count);
     }
 
     nglThread::MsSleep(10);
@@ -268,7 +252,7 @@ void Radio::OnStart()
 }
 
 bool Radio::LoadNextTrack()
-{  
+{
   // Try to get the new track from the app server:
   nglString url;
   url.Format("https://dev.yasound.com/api/v1/radio/%s/get_next_song/", mID.GetChars());
@@ -289,9 +273,14 @@ bool Radio::LoadNextTrack()
 
     printf("new song from server: %s\n", path.GetChars());
     if (SetTrack(path))
+    {
+      delete pResponse;
       return true;
+    }
   }
 
+  delete pResponse;
+  
   // Otherwise load a track from mTracks
   if (!mTracks.empty())
   {
