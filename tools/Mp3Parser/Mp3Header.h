@@ -51,32 +51,32 @@ enum MpegEmphasis
 typedef unsigned long TimeMs;
 
 
-class Mp3Header 
+class Mp3Header
 {
 public:
-  Mp3Header();
-  Mp3Header(nglIStream& rStream, int position);
+  Mp3Header(bool logging);
+  Mp3Header(nglIStream& rStream, int position, bool logging);
   virtual ~Mp3Header();
-  
+
   static float GetBitrate(unsigned int bitrate_index, MpegAudioVersion version, MpegLayer layer);
   static float GetSampleRate(unsigned int samplerate_index, MpegAudioVersion version);
-  
+
   static float sBitrates[5][16];
   static float sSamplerates[3][3];
   static int sSamplesPerFrame[2][3];
-  
+
   const bool IsValid() const;
   const std::string ToString() const;
-  
+
   const int GetFrameByteLength() const;
   const int GetFrameHeaderByteLength() const;
   const int GetFrameDataByteLength() const;
-  
+
   const TimeMs GetFrameDuration() const;
-  
+
   bool operator==(const Mp3Header& rHeader);
   bool operator!=(const Mp3Header& rHeader);
-  
+
   MpegAudioVersion mVersion;
   MpegLayer mLayer;
   MpegChannelMode mChannelMode;
@@ -87,10 +87,11 @@ public:
   bool mUsePadding;
   bool mIsCopyrighted;
   bool mIsOriginal;
-  
+
 private:
   void Reset();
   void ParseHeaderData(unsigned char* data);
   const int GetSamplesPerFrame() const;
+  bool mLog;
 };
 

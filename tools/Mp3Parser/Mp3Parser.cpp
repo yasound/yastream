@@ -11,14 +11,16 @@
 #include <iostream>
 
 
-Mp3Parser::Mp3Parser(nglIStream& rStream)
-: mrStream(rStream)
+Mp3Parser::Mp3Parser(nglIStream& rStream, bool logging)
+: mrStream(rStream), mLog(logging), mCurrentFrame(logging)
 {
-  //printf("new parser with stream\n");
+  if (mLog)
+    printf("new parser with stream\n");
   mDataLength = mrStream.Available();
 
   mCurrentFrame = FindFirstFrame();
-  //printf("done with first frame? %s\n", YESNO(mCurrentFrame.IsValid()));
+  if (mLog)
+    printf("done with first frame? %s\n", YESNO(mCurrentFrame.IsValid()));
   mDuration = 0;
   mId = 0;
 }
@@ -93,11 +95,12 @@ Mp3Frame Mp3Parser::FindNextFrame(Mp3Frame previous)
 {
   int nextOffset = previous.GetEndBytePosition();
   TimeMs nextTime = previous.GetEndTime();
-  Mp3Frame next(mrStream, nextOffset, nextTime);
-  if (!next.IsValid())
-  {
-    next = ComputeNextFrame(previous);
-  }
+  Mp3Frame next(mrStream, nextOffset, nextTime, mLog);
+
+  if (next.IsValid())
+    return next;
+
+  next = ComputeNextFrame(previous);
 
   return next;
 }
@@ -120,23 +123,28 @@ Mp3Frame Mp3Parser::ComputeFirstFrame()
 
 Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
 {
-  //printf("ComputeNextFrame (%d, %d)\n", byteOffset, mDataLength);
+  if (mLog)
+    printf("ComputeNextFrame (%d, %d)\n", byteOffset, mDataLength);
   int b = byteOffset;
   while (b < mDataLength - 4)
   {
-    Mp3Frame temp(mrStream, b, time);
+    if (mLog)
+      printf("trying %d\n", b);
+    Mp3Frame temp(mrStream, b, time, mLog);
     if (temp.IsValid())
     {
       // found !
-      //printf("ComputeNextFrame ok\n");
+      if (mLog)
+        printf("ComputeNextFrame ok\n");
       return temp;
     }
 
     b++;
   }
 
-  //printf("ComputeNextFrame not found\n");
-  return Mp3Frame();
+  if (mLog)
+    printf("ComputeNextFrame not found\n");
+  return Mp3Frame(mLog);
 }
 
 Mp3Chunk* Mp3Parser::GetChunk()
@@ -163,6 +171,11 @@ bool Mp3Parser::ReadFrameBytes(std::vector<uint8>& rData)
     return false;
   }
   return true;
+}
+
+void Mp3Parser::SetLog(bool l)
+{
+  mLog = l;
 }
 
 nglAtomic Mp3Chunk::mCount = 0;

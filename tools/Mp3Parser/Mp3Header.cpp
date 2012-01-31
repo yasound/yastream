@@ -9,24 +9,32 @@
 #include "Mp3Header.h"
 
 
-Mp3Header::Mp3Header()
+Mp3Header::Mp3Header(bool logging)
+  : mLog(logging)
 {
-  //printf("Mp3Header()\n");
+  if (mLog)
+    printf("Mp3Header()\n");
 
   Reset();
 }
 
-Mp3Header::Mp3Header(nglIStream& rStream, int position)
+Mp3Header::Mp3Header(nglIStream& rStream, int position, bool logging)
+  : mLog(logging)
 {
-  //printf("Mp3Header(stream + pos) [%d]\n", position);
+  if (mLog)
+    printf("Mp3Header(stream + pos) [%d]\n", position);
   Reset();
 
   rStream.SetPos(position);
   unsigned char data[4];
-  rStream.Read(data, 4, 1);
-  //printf("Header frame %x %x %x %x\n", data[0], data[1], data[2], data[3]);
+  int64 r = rStream.Read(data, 4, 1);
+  if (!r && mLog)
+    printf("unable to read stream @pos %d :(\n", position);
+  if (mLog)
+    printf("Header frame %x %x %x %x\n", data[0], data[1], data[2], data[3]);
   ParseHeaderData(data);
-  //printf("Header:\n%s\n", ToString().c_str());
+  if (mLog)
+    printf("Header:\n%s\n", ToString().c_str());
 
 }
 
@@ -50,7 +58,8 @@ void Mp3Header::Reset()
 
 void Mp3Header::ParseHeaderData(unsigned char* data)
 {
-  //printf("ParseHeaderData\n");
+  if (mLog)
+    printf("ParseHeaderData\n");
 
   Reset();
   unsigned int b0 = data[0];
@@ -64,8 +73,11 @@ void Mp3Header::ParseHeaderData(unsigned char* data)
   bool ok = (res == sync);
   if (!ok)
   {
-    //printf("res != sync (%x != %x)\n", res, sync);
-    //printf("ParseHeaderData broken\n");
+    if (mLog)
+    {
+      printf("res != sync (%x != %x)\n", res, sync);
+      printf("ParseHeaderData broken\n");
+    }
     return;
   }
   unsigned int version = (val >> 19) & 3;
@@ -93,7 +105,8 @@ void Mp3Header::ParseHeaderData(unsigned char* data)
 
   mIsCopyrighted = copyright;
   mIsOriginal = original;
-  //printf("ParseHeaderData ok\n");
+  if (mLog)
+    printf("ParseHeaderData ok\n");
 }
 
 int Mp3Header::sSamplesPerFrame[2][3] =
@@ -193,6 +206,11 @@ const bool Mp3Header::IsValid() const
   bool samplerateOK = mSamplerate != 0;
 
   bool valid = (versionOK && layerOK && channelOK && emphasisOK && bitrateOK && samplerateOK);
+
+  if (!valid)
+  {
+    printf(".");
+  }
   return valid;
 }
 

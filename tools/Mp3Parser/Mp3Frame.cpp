@@ -9,18 +9,21 @@
 #include "Mp3Frame.h"
 
 
-Mp3Frame::Mp3Frame()
+Mp3Frame::Mp3Frame(bool logging)
+: mHeader(logging), mLog(logging)
 {
   mPosition = 0;
   mTime = 0;
 }
 
-Mp3Frame::Mp3Frame(nglIStream& rStream, int bytePosition, TimeMs time)
+Mp3Frame::Mp3Frame(nglIStream& rStream, int bytePosition, TimeMs time, bool logging)
 : mPosition(bytePosition),
   mTime(time),
-  mHeader(rStream, bytePosition)
+  mHeader(rStream, bytePosition, logging),
+  mLog(logging)
 {
-  //printf("Mp3Frame\n");
+  if (mLog)
+    printf("Mp3Frame @%d\n", bytePosition);
 }
 
 Mp3Frame::~Mp3Frame()

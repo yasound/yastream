@@ -29,7 +29,7 @@ public:
 private:
   bool SetTrack(const nglPath& rPath);
   bool LoadNextTrack();
-  void ReadSet(int64& chunk_count_preview, int64& chunk_count);
+  double ReadSet(int64& chunk_count_preview, int64& chunk_count);
 
   bool mLive;
   nglCriticalSection mCS;

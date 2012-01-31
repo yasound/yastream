@@ -5,7 +5,8 @@
 #include "HTTPHandler.h"
 #include "nuiHTTP.h"
 
-#define IDEAL_BUFFER_SIZE 5
+#define IDEAL_BUFFER_SIZE 3.0
+#define MAX_BUFFER_SIZE 4.0
 
 ///////////////////////////////////////////////////
 //class Radio
@@ -92,7 +93,7 @@ bool Radio::SetTrack(const nglPath& rPath)
     return false;
   }
 
-  Mp3Parser* pParser = new Mp3Parser(*pStream);
+  Mp3Parser* pParser = new Mp3Parser(*pStream, false);
   bool valid = pParser->GetCurrentFrame().IsValid();
   if (!valid)
   {
@@ -102,7 +103,7 @@ bool Radio::SetTrack(const nglPath& rPath)
     return false;
   }
 
-  Mp3Parser* pParserPreview = new Mp3Parser(*pStreamPreview);
+  Mp3Parser* pParserPreview = new Mp3Parser(*pStreamPreview, false);
   valid = pParserPreview->GetCurrentFrame().IsValid();
   if (!valid)
   {
@@ -158,10 +159,10 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
     pClient->AddChunk(pChunk);
   }
 
-  pChunk = rChunks.front();
-  if (rBufferDuration - pChunk->GetDuration() > IDEAL_BUFFER_SIZE)
+  while (rBufferDuration > MAX_BUFFER_SIZE)
   {
     // remove old chunks:
+    pChunk = rChunks.front();
     rChunks.pop_front();
     rBufferDuration -= pChunk->GetDuration();
 
@@ -169,13 +170,14 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
   }
 }
 
-void Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
+double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 {
+  double duration = 0;
   for (int32 i = 0; i < 13; i++)
   {
     bool nextFrameOK = true;
     bool nextFramePreviewOK = true;
-    bool skip = i > 11;
+    bool skip = i == 12;
     Mp3Chunk* pChunk = NULL;
     if (!skip)
       pChunk = mpParser->GetChunk();
@@ -200,14 +202,16 @@ void Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 
       // Store this chunk locally for incomming connections and push it to current clients:
       AddChunk(pChunkPreview, true);
+      duration += pChunkPreview->GetDuration();
     }
 
     if (!skip)
-     nextFrameOK = mpParser->GoToNextFrame();
+      nextFrameOK = mpParser->GoToNextFrame();
     nextFramePreviewOK = mpParserPreview->GoToNextFrame();
 
-    if ((!skip && !pChunk) || !nextFrameOK)
+    if ((!skip && !pChunk) || !nextFramePreviewOK || !nextFrameOK)
     {
+      printf("[skip: %c][pChunk: %p][nextFrameOK: %c / %c]\n", skip?'y':'n', pChunk, nextFramePreviewOK?'y':'n', nextFrameOK?'y':'n');
       mLive = LoadNextTrack();
 
       if (!mLive)
@@ -218,6 +222,7 @@ void Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
   }
 
   //printf("mBufferDurationPreview: %f / mBufferDuration: %f\n", mBufferDurationPreview, mBufferDuration);
+  return duration;
 }
 
 void Radio::OnStart()
@@ -232,6 +237,7 @@ void Radio::OnStart()
   while ((mBufferDurationPreview < IDEAL_BUFFER_SIZE && mLive))
   {
     ReadSet(chunk_count_preview, chunk_count);
+    //printf("Preload buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
   }
 
   // Do the actual regular streaming:
@@ -240,7 +246,8 @@ void Radio::OnStart()
   {
     while ((mBufferDurationPreview < IDEAL_BUFFER_SIZE && mLive) || nglTime() >= nexttime)
     {
-      ReadSet(chunk_count_preview, chunk_count);
+      nexttime += ReadSet(chunk_count_preview, chunk_count);
+      //printf("buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
     }
 
     nglThread::MsSleep(10);
@@ -280,7 +287,7 @@ bool Radio::LoadNextTrack()
   }
 
   delete pResponse;
-  
+
   // Otherwise load a track from mTracks
   if (!mTracks.empty())
   {
