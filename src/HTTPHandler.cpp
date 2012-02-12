@@ -81,6 +81,10 @@ bool HTTPHandler::OnBodyStart()
   
   std::vector<nglString> tokens;
   mURL.Tokenize(tokens, "/");
+
+  if (tokens.size() < 1)
+    return false;
+
   mRadioID = tokens[0];
   bool hq = false;
   if (tokens.size() > 1)
