@@ -13,6 +13,7 @@
 HTTPHandler::HTTPHandler(nuiTCPClient* pClient)
 : nuiHTTPHandler(pClient), mLive(true)
 {
+  mpTemplate = new nuiStringTemplate("<html><body><br>This template is a test<br>ClassName: {{Class}}<br>Is it ok?<br></body></html>");
 }
 
 HTTPHandler::~HTTPHandler()
@@ -68,8 +69,29 @@ bool HTTPHandler::OnHeader(const nglString& rKey, const nglString& rValue)
   return true;
 }
 
+bool HTTPHandler::SendFromTemplate(const nglString& rString, nuiObject* pObject)
+{
+  return mpClient->Send(rString);
+}
+
+
 bool HTTPHandler::OnBodyStart()
 {
+  if (mURL == "/")
+  {
+    // Reply + Headers:
+    ReplyLine("HTTP/1.1 200 OK");
+    //ReplyHeader("Cache-Control", "no-cache");
+    ReplyHeader("Content-Type", "text/html");
+    ReplyHeader("Server", "Yastream 1.0.0");
+    ReplyLine("");
+
+    nuiObject* obj = new nuiObject();
+    mpTemplate->Generate(obj, nuiMakeDelegate(this, &HTTPHandler::SendFromTemplate));
+    
+    return false;
+  }
+
   if (mURL == "/favicon.ico")
   {
     nglString str;

@@ -3,6 +3,7 @@
 
 #include "nui.h"
 #include "nuiHTTPServer.h"
+#include "nuiStringTemplate.h"
 
 class Radio;
 class Mp3Chunk;
@@ -36,10 +37,14 @@ private:
   
   void SendListenStatus(ListenStatus status);
   
+  bool SendFromTemplate(const nglString& rString, nuiObject* pObject);
+  
   bool mLive;
   nglString mUsername;
   nglString mApiKey;
   nglString mRadioID;
   nglTime mStartTime;
+  
+  nuiStringTemplate* mpTemplate;
 };
 
