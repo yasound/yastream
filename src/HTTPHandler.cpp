@@ -13,7 +13,7 @@
 HTTPHandler::HTTPHandler(nuiTCPClient* pClient)
 : nuiHTTPHandler(pClient), mLive(true)
 {
-  mpTemplate = new nuiStringTemplate("<html><body><br>This template is a test<br>ClassName: {{Class}}<br>Is it ok?<br></body></html>");
+  mpTemplate = new nuiStringTemplate("<html><body><br>This template is a test<br>ClassName: {{Class}}<br>ObjectName: {{Name}}<br>Is it ok?<br></body></html>");
 }
 
 HTTPHandler::~HTTPHandler()
