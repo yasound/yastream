@@ -13,7 +13,7 @@
 HTTPHandler::HTTPHandler(nuiTCPClient* pClient)
 : nuiHTTPHandler(pClient), mLive(true)
 {
-  mpTemplate = new nuiStringTemplate("<html><body><br>This template is a test<br>ClassName: {{Class}}<br>ObjectName: {{Name}}<br>Is it ok?<br></body></html>");
+  mpTemplate = new nuiStringTemplate("<html><body><br>This template is a test<br>ClassName: {{Class}}<br>ObjectName: {{Name}}<br>{%for elem in array%}{{elem}}<br>{%end%}Is it ok?<br></body></html>");
 }
 
 HTTPHandler::~HTTPHandler()
@@ -74,6 +74,19 @@ bool HTTPHandler::SendFromTemplate(const nglString& rString, nuiObject* pObject)
   return mpClient->Send(rString);
 }
 
+uint32 FakeGetter(uint32 i)
+{
+  return i;
+}
+
+void FakeSetter(uint32 i, uint32 v)
+{
+}
+
+uint32 FakeRange(uint32 i)
+{
+  return 10;
+}
 
 bool HTTPHandler::OnBodyStart()
 {
@@ -87,6 +100,8 @@ bool HTTPHandler::OnBodyStart()
     ReplyLine("");
 
     nuiObject* obj = new nuiObject();
+    nuiAttributeBase* pAttrib = new nuiAttribute<uint32>("array", nuiUnitNone, FakeGetter, FakeSetter, FakeRange);
+    obj->AddInstanceAttribute("array", pAttrib);
     mpTemplate->Generate(obj, nuiMakeDelegate(this, &HTTPHandler::SendFromTemplate));
     
     return false;
