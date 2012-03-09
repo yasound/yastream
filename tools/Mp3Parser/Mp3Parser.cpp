@@ -11,8 +11,8 @@
 #include <iostream>
 
 
-Mp3Parser::Mp3Parser(nglIStream& rStream, bool logging)
-: mrStream(rStream), mLog(logging), mCurrentFrame(logging)
+Mp3Parser::Mp3Parser(nglIStream& rStream, bool logging, bool SkipPadding)
+: mrStream(rStream), mLog(logging), mCurrentFrame(logging), mSkipPadding(SkipPadding)
 {
   if (mLog)
     printf("new parser with stream\n");
@@ -79,7 +79,7 @@ void Mp3Parser::ParseAll()
   bool ok = true;
   while (ok)
   {
-    printf("---FRAME--- %s\n", mCurrentFrame.ToString().c_str());
+    printf("---FRAME---(%dms)\n%s \n", (int)mCurrentFrame.GetDuration(), mCurrentFrame.ToString().c_str());
     ok = GoToNextFrame();
   }
 }
@@ -98,9 +98,16 @@ Mp3Frame Mp3Parser::FindNextFrame(Mp3Frame previous)
   Mp3Frame next(mrStream, nextOffset, nextTime, mLog);
 
   if (next.IsValid())
-    return next;
+    if (!mSkipPadding || !next.GetHeader().mUsePadding)
+      return next;
 
   next = ComputeNextFrame(previous);
+  while (mSkipPadding && next.GetHeader().mUsePadding)
+  {
+    if (!next.IsValid())
+      return next;
+    next = ComputeNextFrame(previous);
+  }
 
   return next;
 }
@@ -135,9 +142,12 @@ Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
     if (temp.IsValid())
     {
       // found !
-      if (mLog)
-        printf("ComputeNextFrame ok\n");
-      return temp;
+      if (!mSkipPadding || !temp.GetHeader().mUsePadding)
+      {
+        if (mLog)
+          printf("ComputeNextFrame ok\n");
+        return temp;
+      }
     }
 
     // Not valid:

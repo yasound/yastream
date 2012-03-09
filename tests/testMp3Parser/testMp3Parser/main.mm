@@ -33,8 +33,9 @@ int main (int argc, const char * argv[])
     int nbBytes = (int)data.length;
 
     nglIMemory mem(bytes, nbBytes);
-    Mp3Parser parser(mem, true);
-    
+    Mp3Parser parser(mem, true, true);
+    parser.ParseAll();
+/*    
     int count = 1000;
     NSTimeInterval total = 0;
     for (int i = 0; i < count; i++)
@@ -49,7 +50,7 @@ int main (int argc, const char * argv[])
     
     NSTimeInterval mean = total / count;
     NSLog(@"parsing mean duration: %lf", mean);
-
+*/
     nuiUninit();
 
   }

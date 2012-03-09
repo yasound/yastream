@@ -25,11 +25,16 @@ Mp3Header::Mp3Header(nglIStream& rStream, int position, bool logging)
     printf("Mp3Header(stream + pos) [%d]\n", position);
   Reset();
 
-  rStream.SetPos(position);
+  if (position != rStream.SetPos(position))
+    return;
   unsigned char data[4];
   int64 r = rStream.Read(data, 4, 1);
-  if (!r && mLog)
-    printf("unable to read stream @pos %d :(\n", position);
+  if (!r)
+  {
+    if (mLog)
+      printf("unable to read stream @pos %d :(\n", position);
+    return;
+  }
   if (mLog)
     printf("Header frame %x %x %x %x\n", data[0], data[1], data[2], data[3]);
   ParseHeaderData(data);

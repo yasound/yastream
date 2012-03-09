@@ -15,7 +15,7 @@
 class Mp3Parser
 {
 public:
-  Mp3Parser(nglIStream& rStream, bool logging);
+  Mp3Parser(nglIStream& rStream, bool logging, bool SkipPadding);
   virtual ~Mp3Parser();
 
   const Mp3Frame& GetCurrentFrame();
@@ -34,6 +34,7 @@ private:
   nglIStream& mrStream;
   int mDataLength;
   int32 mId;
+  bool mSkipPadding;
 
   Mp3Frame mCurrentFrame;
   TimeMs mDuration;
