@@ -13,11 +13,17 @@
 HTTPHandler::HTTPHandler(nuiTCPClient* pClient)
 : nuiHTTPHandler(pClient), mLive(true)
 {
+#if TEMPLATE_TEST
   mpTemplate = new nuiStringTemplate("<html><body><br>This template is a test<br>ClassName: {{Class}}<br>ObjectName: {{Name}}<br>{%for elem in array%}{{elem}}<br>{%end%}Is it ok?<br></body></html>");
+#else
+  mpTemplate = NULL;
+#endif
 }
 
 HTTPHandler::~HTTPHandler()
 {
+  if (mpTemplate)
+    delete mpTemplate;
 }
 
 bool HTTPHandler::OnMethod(const nglString& rValue)
@@ -90,6 +96,7 @@ uint32 FakeRange(uint32 i)
 
 bool HTTPHandler::OnBodyStart()
 {
+#if TEMPLATE_TEST
   if (mURL == "/")
   {
     // Reply + Headers:
@@ -106,7 +113,8 @@ bool HTTPHandler::OnBodyStart()
     
     return false;
   }
-
+#endif
+  
   if (mURL == "/favicon.ico")
   {
     nglString str;
