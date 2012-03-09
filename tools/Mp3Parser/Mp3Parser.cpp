@@ -130,6 +130,7 @@ Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
   {
     if (mLog)
       printf("trying %d\n", b);
+    
     Mp3Frame temp(mrStream, b, time, mLog);
     if (temp.IsValid())
     {
@@ -139,7 +140,52 @@ Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
       return temp;
     }
 
-    b++;
+    // Not valid:
+    // Try to skip ID3 Frames:
+    mrStream.SetPos(b);
+    unsigned char data[3];
+    int64 r = mrStream.Read(data, 3, 1);
+    if (!r)
+      return Mp3Frame(mLog);
+
+    if (data[0] == 'I' && data[1] == 'D' && data[2] == '3')
+    {
+      printf("ID3 frame (%c %c %c)\n", data[0], data[1], data[2]);
+      
+      uint8 version[2];
+      uint8 flags;
+      uint8 sizes[4];
+      r = mrStream.Read(version, 2, 1);
+      if (!r)
+        return Mp3Frame(mLog);
+      
+      r = mrStream.Read(&flags, 1, 1);
+      if (!r)
+        return Mp3Frame(mLog);
+      r = mrStream.Read(sizes, 4, 1);
+      if (!r)
+        return Mp3Frame(mLog);
+      
+      int32 size = 0;
+      for (int32 i = 0; i < 4; i++)
+        size = (size << 7) + sizes[i];
+      
+      if (mLog)
+        printf("id3 frame size: %d (0x%x) + 10 bytes of header = %d (0x%x)\n", size, size, size + 10, size + 10);
+      
+      b += size + 10;
+
+    }
+    else if (data[0] == 'T' && data[1] == 'A' && data[2] == 'G')
+    {
+      // This is an ID3v1.x tag
+      b += 128;
+    }
+    else 
+    {
+      // Try next byte...
+      b++;
+    }
   }
 
   if (mLog)

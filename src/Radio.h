@@ -26,6 +26,9 @@ public:
 
   bool IsLive() const;
 
+  static void AddRadioSource(const nglString& rID, const nglString& rURL);
+  static void DelRadioSource(const nglString& rID, const nglString& rURL);
+  
 private:
   bool SetTrack(const nglPath& rPath);
   bool LoadNextTrack();

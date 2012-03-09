@@ -13,7 +13,99 @@
 		409F269A147D437A0059A839 /* Mp3Frame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 409F2694147D437A0059A839 /* Mp3Frame.cpp */; };
 		409F269B147D437A0059A839 /* Mp3Header.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 409F2696147D437A0059A839 /* Mp3Header.cpp */; };
 		409F269C147D437A0059A839 /* Mp3Parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 409F2698147D437A0059A839 /* Mp3Parser.cpp */; };
+		E5CACD0A150A9F6A004E2BD7 /* libnui3CocoaD.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E5CACCE8150A9F2D004E2BD7 /* libnui3CocoaD.a */; };
+		E5CACD13150AA146004E2BD7 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E5CACD12150AA146004E2BD7 /* Cocoa.framework */; };
+		E5CACD15150AA150004E2BD7 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E5CACD14150AA150004E2BD7 /* CoreFoundation.framework */; };
+		E5CACD17150AA15E004E2BD7 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E5CACD16150AA15E004E2BD7 /* OpenGL.framework */; };
+		E5CACD19150AA174004E2BD7 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = E5CACD18150AA174004E2BD7 /* libz.dylib */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		E5CACCDD150A9F2D004E2BD7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E5CACCCF150A9F2C004E2BD7 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E58172D80C3D103300902DFE;
+			remoteInfo = nui3D;
+		};
+		E5CACCDF150A9F2D004E2BD7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E5CACCCF150A9F2C004E2BD7 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E542A1AE0C3F0A5900225219;
+			remoteInfo = nui3;
+		};
+		E5CACCE1150A9F2D004E2BD7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E5CACCCF150A9F2C004E2BD7 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E52417F311CB860B0025CA71;
+			remoteInfo = nuiPhoneD;
+		};
+		E5CACCE3150A9F2D004E2BD7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E5CACCCF150A9F2C004E2BD7 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E52420E511CBCE9E0025CA71;
+			remoteInfo = nuiPhone;
+		};
+		E5CACCE5150A9F2D004E2BD7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E5CACCCF150A9F2C004E2BD7 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 73F086E612E9BA0700656E84;
+			remoteInfo = nuiPhone_arm7;
+		};
+		E5CACCE7150A9F2D004E2BD7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E5CACCCF150A9F2C004E2BD7 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E5A8D1D311E33A54004E14CE;
+			remoteInfo = nui3CocoaD;
+		};
+		E5CACCE9150A9F2D004E2BD7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E5CACCCF150A9F2C004E2BD7 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E5D643E51209AB9C009C26A9;
+			remoteInfo = nui3Cocoa;
+		};
+		E5CACCEB150A9F2D004E2BD7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E5CACCCF150A9F2C004E2BD7 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E5DD341012E09CA800F1EF4E;
+			remoteInfo = thirdparty;
+		};
+		E5CACCED150A9F2D004E2BD7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E5CACCCF150A9F2C004E2BD7 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E5DD3FF412E0B08300F1EF4E;
+			remoteInfo = thirdparty_ios;
+		};
+		E5CACCEF150A9F2D004E2BD7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E5CACCCF150A9F2C004E2BD7 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 73F09AC312E9D09E00656E84;
+			remoteInfo = thirdparty_ios_arm7;
+		};
+		E5CACCF1150A9F2D004E2BD7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E5CACCCF150A9F2C004E2BD7 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E5FB9CF3147D5CEE001A1829;
+			remoteInfo = minui3D;
+		};
+		E5CACD0B150A9F71004E2BD7 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E5CACCCF150A9F2C004E2BD7 /* nui3.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = E5A8CCAE11E33A54004E14CE;
+			remoteInfo = nui3CocoaD;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		409F267F147D43560059A839 /* CopyFiles */ = {
@@ -31,7 +123,7 @@
 /* Begin PBXFileReference section */
 		409F2681147D43560059A839 /* testMp3Parser */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testMp3Parser; sourceTree = BUILT_PRODUCTS_DIR; };
 		409F2685147D43560059A839 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		409F2688147D43560059A839 /* main.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp.preprocessed; path = main.mm; sourceTree = "<group>"; };
+		409F2688147D43560059A839 /* main.mm */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
 		409F268B147D43560059A839 /* testMp3Parser-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "testMp3Parser-Prefix.pch"; sourceTree = "<group>"; };
 		409F268C147D43560059A839 /* testMp3Parser.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = testMp3Parser.1; sourceTree = "<group>"; };
 		409F2694147D437A0059A839 /* Mp3Frame.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mp3Frame.cpp; sourceTree = "<group>"; };
@@ -40,6 +132,12 @@
 		409F2697147D437A0059A839 /* Mp3Header.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.h; fileEncoding = 4; path = Mp3Header.h; sourceTree = "<group>"; };
 		409F2698147D437A0059A839 /* Mp3Parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mp3Parser.cpp; sourceTree = "<group>"; };
 		409F2699147D437A0059A839 /* Mp3Parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp3Parser.h; sourceTree = "<group>"; };
+		E5CACCCF150A9F2C004E2BD7 /* nui3.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = nui3.xcodeproj; path = ../../../nui3/nui3.xcodeproj; sourceTree = "<group>"; };
+		E5CACD11150AA0B9004E2BD7 /* Mp3Chunk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp3Chunk.h; sourceTree = "<group>"; };
+		E5CACD12150AA146004E2BD7 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		E5CACD14150AA150004E2BD7 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		E5CACD16150AA15E004E2BD7 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		E5CACD18150AA174004E2BD7 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,6 +145,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E5CACD19150AA174004E2BD7 /* libz.dylib in Frameworks */,
+				E5CACD17150AA15E004E2BD7 /* OpenGL.framework in Frameworks */,
+				E5CACD15150AA150004E2BD7 /* CoreFoundation.framework in Frameworks */,
+				E5CACD13150AA146004E2BD7 /* Cocoa.framework in Frameworks */,
+				E5CACD0A150A9F6A004E2BD7 /* libnui3CocoaD.a in Frameworks */,
 				409F2686147D43560059A839 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -57,6 +160,10 @@
 		409F2676147D43560059A839 = {
 			isa = PBXGroup;
 			children = (
+				E5CACD18150AA174004E2BD7 /* libz.dylib */,
+				E5CACD16150AA15E004E2BD7 /* OpenGL.framework */,
+				E5CACD14150AA150004E2BD7 /* CoreFoundation.framework */,
+				E5CACD12150AA146004E2BD7 /* Cocoa.framework */,
 				409F2687147D43560059A839 /* testMp3Parser */,
 				409F2684147D43560059A839 /* Frameworks */,
 				409F2682147D43560059A839 /* Products */,
@@ -74,6 +181,7 @@
 		409F2684147D43560059A839 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				E5CACCCF150A9F2C004E2BD7 /* nui3.xcodeproj */,
 				409F2685147D43560059A839 /* Foundation.framework */,
 			);
 			name = Frameworks;
@@ -101,6 +209,7 @@
 		409F2693147D437A0059A839 /* Mp3Parser */ = {
 			isa = PBXGroup;
 			children = (
+				E5CACD11150AA0B9004E2BD7 /* Mp3Chunk.h */,
 				409F2694147D437A0059A839 /* Mp3Frame.cpp */,
 				409F2695147D437A0059A839 /* Mp3Frame.h */,
 				409F2696147D437A0059A839 /* Mp3Header.cpp */,
@@ -110,6 +219,24 @@
 			);
 			name = Mp3Parser;
 			path = ../../../tools/Mp3Parser;
+			sourceTree = "<group>";
+		};
+		E5CACCD0150A9F2C004E2BD7 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E5CACCDE150A9F2D004E2BD7 /* libnui3D.a */,
+				E5CACCE0150A9F2D004E2BD7 /* libnui3.a */,
+				E5CACCE2150A9F2D004E2BD7 /* libnuiPhoneD.a */,
+				E5CACCE4150A9F2D004E2BD7 /* libnuiPhone.a */,
+				E5CACCE6150A9F2D004E2BD7 /* libnuiPhone_arm7.a */,
+				E5CACCE8150A9F2D004E2BD7 /* libnui3CocoaD.a */,
+				E5CACCEA150A9F2D004E2BD7 /* libnui3Cocoa.a */,
+				E5CACCEC150A9F2D004E2BD7 /* libthirdparty.a */,
+				E5CACCEE150A9F2D004E2BD7 /* libthirdparty_ios.a */,
+				E5CACCF0150A9F2D004E2BD7 /* libthirdparty_ios_arm7.a */,
+				E5CACCF2150A9F2D004E2BD7 /* libminui3D.a */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -126,6 +253,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				E5CACD0C150A9F71004E2BD7 /* PBXTargetDependency */,
 			);
 			name = testMp3Parser;
 			productName = testMp3Parser;
@@ -151,12 +279,98 @@
 			mainGroup = 409F2676147D43560059A839;
 			productRefGroup = 409F2682147D43560059A839 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = E5CACCD0150A9F2C004E2BD7 /* Products */;
+					ProjectRef = E5CACCCF150A9F2C004E2BD7 /* nui3.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				409F2680147D43560059A839 /* testMp3Parser */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		E5CACCDE150A9F2D004E2BD7 /* libnui3D.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libnui3D.a;
+			remoteRef = E5CACCDD150A9F2D004E2BD7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		E5CACCE0150A9F2D004E2BD7 /* libnui3.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libnui3.a;
+			remoteRef = E5CACCDF150A9F2D004E2BD7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		E5CACCE2150A9F2D004E2BD7 /* libnuiPhoneD.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libnuiPhoneD.a;
+			remoteRef = E5CACCE1150A9F2D004E2BD7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		E5CACCE4150A9F2D004E2BD7 /* libnuiPhone.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libnuiPhone.a;
+			remoteRef = E5CACCE3150A9F2D004E2BD7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		E5CACCE6150A9F2D004E2BD7 /* libnuiPhone_arm7.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libnuiPhone_arm7.a;
+			remoteRef = E5CACCE5150A9F2D004E2BD7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		E5CACCE8150A9F2D004E2BD7 /* libnui3CocoaD.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libnui3CocoaD.a;
+			remoteRef = E5CACCE7150A9F2D004E2BD7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		E5CACCEA150A9F2D004E2BD7 /* libnui3Cocoa.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libnui3Cocoa.a;
+			remoteRef = E5CACCE9150A9F2D004E2BD7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		E5CACCEC150A9F2D004E2BD7 /* libthirdparty.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libthirdparty.a;
+			remoteRef = E5CACCEB150A9F2D004E2BD7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		E5CACCEE150A9F2D004E2BD7 /* libthirdparty_ios.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libthirdparty_ios.a;
+			remoteRef = E5CACCED150A9F2D004E2BD7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		E5CACCF0150A9F2D004E2BD7 /* libthirdparty_ios_arm7.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libthirdparty_ios_arm7.a;
+			remoteRef = E5CACCEF150A9F2D004E2BD7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		E5CACCF2150A9F2D004E2BD7 /* libminui3D.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libminui3D.a;
+			remoteRef = E5CACCF1150A9F2D004E2BD7 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
 		409F267D147D43560059A839 /* Sources */ = {
@@ -171,6 +385,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		E5CACD0C150A9F71004E2BD7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = nui3CocoaD;
+			targetProxy = E5CACD0B150A9F71004E2BD7 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		409F268E147D43560059A839 /* Debug */ = {
@@ -223,6 +445,11 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "testMp3Parser/testMp3Parser-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					_COCOA_,
+					"DEBUG=1",
+				);
+				HEADER_SEARCH_PATHS = ../../../nui3/include;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -232,6 +459,8 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "testMp3Parser/testMp3Parser-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = _COCOA_;
+				HEADER_SEARCH_PATHS = ../../../nui3/include;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -255,6 +484,7 @@
 				409F2692147D43560059A839 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};

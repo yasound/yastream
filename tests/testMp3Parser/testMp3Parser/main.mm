@@ -10,6 +10,10 @@
 #include "MP3Parser.h"
 #include <time.h>
 
+#include "nui.h"
+#include "nuiInit.h"
+#include "nglIMemory.h"
+
 int main (int argc, const char * argv[])
 {
 
@@ -18,6 +22,8 @@ int main (int argc, const char * argv[])
     if (argc  < 2)
       return -1;
     
+    nuiInit(NULL);
+    
     NSString* file = [NSString stringWithCString:argv[1] encoding:NSUTF8StringEncoding];
     NSData* data = [NSData dataWithContentsOfFile:file];
     if (!data)
@@ -25,8 +31,9 @@ int main (int argc, const char * argv[])
     
     unsigned char* bytes = (unsigned char*)data.bytes;
     int nbBytes = (int)data.length;
-    
-    Mp3Parser parser(bytes, nbBytes);
+
+    nglIMemory mem(bytes, nbBytes);
+    Mp3Parser parser(mem, true);
     
     int count = 1000;
     NSTimeInterval total = 0;
@@ -42,7 +49,9 @@ int main (int argc, const char * argv[])
     
     NSTimeInterval mean = total / count;
     NSLog(@"parsing mean duration: %lf", mean);
-      
+
+    nuiUninit();
+
   }
     return 0;
 }
