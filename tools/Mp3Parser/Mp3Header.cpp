@@ -214,7 +214,7 @@ const bool Mp3Header::IsValid() const
 
   if (!valid)
   {
-    printf(".");
+    //printf(".");
   }
   return valid;
 }
