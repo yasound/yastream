@@ -160,6 +160,8 @@ bool Mp3Header::IsXing(nglIStream& rStream, unsigned char* data, int position) c
   
   if (marker[0] == 'L' && marker[1] == 'A' && marker[2] == 'M' && marker[3] == 'E')
     return true;
+  
+  return false;
 }
 
 
