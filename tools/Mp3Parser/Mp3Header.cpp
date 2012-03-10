@@ -38,7 +38,7 @@ Mp3Header::Mp3Header(nglIStream& rStream, int position, bool logging, bool LookF
   if (mLog)
     printf("Header frame %x %x %x %x\n", data[0], data[1], data[2], data[3]);
   ParseHeaderData(data);
-  if (1 && LookForXing)
+  if (LookForXing)
   {
     mIsXing = IsXing(rStream, data, position);
     if (mIsXing)

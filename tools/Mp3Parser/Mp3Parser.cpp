@@ -14,7 +14,6 @@
 Mp3Parser::Mp3Parser(nglIStream& rStream, bool logging, bool SkipPadding)
 : mrStream(rStream), mLog(logging), mCurrentFrame(logging), mSkipPadding(SkipPadding), mFirstFrameFound(false)
 {
-  //mSkipPadding = false; // Not ready for prime time!
   if (mLog)
     printf("new parser with stream\n");
   mDataLength = mrStream.Available();

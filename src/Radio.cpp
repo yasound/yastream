@@ -93,7 +93,7 @@ bool Radio::SetTrack(const nglPath& rPath)
     return false;
   }
 
-  Mp3Parser* pParser = new Mp3Parser(*pStream, false, true);
+  Mp3Parser* pParser = new Mp3Parser(*pStream, false, false);
   bool valid = pParser->GetCurrentFrame().IsValid();
   if (!valid)
   {
@@ -103,7 +103,7 @@ bool Radio::SetTrack(const nglPath& rPath)
     return false;
   }
 
-  Mp3Parser* pParserPreview = new Mp3Parser(*pStreamPreview, false, true);
+  Mp3Parser* pParserPreview = new Mp3Parser(*pStreamPreview, false, false);
   valid = pParserPreview->GetCurrentFrame().IsValid();
   if (!valid)
   {
