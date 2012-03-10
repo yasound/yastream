@@ -12,14 +12,15 @@
 
 
 Mp3Parser::Mp3Parser(nglIStream& rStream, bool logging, bool SkipPadding)
-: mrStream(rStream), mLog(logging), mCurrentFrame(logging), mSkipPadding(SkipPadding)
+: mrStream(rStream), mLog(logging), mCurrentFrame(logging), mSkipPadding(SkipPadding), mFirstFrameFound(false)
 {
-  mSkipPadding = false; // Not ready for prime time!
+  //mSkipPadding = false; // Not ready for prime time!
   if (mLog)
     printf("new parser with stream\n");
   mDataLength = mrStream.Available();
 
   mCurrentFrame = FindFirstFrame();
+  mFirstFrameFound = true;
   if (mLog)
     printf("done with first frame? %s\n", YESNO(mCurrentFrame.IsValid()));
   mDuration = 0;
@@ -96,14 +97,14 @@ Mp3Frame Mp3Parser::FindNextFrame(Mp3Frame previous)
 {
   int nextOffset = previous.GetEndBytePosition();
   TimeMs nextTime = previous.GetEndTime();
-  Mp3Frame next(mrStream, nextOffset, nextTime, mLog);
+  Mp3Frame next(mrStream, nextOffset, nextTime, mLog, !mFirstFrameFound);
 
   if (next.IsValid())
-    if (!mSkipPadding || !next.GetHeader().mUsePadding)
+    if (!mSkipPadding || !next.GetHeader().mIsXing)
       return next;
 
   next = ComputeNextFrame(previous);
-  while (mSkipPadding && next.GetHeader().mUsePadding)
+  while (mSkipPadding && next.GetHeader().mIsXing)
   {
     if (!next.IsValid())
       return next;
@@ -139,11 +140,11 @@ Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
     if (mLog)
       printf("trying %d\n", b);
     
-    Mp3Frame temp(mrStream, b, time, mLog);
+    Mp3Frame temp(mrStream, b, time, mLog, !mFirstFrameFound);
     if (temp.IsValid())
     {
       // found !
-      if (!mSkipPadding || !temp.GetHeader().mUsePadding)
+      if (!mSkipPadding || !temp.GetHeader().mIsXing)
       {
         if (mLog)
           printf("ComputeNextFrame ok\n");

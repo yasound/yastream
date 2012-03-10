@@ -16,10 +16,10 @@ Mp3Frame::Mp3Frame(bool logging)
   mTime = 0;
 }
 
-Mp3Frame::Mp3Frame(nglIStream& rStream, int bytePosition, TimeMs time, bool logging)
+Mp3Frame::Mp3Frame(nglIStream& rStream, int bytePosition, TimeMs time, bool logging, bool LookForXing)
 : mPosition(bytePosition),
   mTime(time),
-  mHeader(rStream, bytePosition, logging),
+  mHeader(rStream, bytePosition, logging, LookForXing),
   mLog(logging)
 {
   if (mLog)

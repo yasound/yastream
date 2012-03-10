@@ -18,7 +18,7 @@ Mp3Header::Mp3Header(bool logging)
   Reset();
 }
 
-Mp3Header::Mp3Header(nglIStream& rStream, int position, bool logging)
+Mp3Header::Mp3Header(nglIStream& rStream, int position, bool logging, bool LookForXing)
   : mLog(logging)
 {
   if (mLog)
@@ -38,6 +38,12 @@ Mp3Header::Mp3Header(nglIStream& rStream, int position, bool logging)
   if (mLog)
     printf("Header frame %x %x %x %x\n", data[0], data[1], data[2], data[3]);
   ParseHeaderData(data);
+  if (LookForXing)
+  {
+    mIsXing = IsXing(rStream, data, position);
+    if (mIsXing)
+      printf("This frame contains Xing/Info data.\n");
+  }
   if (mLog)
     printf("Header:\n%s\n", ToString().c_str());
 
@@ -59,6 +65,8 @@ void Mp3Header::Reset()
   mUsePadding = false;
   mIsCopyrighted = false;
   mIsOriginal = false;
+  
+  mIsXing = false;
 }
 
 void Mp3Header::ParseHeaderData(unsigned char* data)
@@ -110,9 +118,45 @@ void Mp3Header::ParseHeaderData(unsigned char* data)
 
   mIsCopyrighted = copyright;
   mIsOriginal = original;
+
+  
   if (mLog)
     printf("ParseHeaderData ok\n");
 }
+
+bool Mp3Header::IsXing(nglIStream& rStream, unsigned char* data, int position) const
+{
+  // Try to find a Xing header
+  unsigned int layer3mode = (data[1] >> 3) & 1;
+  unsigned int channelmode = (data[3] >> 6) & 3;
+  unsigned int ofs = 0;
+  if (layer3mode)
+  {        // mpeg1
+    if (channelmode != 3)
+      ofs += (32+4);
+    else
+      ofs += (17+4);
+  }
+  else
+  {      // mpeg2
+    if (channelmode != 3)
+      ofs += (17+4);
+    else
+      ofs += (9+4);
+  }
+  
+  rStream.SetPos(position + ofs);
+  char marker[4];
+  rStream.Read(marker, 4, 1);
+  if (marker[0] == 'X' && marker[1] == 'i' && marker[2] == 'n' && marker[3] == 'g')
+    return true;
+  
+  if (marker[0] == 'I' && marker[1] == 'n' && marker[2] == 'f' && marker[3] == 'o')
+    return true;
+  
+}
+
+
 
 int Mp3Header::sSamplesPerFrame[2][3] =
 {

@@ -55,7 +55,7 @@ class Mp3Header
 {
 public:
   Mp3Header(bool logging);
-  Mp3Header(nglIStream& rStream, int position, bool logging);
+  Mp3Header(nglIStream& rStream, int position, bool logging, bool LookForXing);
   virtual ~Mp3Header();
 
   static float GetBitrate(unsigned int bitrate_index, MpegAudioVersion version, MpegLayer layer);
@@ -88,10 +88,14 @@ public:
   bool mIsCopyrighted;
   bool mIsOriginal;
 
+  bool mIsXing;
 private:
   void Reset();
   void ParseHeaderData(unsigned char* data);
   const int GetSamplesPerFrame() const;
   bool mLog;
+
+  bool IsXing(nglIStream& rStream, unsigned char* data, int position) const;
+
 };
 

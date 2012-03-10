@@ -16,7 +16,7 @@ class Mp3Frame
 {
 public:
   Mp3Frame(bool logging);
-  Mp3Frame(nglIStream& rStream, int bytePosition, TimeMs time, bool logging);
+  Mp3Frame(nglIStream& rStream, int bytePosition, TimeMs time, bool logging, bool LookForXing);
   virtual ~Mp3Frame();
 
   const int GetBytePosition() const;
@@ -30,6 +30,7 @@ public:
   const Mp3Header& GetHeader() const;
 
   const bool IsValid() const;
+
   const std::string ToString() const;
 
   bool operator==(const Mp3Frame& rFrame);

@@ -35,6 +35,7 @@ private:
   int mDataLength;
   int32 mId;
   bool mSkipPadding;
+  bool mFirstFrameFound;
 
   Mp3Frame mCurrentFrame;
   TimeMs mDuration;
