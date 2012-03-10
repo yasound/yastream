@@ -20,7 +20,7 @@ Mp3Parser::Mp3Parser(nglIStream& rStream, bool logging, bool SkipPadding)
   mDataLength = mrStream.Available();
 
   mCurrentFrame = FindFirstFrame();
-  mFirstFrameFound = true;
+  mFirstFrameFound = mCurrentFrame.IsValid();
   if (mLog)
     printf("done with first frame? %s\n", YESNO(mCurrentFrame.IsValid()));
   mDuration = 0;
@@ -195,8 +195,10 @@ Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
     }
     else 
     {
-      // Try next byte...
-      b++;
+      if (mSkipPadding && temp.GetHeader().mIsXing)
+        b = temp.GetEndBytePosition();
+      else // Try next byte...
+        b++;
     }
   }
 
