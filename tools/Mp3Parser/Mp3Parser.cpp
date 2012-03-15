@@ -161,7 +161,8 @@ Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
 
     if (data[0] == 'I' && data[1] == 'D' && data[2] == '3')
     {
-      printf("ID3 frame (%c %c %c)\n", data[0], data[1], data[2]);
+      if (mLog)
+        printf("ID3 frame (%c %c %c)\n", data[0], data[1], data[2]);
       
       uint8 version[2];
       uint8 flags;

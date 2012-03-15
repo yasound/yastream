@@ -134,7 +134,7 @@ nglPath Radio::GetPreviewPath(const nglPath& rOriginalPath)
   base += ".";
   base += ext;
   nglPath previewPath(base);
-  printf("preview path %s\n", previewPath.GetPathName().GetChars());
+  //printf("preview path %s\n", previewPath.GetPathName().GetChars());
   return previewPath;
 }
 
@@ -173,7 +173,7 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
 double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 {
   double duration = 0;
-  for (int32 i = 0; i < 13; i++)
+  for (int32 i = 0; i < 13 && mLive; i++)
   {
     bool nextFrameOK = true;
     bool nextFramePreviewOK = true;
@@ -244,7 +244,7 @@ void Radio::OnStart()
   double nexttime = nglTime();
   while (mLive)
   {
-    while ((mBufferDurationPreview < IDEAL_BUFFER_SIZE && mLive) || nglTime() >= nexttime)
+    while (mLive && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || nglTime() >= nexttime))
     {
       nexttime += ReadSet(chunk_count_preview, chunk_count);
       //printf("buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
@@ -253,7 +253,7 @@ void Radio::OnStart()
     nglThread::MsSleep(10);
   }
 
-  //printf("radio '%s' is now offline\n", mID.GetChars());
+  printf("radio '%s' is now offline\n", mID.GetChars());
 
   delete this;
 }
@@ -278,7 +278,7 @@ bool Radio::LoadNextTrack()
     nglPath path = "/space/new/medias/song";
     path += p;
 
-    printf("new song from server: %s\n", path.GetChars());
+    //printf("new song from server: %s\n", path.GetChars());
     if (SetTrack(path))
     {
       delete pResponse;
@@ -309,7 +309,7 @@ bool Radio::LoadNextTrack()
     return true;
   }
 
-  printf("No more track in the list. Bailout...\n");
+  //printf("No more track in the list. Bailout...\n");
   return false;
 }
 

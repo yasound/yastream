@@ -41,10 +41,13 @@ Mp3Header::Mp3Header(nglIStream& rStream, int position, bool logging, bool LookF
   if (LookForXing)
   {
     mIsXing = IsXing(rStream, data, position);
-    if (mIsXing)
-      printf("This frame contains Xing/Info data.\n");
-    if (IsValid())
-      printf("This frame is valid!\n");
+    if (mLog)
+    {
+      if (mIsXing)
+        printf("This frame contains Xing/Info data.\n");
+      if (IsValid())
+        printf("This frame is valid!\n");
+    }
   }
   if (mLog)
     printf("Header:\n%s\n", ToString().c_str());
@@ -151,7 +154,8 @@ bool Mp3Header::IsXing(nglIStream& rStream, unsigned char* data, int position) c
   char marker[4];
   rStream.Read(marker, 4, 1);
   
-  printf("Marker: %c%c%c%c\n", marker[0], marker[1], marker[2], marker[3]);
+  if (mLog)
+    printf("Marker: %c%c%c%c\n", marker[0], marker[1], marker[2], marker[3]);
   if (marker[0] == 'X' && marker[1] == 'i' && marker[2] == 'n' && marker[3] == 'g')
     return true;
   
