@@ -75,7 +75,7 @@ RedisClient::ReplyType RedisClient::SendCommand()
   ReplyType type;
   std::vector<uint8> data;
   nglChar cur = 0;
-  data.resize(1024);
+  data.resize(1);
   nglString line;
 
   int replycount = 1;
