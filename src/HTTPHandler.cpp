@@ -191,7 +191,7 @@ bool HTTPHandler::OnBodyStart()
     while (!pChunk)
     {
       cnt++;
-      nglThread::MsSleep(10);
+      nglThread::MsSleep(100);
       pChunk = GetNextChunk();
     }
 //    if (cnt)

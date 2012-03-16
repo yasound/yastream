@@ -250,7 +250,7 @@ void Radio::OnStart()
       //printf("buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
     }
 
-    nglThread::MsSleep(10);
+    nglThread::MsSleep(100);
   }
 
   printf("radio '%s' is now offline\n", mID.GetChars());
