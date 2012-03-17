@@ -7,6 +7,8 @@
 #include "Radio.h"
 #include <signal.h>
 
+#include "RedisClient.h"
+
 nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient);
 nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient)
 {
@@ -60,8 +62,41 @@ int main(int argc, const char** argv)
       printf("test mode ENABLED\n");
     }
   }
+  
+  RedisClient redis;
+  if (!redis.Connect(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP)))
+  {
+    printf("Error connecting to redis server.\n");
+    exit(0);
+  }
 
-//  nuiHTTPRequest request("https://dev.yasound.com/admin/");
+  redis.StartCommand("DEL");
+  redis.AddArg("prout");
+  redis.PrintSendCommand();
+  
+  //redis.StartCommand("GET");
+  redis.StartCommand("LPUSH");
+  redis.AddArg("prout");
+  redis.AddArg("bleh");
+  redis.PrintSendCommand();
+
+  redis.StartCommand("LPUSH");
+  redis.AddArg("prout");
+  redis.AddArg("woah");
+  redis.PrintSendCommand();
+
+  redis.StartCommand("LRANGE");
+  redis.AddArg("prout");
+  redis.AddArg("0");
+  redis.AddArg("-1");
+  redis.PrintSendCommand();
+  
+  redis.StartCommand("OBJECT");
+  redis.AddArg("ENCODING");
+  redis.AddArg("prout");
+  redis.PrintSendCommand();
+
+  //  nuiHTTPRequest request("https://dev.yasound.com/admin/");
 //  nuiHTTPResponse* pResponse = request.SendRequest();
 //  printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
 //  printf("data:\n %s\n\n", pResponse->GetBodyStr().GetChars());

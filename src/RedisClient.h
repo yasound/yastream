@@ -34,6 +34,7 @@ public:
   void StartCommand(const nglString& rCommand);
   void AddArg(const nglString& rArg);
   ReplyType SendCommand();
+  ReplyType PrintSendCommand();
   
   // Get Replies:
   

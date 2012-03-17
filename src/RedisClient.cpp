@@ -72,51 +72,53 @@ RedisClient::ReplyType RedisClient::SendCommand()
 
   mpClient->Send(str);
   
-  ReplyType type;
   std::vector<uint8> data;
   nglChar cur = 0;
   data.resize(1);
   nglString line;
 
   int replycount = 1;
+  bool eolfound = false;
   while (mpClient->Receive(data))
   {
     size_t index = 0;
     while (index < data.size())
     {
       cur = data[index];
-        index++;
+      index++;
         
-      if (cur == 10)
+      if (cur == 13)
       {
         // skip...
+        eolfound = true;
       }
-      else if (cur == 13)
+      else if (eolfound && cur == 10)
       {
+        eolfound = false;
         // found a line:
         switch (line[0])
         {
         case '+':
           {
-            mStatus = line.Extract(1, line.GetLength() - 3);
+            mStatus = line.Extract(1, line.GetLength() - 1);
             return mReplyType = eRedisStatus;
           }
           break;
         case '-':
           {
-            mError = line.Extract(1, line.GetLength() - 3);
+            mError = line.Extract(1, line.GetLength() - 1);
             return mReplyType = eRedisError;
           }
           break;
         case ':':
           {
-            mInteger = line.Extract(1, line.GetLength() - 3).GetCInt64();
+            mInteger = line.Extract(1, line.GetLength() - 1).GetCInt64();
             return mReplyType = eRedisInteger;
           }
           break;
         case '$':
           {
-            int64 s = line.Extract(1, line.GetLength() - 3).GetCInt64();
+            int64 s = line.Extract(1, line.GetLength() - 1).GetCInt64();
             std::vector<uint8> d;
             d.resize(s);
             int64 done = mpClient->Receive(d);
@@ -126,7 +128,7 @@ RedisClient::ReplyType RedisClient::SendCommand()
             mReply.push_back(res);
             d.resize(2);
             res = mpClient->Receive(d);
-            NGL_ASSERT(d[0] == 10 && d[1] == 13);
+            NGL_ASSERT(d[0] == 13 && d[1] == 10);
 
             replycount--;
             if (!replycount)
@@ -148,6 +150,32 @@ RedisClient::ReplyType RedisClient::SendCommand()
       }
     }
   }
+  
+}
+
+RedisClient::ReplyType RedisClient::PrintSendCommand()
+{
+  printf("Redis command: %s\n", mRequest[0].GetChars());
+  ReplyType reply = SendCommand();
+  // Optionnaly print output:
+  switch (reply)
+  {
+    case RedisClient::eRedisError:
+      printf("error: %s\n", GetError().GetChars());
+      break;
+    case RedisClient::eRedisStatus:
+      printf("status: %s\n", GetStatus().GetChars());
+      break;
+    case RedisClient::eRedisInteger:
+      printf("integer: %lld\n", GetInteger());
+      break;
+    case RedisClient::eRedisBulk:
+      for (int i = 0; i < GetCount(); i++)
+        printf("[%d]: %s\n", i, GetReply(i).GetChars());
+      break;
+  }
+
+  return reply;
 }
 
 RedisClient::ReplyType RedisClient::GetReply() const
@@ -163,6 +191,11 @@ const nglString& RedisClient::GetError() const
 const nglString& RedisClient::GetStatus() const
 {
   return mStatus;
+}
+
+int64 RedisClient::GetInteger() const
+{
+  return mInteger;
 }
 
 int64 RedisClient::GetCount() const
