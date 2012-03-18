@@ -24,6 +24,8 @@ void SigPipeSink(int signal)
 int main(int argc, const char** argv)
 {
   nuiInit(NULL);
+  nglOStream* pLogOutput = nglPath("~/yastreamlog.txt").OpenWrite();
+  App->GetLog().AddOutput(pLogOutput);
   NGL_OUT("yasound streamer\n");
 
 #if defined _MINUI3_
