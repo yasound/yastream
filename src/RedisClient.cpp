@@ -175,7 +175,7 @@ RedisClient::ReplyType RedisClient::PrintSendCommand()
       printf("status: %s\n", GetStatus().GetChars());
       break;
     case RedisClient::eRedisInteger:
-      printf("integer: %lld\n", GetInteger());
+      printf("integer: %ld\n", GetInteger());
       break;
     case RedisClient::eRedisBulk:
       for (int i = 0; i < GetCount(); i++)

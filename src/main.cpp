@@ -9,6 +9,8 @@
 
 #include "RedisClient.h"
 
+#include <syslog.h>
+
 nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient);
 nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient)
 {
@@ -23,10 +25,55 @@ void SigPipeSink(int signal)
 
 int main(int argc, const char** argv)
 {
-  nuiInit(NULL);
+openlog("yastream", LOG_PID, LOG_DAEMON);
+syslog(LOG_ALERT, "starting streaming server");
+
+        /* Our process ID and Session ID */
+        pid_t pid, sid;
+                
+                /* Fork off the parent process */
+                pid = fork();
+                        if (pid < 0) {
+                                            exit(EXIT_FAILURE);
+                                                    }
+                                /* If we got a good PID, then
+                                 *            we can exit the parent process. */
+                                if (pid > 0) {
+                                                    exit(EXIT_SUCCESS);
+                                                            }
+
+                                        /* Change the file mode mask */
+                                        umask(0);
+                                                        
+                                                /* Open any logs here */        
+                                                        
+                                                /* Create a new SID for the child process */
+                                                sid = setsid();
+                                                        if (sid < 0) {
+                                                                            /* Log the failure */
+                                                                            exit(EXIT_FAILURE);
+                                                                                    }
+                                                                
+
+                                                                
+                                                                /* Change the current working directory */
+                                                                if ((chdir("/")) < 0) {
+                                                                                    /* Log the failure */
+                                                                                    exit(EXIT_FAILURE);
+                                                                                            }
+                                                                        
+                                                                        /* Close out the standard file descriptors */
+                                                                        close(STDIN_FILENO);
+                                                                                close(STDOUT_FILENO);
+                                                                                        close(STDERR_FILENO);
+
+    
+    nuiInit(NULL);
   nglOStream* pLogOutput = nglPath("~/yastreamlog.txt").OpenWrite();
+  App->GetLog().SetLevel("yastream", 0);
   App->GetLog().AddOutput(pLogOutput);
-  NGL_OUT("yasound streamer\n");
+  App->GetLog().Dump();
+  NGL_LOG("yastream", NGL_LOG_INFO, "yasound streamer\n");
 
 #if defined _MINUI3_
   App->CatchSignal(SIGPIPE, SigPipeSink);
