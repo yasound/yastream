@@ -4,6 +4,7 @@
 #include "nui.h"
 #include "Mp3Parser/Mp3Parser.h"
 #include "nglReaderWriterLock.h"
+#include "RedisClient.h"
 
 class HTTPHandler;
 
@@ -21,6 +22,7 @@ public:
   void OnStart();
 
   static Radio* GetRadio(const nglString& rURL);
+  static void SetParams(const nglString& hostname, int port);
 
   void AddTrack(const nglPath& rPath);
 
@@ -64,6 +66,9 @@ private:
   static nglCriticalSection gCS;
   typedef std::map<nglString, Radio*> RadioMap;
   static RadioMap gRadios;
+  static RedisClient gRedis;
+  static nglString mHostname;
+  static int mPort;
 
   static Radio* CreateRadio(const nglString& rURL);
   static void RegisterRadio(const nglString& rURL, Radio* pRadio);

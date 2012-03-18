@@ -31,18 +31,37 @@ int main(int argc, const char** argv)
 #endif
 
   int port = 8001;
+  nglString hostname = "0.0.0.0";
+  
   for (int i = 1; i < argc; i++)
   {
-    if (strcmp(argv[i], "-p") == 0)
+    if (strcmp(argv[i], "-port") == 0)
     {
       i++;
       if (i >= argc)
       {
-        printf("ERROR: -p must be followed by a port number\n");
+        printf("ERROR: -port must be followed by a port number\n");
         exit(1);
       }
 
       port = atoi(argv[i]);
+    }
+    else if (strcmp(argv[i], "-host") == 0)
+    {
+      i++;
+      if (i >= argc)
+      {
+        printf("ERROR: -host must be followed by a hostname or an ip address\n");
+        exit(1);
+      }
+      
+      hostname = argv[i];
+    }
+    else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
+    {
+      printf("yastrm [-p port] [-host hostname]\n");
+      printf("\t-port port\tset the server port.\n");
+      printf("\t-host port\tset the server host name or ip address.\n");
     }
     else if (strcmp(argv[i], "--test") == 0)
     {
@@ -62,7 +81,8 @@ int main(int argc, const char** argv)
       printf("test mode ENABLED\n");
     }
   }
-  
+
+#if 0
   RedisClient redis;
   if (!redis.Connect(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP)))
   {
@@ -95,12 +115,17 @@ int main(int argc, const char** argv)
   redis.AddArg("ENCODING");
   redis.AddArg("prout");
   redis.PrintSendCommand();
-
+  
+  redis.StartCommand("INFO");
+  redis.PrintSendCommand();
+#endif
+  
   //  nuiHTTPRequest request("https://dev.yasound.com/admin/");
 //  nuiHTTPResponse* pResponse = request.SendRequest();
 //  printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
 //  printf("data:\n %s\n\n", pResponse->GetBodyStr().GetChars());
 
+  Radio::SetParams(hostname, port);
 
   nuiHTTPServer* pServer = new nuiHTTPServer();
 
@@ -114,7 +139,7 @@ int main(int argc, const char** argv)
   pServer->SetHandlerDelegate(HandlerDelegate);
 
 
-  if (pServer->Bind(0, port))
+  if (pServer->Bind(hostname, port))
   {
     pServer->AcceptConnections();
   }

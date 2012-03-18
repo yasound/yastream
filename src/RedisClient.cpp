@@ -119,12 +119,20 @@ RedisClient::ReplyType RedisClient::SendCommand()
         case '$':
           {
             int64 s = line.Extract(1, line.GetLength() - 1).GetCInt64();
+            if (s < 0)
+            {
+              mReply.push_back(nglString::Null);
+              return mReplyType = eRedisBulk;
+            }
+            
             std::vector<uint8> d;
             d.resize(s);
             int64 done = mpClient->Receive(d);
             NGL_ASSERT(done == s);
 
             nglString res((const nglChar*)&d[0], d.size(), eEncodingInternal);
+            if (res == "$-1")
+              res.Nullify();
             mReply.push_back(res);
             d.resize(2);
             res = mpClient->Receive(d);

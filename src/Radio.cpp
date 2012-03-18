@@ -321,6 +321,17 @@ void Radio::AddTrack(const nglPath& rPath)
 
 nglCriticalSection Radio::gCS;
 std::map<nglString, Radio*> Radio::gRadios;
+nglString Radio::mHostname = "0.0.0.0";
+int Radio::mPort = 8001;
+
+RedisClient Radio::gRedis;
+
+void Radio::SetParams(const nglString& hostname, int port)
+{
+  mHostname = hostname;
+  mPort = port;
+}
+
 
 Radio* Radio::GetRadio(const nglString& rURL)
 {
@@ -330,6 +341,56 @@ Radio* Radio::GetRadio(const nglString& rURL)
   RadioMap::const_iterator it = gRadios.find(rURL);
   if (it == gRadios.end())
   {
+    // Ask Redis if he knows a server that handles this radio:
+    if (!gRedis.IsConnected())
+    {
+      bool res = gRedis.Connect(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP));
+      if (!res)
+        printf("Error connecting to redis server.\n");
+
+      gRedis.StartCommand("SELECT");
+      gRedis.AddArg("1");
+      RedisClient::ReplyType reply = gRedis.SendCommand();
+      if (reply == RedisClient::eRedisError)
+      {
+        printf("Redis error: %s\n", gRedis.GetError().GetChars());
+      }
+    }
+    
+    nglString r;
+    r.Add("radio:").Add(rURL);
+
+    if (gRedis.IsConnected())
+    {
+      gRedis.StartCommand("GET");
+      gRedis.AddArg(r);
+      RedisClient::ReplyType reply = gRedis.SendCommand();
+      if (reply == RedisClient::eRedisError)
+      {
+        printf("Redis error: %s\n", gRedis.GetError().GetChars());
+      }
+      
+      NGL_ASSERT(reply == RedisClient::eRedisBulk);
+      nglString host = gRedis.GetReply(0);
+      if (!host.IsNull())
+      {
+        // Create this radio from the actual server!
+        printf("Radio found on %s\n", host.GetChars());
+        return NULL;
+      }
+      
+      // The radio was not on the server. we need to create it:
+      gRedis.StartCommand("SET");
+      gRedis.AddArg(r);
+      gRedis.AddArg(mHostname);
+      reply = gRedis.SendCommand();
+      if (reply == RedisClient::eRedisError)
+      {
+        printf("Redis error: %s\n", gRedis.GetError().GetChars());
+      }
+      
+    }
+    
     // Create the radio!
     //printf("Trying to create the radio '%s'\n", rURL.GetChars());
     return CreateRadio(rURL);
