@@ -56,6 +56,7 @@ class Mp3Header
 public:
   Mp3Header(bool logging);
   Mp3Header(nglIStream& rStream, int position, bool logging, bool LookForXing);
+  Mp3Header(uint8* data, bool logging); // data must point to 4 bytes minimum.
   virtual ~Mp3Header();
 
   static float GetBitrate(unsigned int bitrate_index, MpegAudioVersion version, MpegLayer layer);

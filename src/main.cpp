@@ -40,6 +40,7 @@ int main(int argc, const char** argv)
   int port = 8001;
   nglString hostname = "0.0.0.0";
   bool daemon = false;
+  nglPath datapath = "/data/glusterfs-storage/replica2all/song/";
   
   for (int i = 1; i < argc; i++)
   {
@@ -65,11 +66,23 @@ int main(int argc, const char** argv)
       
       hostname = argv[i];
     }
+    else if (strcmp(argv[i], "-datapath") == 0)
+    {
+      i++;
+      if (i >= argc)
+      {
+        printf("ERROR: -datapath must be followed by a valid path\n");
+        exit(1);
+      }
+      
+      datapath = argv[i];
+    }
     else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
     {
       printf("yastrm [-p port] [-host hostname]\n");
-      printf("\t-port port\tset the server port.\n");
-      printf("\t-host port\tset the server host name or ip address.\n");
+      printf("\t-port\tset the server port.\n");
+      printf("\t-host\tset the server host name or ip address.\n");
+      printf("\t-datapath\tset the path to the song folder (the one that contains the mp3 hashes).\n");
       printf("\t-daemon launch in daemon mode (will fork!).\n");
     }
     else if (strcmp(argv[i], "-daemon") == 0)
@@ -181,7 +194,7 @@ int main(int argc, const char** argv)
 //  printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
 //  printf("data:\n %s\n\n", pResponse->GetBodyStr().GetChars());
 
-  Radio::SetParams(hostname, port);
+  Radio::SetParams(hostname, port, datapath);
 
   nuiHTTPServer* pServer = new nuiHTTPServer();
 

@@ -12,7 +12,7 @@ class HTTPHandler;
 class Radio
 {
 public:
-  Radio(const nglString& rID);
+  Radio(const nglString& rID, const nglString& rHost = nglString::Null);
   virtual ~Radio();
 
   void Start();
@@ -20,9 +20,10 @@ public:
   void RegisterClient(HTTPHandler* pClient, bool highQuality = false);
   void UnregisterClient(HTTPHandler* pClient);
   void OnStart();
+  void OnStartProxy();
 
   static Radio* GetRadio(const nglString& rURL);
-  static void SetParams(const nglString& hostname, int port);
+  static void SetParams(const nglString& hostname, int port, const nglPath& rDataPath);
 
   void AddTrack(const nglPath& rPath);
 
@@ -31,11 +32,15 @@ public:
   static void AddRadioSource(const nglString& rID, const nglString& rURL);
   static void DelRadioSource(const nglString& rID, const nglString& rURL);
   
+  
 private:
   bool SetTrack(const nglPath& rPath);
   bool LoadNextTrack();
   double ReadSet(int64& chunk_count_preview, int64& chunk_count);
+  double ReadSetProxy(int64& chunk_count_preview, int64& chunk_count);
 
+  Mp3Chunk* GetChunk(nuiTCPClient* pClient);
+  
   bool mLive;
   nglCriticalSection mCS;
   nglString mID;
@@ -54,6 +59,9 @@ private:
   double mBufferDurationPreview;
   ClientList mClientsPreview;
 
+  nuiTCPClient* mpPreviewSource;
+  nuiTCPClient* mpSource;
+
   void AddChunk(Mp3Chunk* pChunk, bool previewMode);
   nglPath GetPreviewPath(const nglPath& rOriginalPath);
 
@@ -69,8 +77,10 @@ private:
   static RedisClient gRedis;
   static nglString mHostname;
   static int mPort;
+  static nglPath mDataPath;
 
-  static Radio* CreateRadio(const nglString& rURL);
+
+  static Radio* CreateRadio(const nglString& rURL, const nglString& rHost);
   static void RegisterRadio(const nglString& rURL, Radio* pRadio);
   static void UnregisterRadio(const nglString& rURL);
 };

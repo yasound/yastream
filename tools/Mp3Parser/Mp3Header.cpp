@@ -54,6 +54,22 @@ Mp3Header::Mp3Header(nglIStream& rStream, int position, bool logging, bool LookF
 
 }
 
+Mp3Header::Mp3Header(uint8* data, bool logging)
+: mLog(logging)
+{
+  if (mLog)
+    printf("Mp3Header(%p)\n", data);
+  Reset();
+  
+  if (mLog)
+    printf("Header frame %x %x %x %x\n", data[0], data[1], data[2], data[3]);
+  ParseHeaderData(data);
+  if (mLog)
+    printf("Header:\n%s\n", ToString().c_str());
+}
+
+
+
 Mp3Header::~Mp3Header()
 {
 }
