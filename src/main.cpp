@@ -25,51 +25,9 @@ void SigPipeSink(int signal)
 
 int main(int argc, const char** argv)
 {
-openlog("yastream", LOG_PID, LOG_DAEMON);
-syslog(LOG_ALERT, "starting streaming server");
-
-        /* Our process ID and Session ID */
-        pid_t pid, sid;
-                
-                /* Fork off the parent process */
-                pid = fork();
-                        if (pid < 0) {
-                                            exit(EXIT_FAILURE);
-                                                    }
-                                /* If we got a good PID, then
-                                 *            we can exit the parent process. */
-                                if (pid > 0) {
-                                                    exit(EXIT_SUCCESS);
-                                                            }
-
-                                        /* Change the file mode mask */
-                                        umask(0);
-                                                        
-                                                /* Open any logs here */        
-                                                        
-                                                /* Create a new SID for the child process */
-                                                sid = setsid();
-                                                        if (sid < 0) {
-                                                                            /* Log the failure */
-                                                                            exit(EXIT_FAILURE);
-                                                                                    }
-                                                                
-
-                                                                
-                                                                /* Change the current working directory */
-                                                                if ((chdir("/")) < 0) {
-                                                                                    /* Log the failure */
-                                                                                    exit(EXIT_FAILURE);
-                                                                                            }
-                                                                        
-                                                                        /* Close out the standard file descriptors */
-                                                                        close(STDIN_FILENO);
-                                                                                close(STDOUT_FILENO);
-                                                                                        close(STDERR_FILENO);
-
-    
-    nuiInit(NULL);
-  nglOStream* pLogOutput = nglPath("~/yastreamlog.txt").OpenWrite();
+  nuiInit(NULL);
+  
+  nglOStream* pLogOutput = nglPath("~/yastreamlog.txt").OpenWrite(false);
   App->GetLog().SetLevel("yastream", 0);
   App->GetLog().AddOutput(pLogOutput);
   App->GetLog().Dump();
@@ -81,6 +39,7 @@ syslog(LOG_ALERT, "starting streaming server");
 
   int port = 8001;
   nglString hostname = "0.0.0.0";
+  bool daemon = false;
   
   for (int i = 1; i < argc; i++)
   {
@@ -111,6 +70,11 @@ syslog(LOG_ALERT, "starting streaming server");
       printf("yastrm [-p port] [-host hostname]\n");
       printf("\t-port port\tset the server port.\n");
       printf("\t-host port\tset the server host name or ip address.\n");
+      printf("\t-daemon launch in daemon mode (will fork!).\n");
+    }
+    else if (strcmp(argv[i], "-daemon") == 0)
+    {
+      daemon = true;
     }
     else if (strcmp(argv[i], "--test") == 0)
     {
@@ -131,6 +95,49 @@ syslog(LOG_ALERT, "starting streaming server");
     }
   }
 
+  if (daemon)
+  {
+    openlog("yastream", LOG_PID, LOG_DAEMON);
+    syslog(LOG_ALERT, "starting streaming server");
+    
+    /* Our process ID and Session ID */
+    pid_t pid, sid;
+    
+    /* Fork off the parent process */
+    pid = fork();
+    if (pid < 0) {
+      exit(EXIT_FAILURE);
+    }
+    /* If we got a good PID, then
+     *            we can exit the parent process. */
+    if (pid > 0) {
+      exit(EXIT_SUCCESS);
+    }
+    
+    /* Change the file mode mask */
+    umask(0);
+    
+    /* Open any logs here */        
+    
+    /* Create a new SID for the child process */
+    sid = setsid();
+    if (sid < 0) {
+      /* Log the failure */
+      exit(EXIT_FAILURE);
+    }
+    
+    /* Change the current working directory */
+    if ((chdir("/")) < 0) {
+      /* Log the failure */
+      exit(EXIT_FAILURE);
+    }
+    
+    /* Close out the standard file descriptors */
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+  }
+  
 #if 0
   RedisClient redis;
   if (!redis.Connect(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP)))
