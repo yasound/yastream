@@ -199,6 +199,7 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
   data.resize(4);
   if (!pClient->Receive(data))
   {
+    printf("Radio::GetChunk Unable to receive mp3 header from client\n");
     delete pChunk;
     return NULL;
   }
@@ -206,6 +207,7 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
   Mp3Header hdr(&data[0], false);
   if (!hdr.IsValid())
   {
+    printf("Radio::GetChunk Mp3Header invalid\n");
     pClient->Close();
     delete pChunk;
     return NULL;
@@ -216,6 +218,7 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
   int32 res = pClient->Receive(&data[4], len);
   if (res < 0)
   {
+    printf("Radio::GetChunk error getting %d bytes from the stream\n", len);
     delete pChunk;
     return NULL;
   }
