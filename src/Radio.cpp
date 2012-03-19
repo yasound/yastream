@@ -24,7 +24,8 @@ Radio::Radio(const nglString& rID, const nglString& rHost)
 {
   if (!rHost.IsNull())
   {
-    // Proxy mode
+    // Proxy mode 
+    printf("Radio::Radio Proxy for radio '%s' (source url: http://%s:%d/%s )\n", mID.GetChars(), rHost.GetChars(), mPort, mID.GetChars());
     mpSource = new nuiTCPClient(); // Don't connect the non preview source for now
     mpPreviewSource = new nuiTCPClient();
     mpPreviewSource->Connect(nuiNetworkHost(rHost, mPort, nuiNetworkHost::eTCP));
@@ -192,6 +193,8 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
   }
 }
 
+int32 offset = 0;
+
 Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
 {
   Mp3Chunk* pChunk = new Mp3Chunk();
@@ -207,22 +210,37 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
   Mp3Header hdr(&data[0], false);
   if (!hdr.IsValid())
   {
-    printf("Radio::GetChunk Mp3Header invalid\n");
+    printf("Radio::GetChunk Mp3Header invalid [0x%02x%02x%02x%02x]\n", data[0], data[1], data[2], data[3]);
     pClient->Close();
     delete pChunk;
     return NULL;
   }
   
-  int32 len = hdr.GetFrameByteLength() - 4;
-  data.resize(len);
-  int32 res = pClient->Receive(&data[4], len);
-  if (res < 0)
+  int32 len = hdr.GetFrameByteLength();
+  int32 left = len - 4;
+  int32 done = 4;
+  int32 todo = left;
+  offset += 4;
+  //while (done != len && pClient->IsConnected())
   {
-    printf("Radio::GetChunk error getting %d bytes from the stream\n", len);
-    delete pChunk;
-    return NULL;
-  }
+    data.resize(len);
+    int32 res = pClient->Receive(&data[len - todo], todo);
+    
+    if (res < 0)
+    {
+      printf("Radio::GetChunk error getting %d bytes from the stream\n", left);
+      delete pChunk;
+      return NULL;
+    }
 
+    todo -= res;
+    done += res;
+    offset += res;
+  }
+  
+  //NGL_ASSERT(res == left);
+  
+  printf("Radio::GetChunk read %d bytes from the stream [offset 0x%x 0x%02x%02x%02x%02x]\n", done, offset, data[0], data[1], data[2], data[3]);
   return pChunk;
 }
 
@@ -291,7 +309,7 @@ double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
     bool nextFramePreviewOK = true;
     bool skip = i == 12;
     Mp3Chunk* pChunk = NULL;
-    if (!skip && mpSource)
+    if (!skip && mpSource && mpSource->IsConnected())
     {
       pChunk = GetChunk(mpSource);
     }
