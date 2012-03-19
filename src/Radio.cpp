@@ -586,7 +586,8 @@ void Radio::FlushRedis()
   int64 count = gRedis.GetCount();
 
   printf("\t%d radios to flush\n", count);
-  
+  if (count > 0) 
+{
   radios.reserve(count);
   for (int i = 0; i < count; i++)
   {
@@ -604,6 +605,7 @@ void Radio::FlushRedis()
   {
     printf("Redis error while Flush DEL: %s\n", gRedis.GetError().GetChars());
   }
+}
 }
 
 

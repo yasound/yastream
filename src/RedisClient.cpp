@@ -71,6 +71,7 @@ RedisClient::ReplyType RedisClient::SendCommand()
     str += args;
   }
 
+printf("Redis Command:\n%s\n", str.GetChars());
   mpClient->Send(str);
   
   std::vector<uint8> data;
@@ -95,6 +96,7 @@ RedisClient::ReplyType RedisClient::SendCommand()
       }
       else if (eolfound && cur == 10)
       {
+  printf("redis line\n");
         eolfound = false;
         // found a line:
         switch (line[0])
@@ -102,23 +104,27 @@ RedisClient::ReplyType RedisClient::SendCommand()
         case '+':
           {
             mStatus = line.Extract(1, line.GetLength() - 1);
+  printf("status\n");
             return mReplyType = eRedisStatus;
           }
           break;
         case '-':
           {
             mError = line.Extract(1, line.GetLength() - 1);
+  printf("error\n");
             return mReplyType = eRedisError;
           }
           break;
         case ':':
           {
+  printf("int\n");
             mInteger = line.Extract(1, line.GetLength() - 1).GetCInt64();
             return mReplyType = eRedisInteger;
           }
           break;
         case '$':
           {
+  printf("bulk\n");
             int64 s = line.Extract(1, line.GetLength() - 1).GetCInt64();
             if (s < 0)
             {
@@ -148,6 +154,9 @@ RedisClient::ReplyType RedisClient::SendCommand()
           {
             int64 s = line.Extract(1, line.GetLength() - 3).GetCInt64();
             replycount = s;
+  printf("realbulk %lld\n", s);
+            if (replycount == 0)
+              return mReplyType = eRedisBulk;
           }
           break;
         }
