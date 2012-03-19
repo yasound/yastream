@@ -221,7 +221,7 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
   int32 done = 4;
   int32 todo = left;
   offset += 4;
-  //while (done != len && pClient->IsConnected())
+  while (done != len && pClient->IsConnected())
   {
     data.resize(len);
     int32 res = pClient->Receive(&data[len - todo], todo);
