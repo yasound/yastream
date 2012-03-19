@@ -182,6 +182,7 @@ int main(int argc, const char** argv)
   Radio::SetParams(hostname, port, datapath, redishost, redisport);
   Radio::FlushRedis();
   
+  NGL_OUT("Starting http streaming server %s:%d\n", hostname.GetChars(), port);
   nuiHTTPServer* pServer = new nuiHTTPServer();
   pServer->SetHandlerDelegate(HandlerDelegate);
 

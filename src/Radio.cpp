@@ -580,32 +580,33 @@ void Radio::FlushRedis()
     printf("Redis error while SMEMBERS: %s\n", gRedis.GetError().GetChars());
   }
  
-  printf("Got %d items back\n", gRedis.GetCount());
+  //printf("Got %d items back\n", gRedis.GetCount());
  
   std::vector<nglString> radios;
   int64 count = gRedis.GetCount();
 
   printf("\t%d radios to flush\n", count);
   if (count > 0) 
-{
-  radios.reserve(count);
-  for (int i = 0; i < count; i++)
   {
-    radios.push_back(gRedis.GetReply(i));
-    printf("\t\t%s\n", radios[i].GetChars());
-  }
+    radios.reserve(count);
+    for (int i = 0; i < count; i++)
+    {
+      radios.push_back(gRedis.GetReply(i));
+      printf("\t\t%s\n", radios[i].GetChars());
+    }
 
-  gRedis.StartCommand("DEL");
-  
-  for (int i = 0; i < radios.size(); i++)
-    gRedis.AddArg(radios[i]);
-  
-  reply = gRedis.SendCommand();
-  if (reply == RedisClient::eRedisError)
-  {
-    printf("Redis error while Flush DEL: %s\n", gRedis.GetError().GetChars());
+    gRedis.StartCommand("DEL");
+    
+    for (int i = 0; i < radios.size(); i++)
+      gRedis.AddArg(radios[i]);
+    
+    reply = gRedis.SendCommand();
+    if (reply == RedisClient::eRedisError)
+    {
+      printf("Redis error while Flush DEL: %s\n", gRedis.GetError().GetChars());
+    }
   }
-}
+  printf("Flush Done\n");
 }
 
 
