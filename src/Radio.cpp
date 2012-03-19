@@ -99,7 +99,7 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
     //  Shutdown radio
     printf("Last client is gone: Shutting down radio %s\n", mID.GetChars());
     //mLive = false;
-    mGoOffline = true;
+    //mGoOffline = true;
   }
 }
 
@@ -461,16 +461,17 @@ void Radio::OnStartProxy()
 
 bool Radio::LoadNextTrack()
 {
-  if (mGoOffline) // We were aske to kill this radio once the current song was finished.
+  if (mGoOffline) // We were asked to kill this radio once the current song was finished.
     return false;
   
   // Try to get the new track from the app server:
   nglString url;
-  url.Format("https://api.yasound.com/api/v1/radio/%s/get_next_song/", mID.GetChars());
+  url.Format("https://newapi.yasound.com/api/v1/radio/%s/get_next_song/", mID.GetChars());
   nuiHTTPRequest request(url);
   nuiHTTPResponse* pResponse = request.SendRequest();
-//  printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
-//  printf("new trackid: %s\n", pResponse->GetBodyStr().GetChars());
+  printf("get next song: %s\n", url.GetChars());
+  printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
+  printf("new trackid: %s\n", pResponse->GetBodyStr().GetChars());
 
   if (pResponse->GetStatusCode() == 200)
   {
@@ -483,7 +484,7 @@ bool Radio::LoadNextTrack()
     nglPath path = mDataPath;//"/data/glusterfs-storage/replica2all/song/";
     path += p;
 
-    //printf("new song from server: %s\n", path.GetChars());
+    printf("new song from server: %s\n", path.GetChars());
     if (SetTrack(path))
     {
       delete pResponse;
