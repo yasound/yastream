@@ -320,7 +320,8 @@ double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
 //      nextFrameOK = mpParser->GoToNextFrame();
 //    nextFramePreviewOK = mpParserPreview->GoToNextFrame();
     
-    if ((!skip && !pChunk) || !nextFramePreviewOK || !mpPreviewSource->IsConnected()) // #FIXME Handle high quality stream:  || !mpSource->IsConnected())
+    //if ((!skip && !pChunk) || !nextFramePreviewOK || !mpPreviewSource->IsConnected() || !mpSource->IsConnected())
+    if (!nextFramePreviewOK || !mpPreviewSource->IsConnected()) // #FIXME Handle high quality stream (see commented line above)
     {
       printf("PROXY [skip: %c][pChunk: %p][nextFrameOK: %c / %c]\n", skip?'y':'n', pChunk, nextFramePreviewOK?'y':'n', nextFrameOK?'y':'n');
       mLive = mpPreviewSource->IsConnected(); //#FIXME Handle HQ Stream: && mpSource->IsConnected();
