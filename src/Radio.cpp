@@ -564,25 +564,36 @@ void Radio::InitRedis()
 
 void Radio::FlushRedis()
 {
+  printf("Flush Redis DB\n");
   InitRedis();
+  printf("  Connected to Redis DB\n");
   
   gRedis.StartCommand("SMEMBERS");
   nglString server;
   server.Add("server:").Add(mHostname);
   gRedis.AddArg(server);
+  printf("Before SendCommand\n");
   RedisClient::ReplyType reply = gRedis.SendCommand();
 
   if (reply == RedisClient::eRedisError)
   {
     printf("Redis error while SMEMBERS: %s\n", gRedis.GetError().GetChars());
   }
-  
+ 
+  printf("Got %d items back\n", gRedis.GetCount());
+ 
   std::vector<nglString> radios;
   int64 count = gRedis.GetCount();
+
+  printf("\t%d radios to flush\n", count);
+  
   radios.reserve(count);
   for (int i = 0; i < count; i++)
+  {
     radios.push_back(gRedis.GetReply(i));
-  
+    printf("\t\t%s\n", radios[i].GetChars());
+  }
+
   gRedis.StartCommand("DEL");
   
   for (int i = 0; i < radios.size(); i++)
