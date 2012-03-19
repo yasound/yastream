@@ -228,8 +228,9 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
     
     if (res < 0)
     {
-      printf("Radio::GetChunk error getting %d bytes from the stream\n", left);
+      //printf("Radio::GetChunk error getting %d bytes from the stream\n", left);
       delete pChunk;
+      pClient->Close();
       return NULL;
     }
 
@@ -240,7 +241,7 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
   
   //NGL_ASSERT(res == left);
   
-  printf("Radio::GetChunk read %d bytes from the stream [offset 0x%x 0x%02x%02x%02x%02x]\n", done, offset, data[0], data[1], data[2], data[3]);
+  //printf("Radio::GetChunk read %d bytes from the stream [offset 0x%x 0x%02x%02x%02x%02x]\n", done, offset, data[0], data[1], data[2], data[3]);
   return pChunk;
 }
 
