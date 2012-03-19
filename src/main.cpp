@@ -184,6 +184,7 @@ int main(int argc, const char** argv)
   
   NGL_OUT("Starting http streaming server %s:%d\n", hostname.GetChars(), port);
   nuiHTTPServer* pServer = new nuiHTTPServer();
+  pServer->SetClientStackSize(1024 * 10);
   pServer->SetHandlerDelegate(HandlerDelegate);
 
   if (pServer->Bind(hostname, port))
