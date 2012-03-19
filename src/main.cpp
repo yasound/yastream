@@ -179,64 +179,11 @@ int main(int argc, const char** argv)
     close(STDERR_FILENO);
   }
   
-#if 0
-  RedisClient redis;
-  if (!redis.Connect(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP)))
-  {
-    printf("Error connecting to redis server.\n");
-    exit(0);
-  }
-
-  redis.StartCommand("DEL");
-  redis.AddArg("prout");
-  redis.PrintSendCommand();
-  
-  //redis.StartCommand("GET");
-  redis.StartCommand("LPUSH");
-  redis.AddArg("prout");
-  redis.AddArg("bleh");
-  redis.PrintSendCommand();
-
-  redis.StartCommand("LPUSH");
-  redis.AddArg("prout");
-  redis.AddArg("woah");
-  redis.PrintSendCommand();
-
-  redis.StartCommand("LRANGE");
-  redis.AddArg("prout");
-  redis.AddArg("0");
-  redis.AddArg("-1");
-  redis.PrintSendCommand();
-  
-  redis.StartCommand("OBJECT");
-  redis.AddArg("ENCODING");
-  redis.AddArg("prout");
-  redis.PrintSendCommand();
-  
-  redis.StartCommand("INFO");
-  redis.PrintSendCommand();
-#endif
-  
-  //  nuiHTTPRequest request("https://dev.yasound.com/admin/");
-//  nuiHTTPResponse* pResponse = request.SendRequest();
-//  printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
-//  printf("data:\n %s\n\n", pResponse->GetBodyStr().GetChars());
-
   Radio::SetParams(hostname, port, datapath, redishost, redisport);
-
   Radio::FlushRedis();
   
   nuiHTTPServer* pServer = new nuiHTTPServer();
-
-  //Radio* pRadio = new Radio("fakeid");
-  //pRadio->AddTrack("/Users/meeloo/work/yastream/data/Money Talks.mp3");
-  //pRadio->AddTrack("/Users/meeloo/work/yastream/data/Thunderstruck.mp3");
-  //pRadio->AddTrack("/Users/meeloo/work/yastream/data/ebc_preview64.mp3");
-  //pRadio->AddTrack("/Users/meeloo/work/yastream/data/ebc.mp3");
-  //pRadio->AddTrack("/space/new/medias/song/eca/c9f/ebc.mp3");
-
   pServer->SetHandlerDelegate(HandlerDelegate);
-
 
   if (pServer->Bind(hostname, port))
   {
@@ -244,7 +191,7 @@ int main(int argc, const char** argv)
   }
   else
   {
-    NGL_OUT("Unable to bind port %d\n", port);
+    NGL_OUT("Unable to bind %s:%d\n", hostname.GetChars(), port);
   }
 
   delete pServer;
