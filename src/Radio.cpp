@@ -572,7 +572,6 @@ void Radio::FlushRedis()
   nglString server;
   server.Add("server:").Add(mHostname);
   gRedis.AddArg(server);
-  printf("Before SendCommand\n");
   RedisClient::ReplyType reply = gRedis.SendCommand();
 
   if (reply == RedisClient::eRedisError)
@@ -606,7 +605,17 @@ void Radio::FlushRedis()
       printf("Redis error while Flush DEL: %s\n", gRedis.GetError().GetChars());
     }
   }
-  printf("Flush Done\n");
+
+  // Clean the master key:
+  gRedis.StartCommand("DEL");
+  gRedis.AddArg(server);
+
+  reply = gRedis.SendCommand();
+  if (reply == RedisClient::eRedisError)
+  {
+    printf("Redis error while Master Flush DEL: %s\n", gRedis.GetError().GetChars());
+  }
+
 }
 
 
