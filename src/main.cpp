@@ -41,6 +41,8 @@ int main(int argc, const char** argv)
   nglString hostname = "0.0.0.0";
   bool daemon = false;
   nglPath datapath = "/data/glusterfs-storage/replica2all/song/";
+  nglString redishost = "127.0.0.1";
+  int redisport = 6379;
   
   for (int i = 1; i < argc; i++)
   {
@@ -52,8 +54,19 @@ int main(int argc, const char** argv)
         printf("ERROR: -port must be followed by a port number\n");
         exit(1);
       }
-
+      
       port = atoi(argv[i]);
+    }
+    else if (strcmp(argv[i], "-redisport") == 0)
+    {
+      i++;
+      if (i >= argc)
+      {
+        printf("ERROR: -redisport must be followed by a port number\n");
+        exit(1);
+      }
+      
+      redisport = atoi(argv[i]);
     }
     else if (strcmp(argv[i], "-host") == 0)
     {
@@ -65,6 +78,17 @@ int main(int argc, const char** argv)
       }
       
       hostname = argv[i];
+    }
+    else if (strcmp(argv[i], "-redishost") == 0)
+    {
+      i++;
+      if (i >= argc)
+      {
+        printf("ERROR: -redishost must be followed by a hostname or an ip address\n");
+        exit(1);
+      }
+      
+      redishost = argv[i];
     }
     else if (strcmp(argv[i], "-datapath") == 0)
     {
@@ -82,6 +106,8 @@ int main(int argc, const char** argv)
       printf("yastrm [-p port] [-host hostname]\n");
       printf("\t-port\tset the server port.\n");
       printf("\t-host\tset the server host name or ip address.\n");
+      printf("\t-redisport\tset the redis server port.\n");
+      printf("\t-redishost\tset the redis server host name or ip address.\n");
       printf("\t-datapath\tset the path to the song folder (the one that contains the mp3 hashes).\n");
       printf("\t-daemon launch in daemon mode (will fork!).\n");
     }
@@ -194,7 +220,7 @@ int main(int argc, const char** argv)
 //  printf("response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
 //  printf("data:\n %s\n\n", pResponse->GetBodyStr().GetChars());
 
-  Radio::SetParams(hostname, port, datapath);
+  Radio::SetParams(hostname, port, datapath, redishost, redisport);
 
   nuiHTTPServer* pServer = new nuiHTTPServer();
 

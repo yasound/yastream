@@ -23,7 +23,7 @@ public:
   void OnStartProxy();
 
   static Radio* GetRadio(const nglString& rURL);
-  static void SetParams(const nglString& hostname, int port, const nglPath& rDataPath);
+  static void SetParams(const nglString& hostname, int port, const nglPath& rDataPath, const nglString& rRedisHost, int RedisPort);
 
   void AddTrack(const nglPath& rPath);
 
@@ -42,6 +42,7 @@ private:
   Mp3Chunk* GetChunk(nuiTCPClient* pClient);
   
   bool mLive;
+  bool mGoOffline;
   nglCriticalSection mCS;
   nglString mID;
 
@@ -78,7 +79,10 @@ private:
   static nglString mHostname;
   static int mPort;
   static nglPath mDataPath;
+  static nglString mRedisHost;
+  static int mRedisPort;
 
+  static void InitRedis();
 
   static Radio* CreateRadio(const nglString& rURL, const nglString& rHost);
   static void RegisterRadio(const nglString& rURL, Radio* pRadio);

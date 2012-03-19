@@ -13,6 +13,7 @@
 Radio::Radio(const nglString& rID, const nglString& rHost)
 : mID(rID),
   mLive(false),
+  mGoOffline(false),
   mpParser(NULL),
   mpStream(NULL),
   mBufferDuration(0),
@@ -74,6 +75,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
   std::deque<Mp3Chunk*>& rChunks  = highQuality ? mChunks : mChunksPreview;
 
   mLive = true;
+  mGoOffline = false;
   rClients.push_back(pClient);
 
   //printf("Prepare the new client:\n");
@@ -95,8 +97,9 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   if (mClients.empty() && mClientsPreview.empty())
   {
     //  Shutdown radio
-    //printf("Shutting down radio %s\n", mID.GetChars());
+    printf("Last client is gone: Shutting down radio %s\n", mID.GetChars());
     //mLive = false;
+    mGoOffline = true;
   }
 }
 
@@ -458,6 +461,9 @@ void Radio::OnStartProxy()
 
 bool Radio::LoadNextTrack()
 {
+  if (mGoOffline) // We were aske to kill this radio once the current song was finished.
+    return false;
+  
   // Try to get the new track from the app server:
   nglString url;
   url.Format("https://api.yasound.com/api/v1/radio/%s/get_next_song/", mID.GetChars());
@@ -523,16 +529,37 @@ std::map<nglString, Radio*> Radio::gRadios;
 nglString Radio::mHostname = "0.0.0.0";
 int Radio::mPort = 8001;
 nglPath Radio::mDataPath = "/space/new/medias/song";
+nglString Radio::mRedisHost = "127.0.0.1";
+int Radio::mRedisPort = 6379;
 
 RedisClient Radio::gRedis;
 
-void Radio::SetParams(const nglString& hostname, int port, const nglPath& rDataPath)
+void Radio::SetParams(const nglString& hostname, int port, const nglPath& rDataPath, const nglString& rRedisHost, int RedisPort)
 {
   mHostname = hostname;
   mPort = port;
   mDataPath = rDataPath;
+  mRedisHost = rRedisHost;
+  mRedisPort = RedisPort;
 }
 
+void Radio::InitRedis()
+{
+  if (!gRedis.IsConnected())
+  {
+    bool res = gRedis.Connect(nuiNetworkHost(mRedisHost, mRedisPort, nuiNetworkHost::eTCP));
+    if (!res)
+      printf("Error connecting to redis server.\n");
+    
+    gRedis.StartCommand("SELECT");
+    gRedis.AddArg("1");
+    RedisClient::ReplyType reply = gRedis.SendCommand();
+    if (reply == RedisClient::eRedisError)
+    {
+      printf("Redis error: %s\n", gRedis.GetError().GetChars());
+    }
+  }
+}
 
 Radio* Radio::GetRadio(const nglString& rURL)
 {
@@ -543,20 +570,7 @@ Radio* Radio::GetRadio(const nglString& rURL)
   if (it == gRadios.end())
   {
     // Ask Redis if he knows a server that handles this radio:
-    if (!gRedis.IsConnected())
-    {
-      bool res = gRedis.Connect(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP));
-      if (!res)
-        printf("Error connecting to redis server.\n");
-
-      gRedis.StartCommand("SELECT");
-      gRedis.AddArg("1");
-      RedisClient::ReplyType reply = gRedis.SendCommand();
-      if (reply == RedisClient::eRedisError)
-      {
-        printf("Redis error: %s\n", gRedis.GetError().GetChars());
-      }
-    }
+    InitRedis();
     
     nglString r;
     r.Add("radio:").Add(rURL);
@@ -568,7 +582,7 @@ Radio* Radio::GetRadio(const nglString& rURL)
       RedisClient::ReplyType reply = gRedis.SendCommand();
       if (reply == RedisClient::eRedisError)
       {
-        printf("Redis error: %s\n", gRedis.GetError().GetChars());
+        printf("Redis error while GET: %s\n", gRedis.GetError().GetChars());
       }
       
       NGL_ASSERT(reply == RedisClient::eRedisBulk);
@@ -588,7 +602,7 @@ Radio* Radio::GetRadio(const nglString& rURL)
       reply = gRedis.SendCommand();
       if (reply == RedisClient::eRedisError)
       {
-        printf("Redis error: %s\n", gRedis.GetError().GetChars());
+        printf("Redis error while SET: %s\n", gRedis.GetError().GetChars());
       }
       
     }
@@ -624,6 +638,21 @@ void Radio::UnregisterRadio(const nglString& rURL)
     //printf("Error, radio '%s' was never registered\n", rURL.GetChars());
   }
   gRadios.erase(rURL);
+
+  InitRedis();
+  if (gRedis.IsConnected())
+  {
+    nglString r;
+    r.Add("radio:").Add(rURL);
+    gRedis.StartCommand("DEL");
+    gRedis.AddArg(r);
+    RedisClient::ReplyType reply = gRedis.SendCommand();
+    if (reply == RedisClient::eRedisError)
+    {
+      printf("Redis error while DEL: %s\n", gRedis.GetError().GetChars());
+    }
+  }
+
 }
 
 Radio* Radio::CreateRadio(const nglString& rURL, const nglString& rHost)
