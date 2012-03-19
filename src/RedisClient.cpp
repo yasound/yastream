@@ -23,6 +23,7 @@ RedisClient::~RedisClient()
 // Server connection:
 bool RedisClient::Connect(const nuiNetworkHost& rHost)
 {
+  delete mpClient;
   mpClient = new nuiTCPClient();
   return mpClient->Connect(rHost);
 }

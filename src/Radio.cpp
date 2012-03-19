@@ -528,7 +528,7 @@ void Radio::AddTrack(const nglPath& rPath)
 nglCriticalSection Radio::gCS;
 std::map<nglString, Radio*> Radio::gRadios;
 nglString Radio::mHostname = "0.0.0.0";
-int Radio::mPort = 8001;
+int Radio::mPort = 8000;
 nglPath Radio::mDataPath = "/space/new/medias/song";
 nglString Radio::mRedisHost = "127.0.0.1";
 int Radio::mRedisPort = 6379;
@@ -561,6 +561,40 @@ void Radio::InitRedis()
     }
   }
 }
+
+void Radio::FlushRedis()
+{
+  InitRedis();
+  
+  gRedis.StartCommand("SMEMBERS");
+  nglString server;
+  server.Add("server:").Add(mHostname);
+  gRedis.AddArg(server);
+  RedisClient::ReplyType reply = gRedis.SendCommand();
+
+  if (reply == RedisClient::eRedisError)
+  {
+    printf("Redis error while SMEMBERS: %s\n", gRedis.GetError().GetChars());
+  }
+  
+  std::vector<nglString> radios;
+  int64 count = gRedis.GetCount();
+  radios.reserve(count);
+  for (int i = 0; i < count; i++)
+    radios.push_back(gRedis.GetReply(i));
+  
+  gRedis.StartCommand("DEL");
+  
+  for (int i = 0; i < radios.size(); i++)
+    gRedis.AddArg(radios[i]);
+  
+  reply = gRedis.SendCommand();
+  if (reply == RedisClient::eRedisError)
+  {
+    printf("Redis error while Flush DEL: %s\n", gRedis.GetError().GetChars());
+  }
+}
+
 
 Radio* Radio::GetRadio(const nglString& rURL)
 {
@@ -605,7 +639,17 @@ Radio* Radio::GetRadio(const nglString& rURL)
       {
         printf("Redis error while SET: %s\n", gRedis.GetError().GetChars());
       }
-      
+
+      gRedis.StartCommand("SADD");
+      nglString server;
+      server.Add("server:").Add(mHostname);
+      gRedis.AddArg(server);
+      gRedis.AddArg(rURL);
+      if (gRedis.SendCommand() == RedisClient::eRedisError)
+      {
+        printf("Redis error while SADD: %s\n", gRedis.GetError().GetChars());
+      }
+
     }
     
     // Create the radio!
@@ -651,6 +695,16 @@ void Radio::UnregisterRadio(const nglString& rURL)
     if (reply == RedisClient::eRedisError)
     {
       printf("Redis error while DEL: %s\n", gRedis.GetError().GetChars());
+    }
+    
+    gRedis.StartCommand("SREM");
+    nglString server;
+    server.Add("server:").Add(mHostname);
+    gRedis.AddArg(server);
+    gRedis.AddArg(rURL);
+    if (gRedis.SendCommand() == RedisClient::eRedisError)
+    {
+      printf("Redis error while SREM: %s\n", gRedis.GetError().GetChars());
     }
   }
 

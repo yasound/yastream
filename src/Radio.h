@@ -32,7 +32,8 @@ public:
   static void AddRadioSource(const nglString& rID, const nglString& rURL);
   static void DelRadioSource(const nglString& rID, const nglString& rURL);
   
-  
+  static void FlushRedis();
+
 private:
   bool SetTrack(const nglPath& rPath);
   bool LoadNextTrack();
@@ -83,6 +84,7 @@ private:
   static int mRedisPort;
 
   static void InitRedis();
+
 
   static Radio* CreateRadio(const nglString& rURL, const nglString& rHost);
   static void RegisterRadio(const nglString& rURL, Radio* pRadio);

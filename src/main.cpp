@@ -37,7 +37,7 @@ int main(int argc, const char** argv)
   App->CatchSignal(SIGPIPE, SigPipeSink);
 #endif
 
-  int port = 8001;
+  int port = 8000;
   nglString hostname = "0.0.0.0";
   bool daemon = false;
   nglPath datapath = "/data/glusterfs-storage/replica2all/song/";
@@ -224,6 +224,8 @@ int main(int argc, const char** argv)
 
   Radio::SetParams(hostname, port, datapath, redishost, redisport);
 
+  Radio::FlushRedis();
+  
   nuiHTTPServer* pServer = new nuiHTTPServer();
 
   //Radio* pRadio = new Radio("fakeid");
