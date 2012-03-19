@@ -110,6 +110,8 @@ int main(int argc, const char** argv)
       printf("\t-redishost\tset the redis server host name or ip address.\n");
       printf("\t-datapath\tset the path to the song folder (the one that contains the mp3 hashes).\n");
       printf("\t-daemon launch in daemon mode (will fork!).\n");
+      
+      exit(0);
     }
     else if (strcmp(argv[i], "-daemon") == 0)
     {
