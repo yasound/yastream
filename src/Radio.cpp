@@ -50,21 +50,26 @@ void Radio::Start()
   if (mpPreviewSource)
   {
     mLive = mpPreviewSource->IsConnected();
-    
-    mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStartProxy), nglThread::Normal, stacksize);
+   
+    if (mLive) 
+      mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStartProxy), nglThread::Normal, stacksize);
   }
   else
   {
     mLive = LoadNextTrack();
     
-    mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), nglThread::Normal, stacksize);
+   if (mLive)
+      mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), nglThread::Normal, stacksize);
   }
 
-  mpThread->SetAutoDelete(true);
-  mpThread->Start();
-  size_t size = mpThread->GetStackSize();
+  if (mpThread)
+  {
+    mpThread->SetAutoDelete(true);
+    mpThread->Start();
+    size_t size = mpThread->GetStackSize();
   
-  //printf("New thread stack size: %ld (requested %ld)\n", size, stacksize);
+    //printf("New thread stack size: %ld (requested %ld)\n", size, stacksize);
+  }
 }
 
 void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
@@ -90,6 +95,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 
 void Radio::UnregisterClient(HTTPHandler* pClient)
 {
+  printf("client is gone for radio %s\n", mID.GetChars());
   nglCriticalSectionGuard guard(mCS);
   mClients.remove(pClient);
   mClientsPreview.remove(pClient);
@@ -99,7 +105,7 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
     //  Shutdown radio
     printf("Last client is gone: Shutting down radio %s\n", mID.GetChars());
     //mLive = false;
-    //mGoOffline = true;
+    mGoOffline = true;
   }
 }
 
@@ -463,7 +469,9 @@ bool Radio::LoadNextTrack()
 {
   if (mGoOffline) // We were asked to kill this radio once the current song was finished.
     return false;
-  
+ 
+while (1)
+{ 
   // Try to get the new track from the app server:
   nglString url;
   url.Format("https://newapi.yasound.com/api/v1/radio/%s/get_next_song/", mID.GetChars());
@@ -493,6 +501,7 @@ bool Radio::LoadNextTrack()
   }
 
   delete pResponse;
+}
 
   // Otherwise load a track from mTracks
   if (!mTracks.empty())
@@ -532,16 +541,17 @@ int Radio::mPort = 8000;
 nglPath Radio::mDataPath = "/space/new/medias/song";
 nglString Radio::mRedisHost = "127.0.0.1";
 int Radio::mRedisPort = 6379;
-
+int Radio::mRedisDB = 1;
 RedisClient Radio::gRedis;
 
-void Radio::SetParams(const nglString& hostname, int port, const nglPath& rDataPath, const nglString& rRedisHost, int RedisPort)
+void Radio::SetParams(const nglString& hostname, int port, const nglPath& rDataPath, const nglString& rRedisHost, int RedisPort, int RedisDB)
 {
   mHostname = hostname;
   mPort = port;
   mDataPath = rDataPath;
   mRedisHost = rRedisHost;
   mRedisPort = RedisPort;
+  mRedisDB = RedisDB;
 }
 
 void Radio::InitRedis()
@@ -553,7 +563,9 @@ void Radio::InitRedis()
       printf("Error connecting to redis server.\n");
     
     gRedis.StartCommand("SELECT");
-    gRedis.AddArg("1");
+    nglString db;
+    db.SetCInt(mRedisDB);
+    gRedis.AddArg(db);
     RedisClient::ReplyType reply = gRedis.SendCommand();
     if (reply == RedisClient::eRedisError)
     {
@@ -737,7 +749,10 @@ Radio* Radio::CreateRadio(const nglString& rURL, const nglString& rHost)
 {
   Radio* pRadio = new Radio(rURL, rHost);
   pRadio->Start();
-  return pRadio;
+  if (pRadio->IsLive())
+    return pRadio;
+  delete pRadio;
+  return NULL;
 }
 
 bool Radio::IsLive() const

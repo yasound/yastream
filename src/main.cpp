@@ -25,10 +25,13 @@ void SigPipeSink(int signal)
 
 int main(int argc, const char** argv)
 {
+  printf("Before nuiInit\n");
   nuiInit(NULL);
-  
-  nglOStream* pLogOutput = nglPath("~/yastreamlog.txt").OpenWrite(false);
-  App->GetLog().SetLevel("yastream", 0);
+  printf("After nuiInit\n");
+
+  nglOStream* pLogOutput = nglPath("/home/customer/yastreamlog.txt").OpenWrite(false);
+  App->GetLog().SetLevel("yastream", 1000);
+  App->GetLog().SetLevel("kernel", 1000);
   App->GetLog().AddOutput(pLogOutput);
   App->GetLog().Dump();
   NGL_LOG("yastream", NGL_LOG_INFO, "yasound streamer\n");
@@ -43,7 +46,9 @@ int main(int argc, const char** argv)
   nglPath datapath = "/data/glusterfs-storage/replica2all/song/";
   nglString redishost = "127.0.0.1";
   int redisport = 6379;
-  
+  int redisdb = 1;
+
+  printf("Check %s %d\n", __FILE__, __LINE__);
   for (int i = 1; i < argc; i++)
   {
     if (strcmp(argv[i], "-port") == 0)
@@ -51,10 +56,10 @@ int main(int argc, const char** argv)
       i++;
       if (i >= argc)
       {
-        printf("ERROR: -port must be followed by a port number\n");
+        NGL_LOG("yastream", NGL_LOG_ERROR, "ERROR: -port must be followed by a port number\n");
         exit(1);
       }
-      
+
       port = atoi(argv[i]);
     }
     else if (strcmp(argv[i], "-redisport") == 0)
@@ -62,21 +67,33 @@ int main(int argc, const char** argv)
       i++;
       if (i >= argc)
       {
-        printf("ERROR: -redisport must be followed by a port number\n");
+        NGL_LOG("yastream", NGL_LOG_ERROR, "ERROR: -redisport must be followed by a port number\n");
         exit(1);
       }
-      
+
       redisport = atoi(argv[i]);
     }
+    else if (strcmp(argv[i], "-redisdb") == 0)
+    {
+      i++;
+      if (i >= argc)
+      {
+        NGL_LOG("yastream", NGL_LOG_ERROR, "ERROR: -redisdb must be followed by a port number\n");
+        exit(1);
+      }
+
+      redisdb = atoi(argv[i]);
+    }
+
     else if (strcmp(argv[i], "-host") == 0)
     {
       i++;
       if (i >= argc)
       {
-        printf("ERROR: -host must be followed by a hostname or an ip address\n");
+        NGL_LOG("yastream", NGL_LOG_ERROR, "ERROR: -host must be followed by a hostname or an ip address\n");
         exit(1);
       }
-      
+
       hostname = argv[i];
     }
     else if (strcmp(argv[i], "-redishost") == 0)
@@ -84,10 +101,10 @@ int main(int argc, const char** argv)
       i++;
       if (i >= argc)
       {
-        printf("ERROR: -redishost must be followed by a hostname or an ip address\n");
+        NGL_LOG("yastream", NGL_LOG_ERROR, "ERROR: -redishost must be followed by a hostname or an ip address\n");
         exit(1);
       }
-      
+
       redishost = argv[i];
     }
     else if (strcmp(argv[i], "-datapath") == 0)
@@ -95,10 +112,10 @@ int main(int argc, const char** argv)
       i++;
       if (i >= argc)
       {
-        printf("ERROR: -datapath must be followed by a valid path\n");
+        NGL_LOG("yastream", NGL_LOG_ERROR, "ERROR: -datapath must be followed by a valid path\n");
         exit(1);
       }
-      
+
       datapath = argv[i];
     }
     else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
@@ -108,9 +125,10 @@ int main(int argc, const char** argv)
       printf("\t-host\tset the server host name or ip address.\n");
       printf("\t-redisport\tset the redis server port.\n");
       printf("\t-redishost\tset the redis server host name or ip address.\n");
+      printf("\t-redisdb\tset the redis database index.\n");
       printf("\t-datapath\tset the path to the song folder (the one that contains the mp3 hashes).\n");
       printf("\t-daemon launch in daemon mode (will fork!).\n");
-      
+
       exit(0);
     }
     else if (strcmp(argv[i], "-daemon") == 0)
@@ -126,13 +144,13 @@ int main(int argc, const char** argv)
       pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
       pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
       pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
-      
+
 //      pRadio->AddTrack(p + nglPath("/Money Talks.mp3"));
 //      pRadio->AddTrack(p + nglPath("/04 The Vagabound.mp3"));
       pRadio->AddTrack(p + nglPath("/Radian.mp3"));
       pRadio->Start();
 
-      printf("test mode ENABLED\n");
+      NGL_LOG("yastream", NGL_LOG_INFO, "test mode ENABLED\n");
     }
   }
 
@@ -140,10 +158,10 @@ int main(int argc, const char** argv)
   {
     openlog("yastream", LOG_PID, LOG_DAEMON);
     syslog(LOG_ALERT, "starting streaming server");
-    
+
     /* Our process ID and Session ID */
     pid_t pid, sid;
-    
+
     /* Fork off the parent process */
     pid = fork();
     if (pid < 0) {
@@ -154,50 +172,57 @@ int main(int argc, const char** argv)
     if (pid > 0) {
       exit(EXIT_SUCCESS);
     }
-    
+
     /* Change the file mode mask */
     umask(0);
-    
-    /* Open any logs here */        
-    
+
+    /* Open any logs here */
+
     /* Create a new SID for the child process */
     sid = setsid();
     if (sid < 0) {
       /* Log the failure */
       exit(EXIT_FAILURE);
     }
-    
+
     /* Change the current working directory */
     if ((chdir("/")) < 0) {
       /* Log the failure */
       exit(EXIT_FAILURE);
     }
-    
+
     /* Close out the standard file descriptors */
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
+  printf("Check %s %d\n", __FILE__, __LINE__);
   }
-  
-  Radio::SetParams(hostname, port, datapath, redishost, redisport);
+
+  printf("Check %s %d\n", __FILE__, __LINE__);
+  Radio::SetParams(hostname, port, datapath, redishost, redisport, redisdb);
   Radio::FlushRedis();
-  
+
   NGL_OUT("Starting http streaming server %s:%d\n", hostname.GetChars(), port);
   nuiHTTPServer* pServer = new nuiHTTPServer();
-  pServer->SetClientStackSize(1024 * 10);
+  //pServer->SetClientStackSize(1024 * 1024 * 4);
   pServer->SetHandlerDelegate(HandlerDelegate);
 
+  printf("Check %s %d\n", __FILE__, __LINE__);
   if (pServer->Bind(hostname, port))
   {
+  printf("Check %s %d\n", __FILE__, __LINE__);
     pServer->AcceptConnections();
   }
   else
   {
+  printf("Check %s %d\n", __FILE__, __LINE__);
     NGL_OUT("Unable to bind %s:%d\n", hostname.GetChars(), port);
   }
 
+  printf("Check %s %d\n", __FILE__, __LINE__);
   delete pServer;
   nuiUninit();
+  printf("Check %s %d\n", __FILE__, __LINE__);
 
   return 0;
 }
