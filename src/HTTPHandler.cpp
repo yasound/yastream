@@ -33,6 +33,20 @@ bool HTTPHandler::OnMethod(const nglString& rValue)
 
 bool HTTPHandler::OnURL(const nglString& rValue)
 {
+  if (mURL == "/favicon.ico")
+  {
+    nglString str;
+    str.Format("Unable to find %s on this server", mURL.GetChars());
+    ReplyError(404, str);
+    return false; // We don't have a favicon right now...
+  }
+  else if (mURL == "/ping")
+  {
+    ReplyLine("HTTP/1.1 200 OK\n");
+    ReplyLine("All systems nominal");
+    return false; // We don't have a favicon right now...
+  }
+
   return true;
 }
 
@@ -64,7 +78,7 @@ bool HTTPHandler::OnHeader(const nglString& rKey, const nglString& rValue)
         }
       }
     }
-    
+
     if (mUsername.IsEmpty() || mApiKey.IsEmpty())
     {
       // username or api_key is not specified => anonymous user
@@ -110,20 +124,11 @@ bool HTTPHandler::OnBodyStart()
     nuiAttributeBase* pAttrib = new nuiAttribute<uint32>("array", nuiUnitNone, FakeGetter, FakeSetter, FakeRange);
     obj->AddInstanceAttribute("array", pAttrib);
     mpTemplate->Generate(obj, nuiMakeDelegate(this, &HTTPHandler::SendFromTemplate));
-    
+
     return false;
   }
 #endif
-  
-  if (mURL == "/favicon.ico")
-  {
-    nglString str;
-    str.Format("Unable to find %s on this server", mURL.GetChars());
-    ReplyError(404, str);
-    return false; // We don't have a favicon right now...
-  }
-  
-  
+
   std::vector<nglString> tokens;
   mURL.Tokenize(tokens, "/");
 
@@ -138,17 +143,17 @@ bool HTTPHandler::OnBodyStart()
     {
       // check if the user is allowed to play high quality stream
       nglString url;
-      url.Format("https://dev.yasound.com/api/v1/subscription/?username=%s&api_key=%s", mUsername.GetChars(), mApiKey.GetChars());
+      url.Format("https://api.yasound.com/api/v1/subscription/?username=%s&api_key=%s", mUsername.GetChars(), mApiKey.GetChars());
       nuiHTTPRequest request(url);
       nuiHTTPResponse* pResponse = request.SendRequest();
-    
+
       if (pResponse->GetStatusCode() == 200)
       {
         nglString subscription = pResponse->GetBodyStr();
         hq = (subscription == SUBSCRIPTION_PREMIUM);
-        
+
         if (!hq)
-          printf("user '%s' requested high quality but did not subscribe!\n", mUsername.GetChars());
+          NGL_LOG("radio", NGL_LOG_WARNING, "user '%s' requested high quality but did not subscribe!\n", mUsername.GetChars());
       }
     }
   }
@@ -157,6 +162,7 @@ bool HTTPHandler::OnBodyStart()
   Radio* pRadio = Radio::GetRadio(mRadioID);
   if (!pRadio || !pRadio->IsLive())
   {
+    NGL_LOG("radio", NGL_LOG_ERROR, "HTTPHandler::Start unable to create radio %s\n", mRadioID.GetChars());
     nglString str;
     str.Format("Unable to find %s on this server", mURL.GetChars());
     ReplyError(404, str);
@@ -166,7 +172,7 @@ bool HTTPHandler::OnBodyStart()
 
   Log(200);
 
-  
+
   pRadio->RegisterClient(this, hq);
   SendListenStatus(eStartListen);
 
@@ -195,15 +201,17 @@ bool HTTPHandler::OnBodyStart()
       pChunk = GetNextChunk();
     }
 //    if (cnt)
-//      printf("%d", cnt);
-    //printf("^");
-    //printf("%d", cnt);
+//      NGL_LOG("radio", NGL_LOG_INFO, "%d", cnt);
+    //NGL_LOG("radio", NGL_LOG_INFO, "^");
+    //NGL_LOG("radio", NGL_LOG_INFO, "%d", cnt);
     mpClient->Send(&pChunk->GetData()[0], pChunk->GetData().size());
 
     pChunk->Release();
   }
 
   SendListenStatus(eStopListen);
+
+  NGL_LOG("radio", NGL_LOG_INFO, "Client disconnecting from %s\n", mRadioID.GetChars());
   pRadio->UnregisterClient(this);
 
   return false;
@@ -221,7 +229,7 @@ void HTTPHandler::OnBodyEnd()
 void HTTPHandler::AddChunk(Mp3Chunk* pChunk)
 {
   nglCriticalSectionGuard guard(mCS);
-  //printf("handle id = %d\n", pChunk->GetId());
+  //NGL_LOG("radio", NGL_LOG_INFO, "handle id = %d\n", pChunk->GetId());
   pChunk->Acquire();
   mChunks.push_back(pChunk);
 }
@@ -240,13 +248,13 @@ Mp3Chunk* HTTPHandler::GetNextChunk()
 }
 
 void HTTPHandler::SendListenStatus(ListenStatus status)
-{  
+{
   nglString statusStr;
   if (status == eStartListen)
     statusStr = "start_listening";
   else if (status == eStopListen)
     statusStr = "stop_listening";
-  
+
   nglString params;
   if (!mUsername.IsEmpty() && !mApiKey.IsEmpty())
     params.Format("?username=%s&api_key=%s", mUsername.GetChars(), mApiKey.GetChars());
@@ -256,14 +264,14 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
     nuiNetworkHost client(0, 0, nuiNetworkHost::eTCP);
     bool res = mpClient->GetDistantHost(client);
     if (res)
-    { 
+    {
       uint32 ip = client.GetIP();
       int port = client.GetPort();
       address.Format("%d:%d", ip, port);
     }
     params.Format("?address=%s", address.GetChars());
   }
-  
+
   if (status == eStartListen)
   {
     mStartTime = nglTime();
@@ -277,12 +285,12 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
     durationParam.Format("&listening_duration=%d", seconds);
     params += durationParam;
   }
-  
+
   nglString url;
   url.Format("https://dev.yasound.com/api/v1/radio/%s/%s/%s", mRadioID.GetChars(), statusStr.GetChars(), params.GetChars());
   nuiHTTPRequest request(url, "POST");
   nuiHTTPResponse* pResponse = request.SendRequest();
-  
+
   /*
   nglString log;
   log = "\n(url:";
@@ -293,7 +301,7 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
   log += pResponse->GetBodyStr();
   log += " ###END###";
 
-  printf("log length : %d\n", log.GetLength());
+  NGL_LOG("radio", NGL_LOG_INFO, "log length : %d\n", log.GetLength());
   nglPath logPath = nglPath(ePathCurrent);
   logPath += "/log/ListenStatus.log";
   nglIOFile* pFile = new nglIOFile(logPath, eOFileAppend);
@@ -302,4 +310,9 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
   */
 }
 
+void HTTPHandler::GoOffline()
+{
+  mLive = false;
+  mpClient->Close();
+}
 

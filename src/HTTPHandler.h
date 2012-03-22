@@ -22,29 +22,30 @@ public:
   bool OnBodyData(const std::vector<uint8>& rData);
   void OnBodyEnd();
   void AddChunk(Mp3Chunk* pChunk);
-  
+
+  void GoOffline();
 private:
   nglCriticalSection mCS;
   std::deque<Mp3Chunk*> mChunks;
-  
+
   Mp3Chunk* GetNextChunk();
-  
+
   enum ListenStatus
   {
     eStartListen = 0,
     eStopListen
   };
-  
+
   void SendListenStatus(ListenStatus status);
-  
+
   bool SendFromTemplate(const nglString& rString, nuiObject* pObject);
-  
+
   bool mLive;
   nglString mUsername;
   nglString mApiKey;
   nglString mRadioID;
   nglTime mStartTime;
-  
+
   nuiStringTemplate* mpTemplate;
 };
 

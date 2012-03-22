@@ -23,7 +23,7 @@ Mp3Frame::Mp3Frame(nglIStream& rStream, int bytePosition, TimeMs time, bool logg
   mLog(logging)
 {
   if (mLog)
-    printf("Mp3Frame @%d\n", bytePosition);
+    NGL_LOG("radio", NGL_LOG_INFO, "Mp3Frame @%d\n", bytePosition);
 }
 
 Mp3Frame::~Mp3Frame()

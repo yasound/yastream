@@ -31,17 +31,18 @@ public:
 
   static void AddRadioSource(const nglString& rID, const nglString& rURL);
   static void DelRadioSource(const nglString& rID, const nglString& rURL);
-  
-  static void FlushRedis();
+
+  static void FlushRedis(bool FlushAll);
 
 private:
   bool SetTrack(const nglPath& rPath);
   bool LoadNextTrack();
   double ReadSet(int64& chunk_count_preview, int64& chunk_count);
   double ReadSetProxy(int64& chunk_count_preview, int64& chunk_count);
+  void KillClients();
 
   Mp3Chunk* GetChunk(nuiTCPClient* pClient);
-  
+
   bool mLive;
   bool mGoOffline;
   nglCriticalSection mCS;

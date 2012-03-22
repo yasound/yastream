@@ -15,13 +15,13 @@ Mp3Parser::Mp3Parser(nglIStream& rStream, bool logging, bool SkipPadding)
 : mrStream(rStream), mLog(logging), mCurrentFrame(logging), mSkipPadding(SkipPadding), mFirstFrameFound(false)
 {
   if (mLog)
-    printf("new parser with stream\n");
+    NGL_LOG("radio", NGL_LOG_INFO, "new parser with stream\n");
   mDataLength = mrStream.Available();
 
   mCurrentFrame = FindFirstFrame();
   mFirstFrameFound = mCurrentFrame.IsValid();
   if (mLog)
-    printf("done with first frame? %s\n", YESNO(mCurrentFrame.IsValid()));
+    NGL_LOG("radio", NGL_LOG_INFO, "done with first frame? %s\n", YESNO(mCurrentFrame.IsValid()));
   mDuration = 0;
   mId = 0;
 }
@@ -80,7 +80,7 @@ void Mp3Parser::ParseAll()
   bool ok = true;
   while (ok)
   {
-    printf("---FRAME---(%dms)\n%s \n", (int)mCurrentFrame.GetDuration(), mCurrentFrame.ToString().c_str());
+    NGL_LOG("radio", NGL_LOG_INFO, "---FRAME---(%dms)\n%s \n", (int)mCurrentFrame.GetDuration(), mCurrentFrame.ToString().c_str());
     ok = GoToNextFrame();
   }
 }
@@ -132,13 +132,13 @@ Mp3Frame Mp3Parser::ComputeFirstFrame()
 Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
 {
   if (mLog)
-    printf("ComputeNextFrame (%d, %d)\n", byteOffset, mDataLength);
+    NGL_LOG("radio", NGL_LOG_INFO, "ComputeNextFrame (%d, %d)\n", byteOffset, mDataLength);
   int b = byteOffset;
   while (b < mDataLength - 4)
   {
     if (mLog)
-      printf("trying %d\n", b);
-    
+      NGL_LOG("radio", NGL_LOG_INFO, "trying %d\n", b);
+
     Mp3Frame temp(mrStream, b, time, mLog, !mFirstFrameFound);
     if (temp.IsValid())
     {
@@ -146,7 +146,7 @@ Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
       if (!mSkipPadding || !temp.GetHeader().mIsXing)
       {
         if (mLog)
-          printf("ComputeNextFrame ok\n");
+          NGL_LOG("radio", NGL_LOG_INFO, "ComputeNextFrame ok\n");
         return temp;
       }
     }
@@ -162,29 +162,29 @@ Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
     if (data[0] == 'I' && data[1] == 'D' && data[2] == '3')
     {
       if (mLog)
-        printf("ID3 frame (%c %c %c)\n", data[0], data[1], data[2]);
-      
+        NGL_LOG("radio", NGL_LOG_INFO, "ID3 frame (%c %c %c)\n", data[0], data[1], data[2]);
+
       uint8 version[2];
       uint8 flags;
       uint8 sizes[4];
       r = mrStream.Read(version, 2, 1);
       if (!r)
         return Mp3Frame(mLog);
-      
+
       r = mrStream.Read(&flags, 1, 1);
       if (!r)
         return Mp3Frame(mLog);
       r = mrStream.Read(sizes, 4, 1);
       if (!r)
         return Mp3Frame(mLog);
-      
+
       int32 size = 0;
       for (int32 i = 0; i < 4; i++)
         size = (size << 7) + sizes[i];
-      
+
       if (mLog)
-        printf("id3 frame size: %d (0x%x) + 10 bytes of header = %d (0x%x)\n", size, size, size + 10, size + 10);
-      
+        NGL_LOG("radio", NGL_LOG_INFO, "id3 frame size: %d (0x%x) + 10 bytes of header = %d (0x%x)\n", size, size, size + 10, size + 10);
+
       b += size + 10;
 
     }
@@ -193,7 +193,7 @@ Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
       // This is an ID3v1.x tag
       b += 128;
     }
-    else 
+    else
     {
       if (mSkipPadding && temp.GetHeader().mIsXing)
         b = temp.GetEndBytePosition();
@@ -203,7 +203,7 @@ Mp3Frame Mp3Parser::ComputeNextFrame(int byteOffset, TimeMs time)
   }
 
   if (mLog)
-    printf("ComputeNextFrame not found\n");
+    NGL_LOG("radio", NGL_LOG_INFO, "ComputeNextFrame not found\n");
   return Mp3Frame(mLog);
 }
 

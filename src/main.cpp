@@ -20,25 +20,49 @@ nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient)
 void SigPipeSink(int signal)
 {
   // Ignore...
-  //printf("SigPipe!\n");
+  //NGL_LOG("radio", NGL_LOG_INFO, "SigPipe!\n");
 }
+
+class SyslogConsole : public nglConsole
+{
+public:
+  SyslogConsole (bool IsVisible = false)
+  {
+    openlog("yastream", LOG_PID, LOG_DAEMON);
+  }
+
+  virtual ~SyslogConsole()
+  {
+  }
+
+
+  virtual void OnOutput (const nglString& rText)
+  {
+    syslog(LOG_ALERT, rText.GetChars());
+  }
+
+  virtual void OnInput  (const nglString& rLine)
+  {
+    // No input handled...
+  }
+};
+
 
 int main(int argc, const char** argv)
 {
-  printf("Before nuiInit\n");
   nuiInit(NULL);
-  printf("After nuiInit\n");
 
-  nglOStream* pLogOutput = nglPath("/home/customer/yastreamlog.txt").OpenWrite(false);
+  //nglOStream* pLogOutput = nglPath("/home/customer/yastreamlog.txt").OpenWrite(false);
   App->GetLog().SetLevel("yastream", 1000);
   App->GetLog().SetLevel("kernel", 1000);
-  App->GetLog().AddOutput(pLogOutput);
+  //App->GetLog().AddOutput(pLogOutput);
   App->GetLog().Dump();
   NGL_LOG("yastream", NGL_LOG_INFO, "yasound streamer\n");
 
 #if defined _MINUI3_
   App->CatchSignal(SIGPIPE, SigPipeSink);
 #endif
+
 
   int port = 8000;
   nglString hostname = "0.0.0.0";
@@ -47,10 +71,12 @@ int main(int argc, const char** argv)
   nglString redishost = "127.0.0.1";
   int redisport = 6379;
   int redisdb = 1;
+  nglString bindhost = "0.0.0.0";
+  bool flushall = false;
 
-  printf("Check %s %d\n", __FILE__, __LINE__);
   for (int i = 1; i < argc; i++)
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "arg[%d] = %s\n", i, argv[i]);
     if (strcmp(argv[i], "-port") == 0)
     {
       i++;
@@ -73,18 +99,6 @@ int main(int argc, const char** argv)
 
       redisport = atoi(argv[i]);
     }
-    else if (strcmp(argv[i], "-redisdb") == 0)
-    {
-      i++;
-      if (i >= argc)
-      {
-        NGL_LOG("yastream", NGL_LOG_ERROR, "ERROR: -redisdb must be followed by a port number\n");
-        exit(1);
-      }
-
-      redisdb = atoi(argv[i]);
-    }
-
     else if (strcmp(argv[i], "-host") == 0)
     {
       i++;
@@ -96,6 +110,17 @@ int main(int argc, const char** argv)
 
       hostname = argv[i];
     }
+    else if (strcmp(argv[i], "-bindhost") == 0)
+    {
+      i++;
+      if (i >= argc)
+      {
+        NGL_LOG("yastream", NGL_LOG_ERROR, "ERROR: -bind must be followed by a hostname or an ip address\n");
+        exit(1);
+      }
+
+      bindhost = argv[i];
+    }
     else if (strcmp(argv[i], "-redishost") == 0)
     {
       i++;
@@ -106,6 +131,22 @@ int main(int argc, const char** argv)
       }
 
       redishost = argv[i];
+    }
+    else if (strcmp(argv[i], "-redisdb") == 0)
+    {
+      i++;
+      if (i >= argc)
+      {
+        NGL_LOG("yastream", NGL_LOG_ERROR, "ERROR: -redisdb must be followed by a port number\n");
+        exit(1);
+      }
+
+      redisdb = atoi(argv[i]);
+    }
+    else if (strcmp(argv[i], "-flushall") == 0)
+    {
+      NGL_LOG("radio", NGL_LOG_INFO, "BEWARE: FLUSH ALL REQUESTED!\n");
+      flushall = true;
     }
     else if (strcmp(argv[i], "-datapath") == 0)
     {
@@ -120,20 +161,26 @@ int main(int argc, const char** argv)
     }
     else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
     {
-      printf("yastrm [-p port] [-host hostname]\n");
+      printf("%s [-p port] [-host hostname]\n", argv[0]);
       printf("\t-port\tset the server port.\n");
       printf("\t-host\tset the server host name or ip address.\n");
       printf("\t-redisport\tset the redis server port.\n");
       printf("\t-redishost\tset the redis server host name or ip address.\n");
-      printf("\t-redisdb\tset the redis database index.\n");
+      printf("\t-redisdb\tset the redis db index (must be an integer, default = 0).\n");
       printf("\t-datapath\tset the path to the song folder (the one that contains the mp3 hashes).\n");
-      printf("\t-daemon launch in daemon mode (will fork!).\n");
+      printf("\t-daemon\tlaunch in daemon mode (will fork!).\n");
+      printf("\t-flushall\tBEWARE this option completely DESTROYS all records in the DB before proceeding to the server launch.\n");
 
       exit(0);
     }
     else if (strcmp(argv[i], "-daemon") == 0)
     {
       daemon = true;
+    }
+    else if (strcmp(argv[i], "-syslog") == 0)
+    {
+      nglConsole* pConsole = new SyslogConsole();
+      App->SetConsole(pConsole);
     }
     else if (strcmp(argv[i], "--test") == 0)
     {
@@ -156,9 +203,6 @@ int main(int argc, const char** argv)
 
   if (daemon)
   {
-    openlog("yastream", LOG_PID, LOG_DAEMON);
-    syslog(LOG_ALERT, "starting streaming server");
-
     /* Our process ID and Session ID */
     pid_t pid, sid;
 
@@ -195,34 +239,27 @@ int main(int argc, const char** argv)
     close(STDIN_FILENO);
     close(STDOUT_FILENO);
     close(STDERR_FILENO);
-  printf("Check %s %d\n", __FILE__, __LINE__);
   }
 
-  printf("Check %s %d\n", __FILE__, __LINE__);
   Radio::SetParams(hostname, port, datapath, redishost, redisport, redisdb);
-  Radio::FlushRedis();
+  Radio::FlushRedis(flushall);
 
-  NGL_OUT("Starting http streaming server %s:%d\n", hostname.GetChars(), port);
+  NGL_OUT("Starting http streaming server %s:%d\n", bindhost.GetChars(), port);
   nuiHTTPServer* pServer = new nuiHTTPServer();
   //pServer->SetClientStackSize(1024 * 1024 * 4);
   pServer->SetHandlerDelegate(HandlerDelegate);
 
-  printf("Check %s %d\n", __FILE__, __LINE__);
-  if (pServer->Bind(hostname, port))
+  if (pServer->Bind(bindhost, port))
   {
-  printf("Check %s %d\n", __FILE__, __LINE__);
     pServer->AcceptConnections();
   }
   else
   {
-  printf("Check %s %d\n", __FILE__, __LINE__);
-    NGL_OUT("Unable to bind %s:%d\n", hostname.GetChars(), port);
+    NGL_OUT("Unable to bind %s:%d\n", bindhost.GetChars(), port);
   }
 
-  printf("Check %s %d\n", __FILE__, __LINE__);
   delete pServer;
   nuiUninit();
-  printf("Check %s %d\n", __FILE__, __LINE__);
 
   return 0;
 }

@@ -13,7 +13,7 @@ Mp3Header::Mp3Header(bool logging)
   : mLog(logging)
 {
   if (mLog)
-    printf("Mp3Header()\n");
+    NGL_LOG("radio", NGL_LOG_INFO, "Mp3Header()\n");
 
   Reset();
 }
@@ -22,7 +22,7 @@ Mp3Header::Mp3Header(nglIStream& rStream, int position, bool logging, bool LookF
   : mLog(logging)
 {
   if (mLog)
-    printf("Mp3Header(stream + pos) [%d]\n", position);
+    NGL_LOG("radio", NGL_LOG_INFO, "Mp3Header(stream + pos) [%d]\n", position);
   Reset();
 
   if (position != rStream.SetPos(position))
@@ -32,11 +32,11 @@ Mp3Header::Mp3Header(nglIStream& rStream, int position, bool logging, bool LookF
   if (!r)
   {
     if (mLog)
-      printf("unable to read stream @pos %d :(\n", position);
+      NGL_LOG("radio", NGL_LOG_INFO, "unable to read stream @pos %d :(\n", position);
     return;
   }
   if (mLog)
-    printf("Header frame %x %x %x %x\n", data[0], data[1], data[2], data[3]);
+    NGL_LOG("radio", NGL_LOG_INFO, "Header frame %x %x %x %x\n", data[0], data[1], data[2], data[3]);
   ParseHeaderData(data);
   if (LookForXing)
   {
@@ -44,13 +44,13 @@ Mp3Header::Mp3Header(nglIStream& rStream, int position, bool logging, bool LookF
     if (mLog)
     {
       if (mIsXing)
-        printf("This frame contains Xing/Info data.\n");
+        NGL_LOG("radio", NGL_LOG_INFO, "This frame contains Xing/Info data.\n");
       if (IsValid())
-        printf("This frame is valid!\n");
+        NGL_LOG("radio", NGL_LOG_INFO, "This frame is valid!\n");
     }
   }
   if (mLog)
-    printf("Header:\n%s\n", ToString().c_str());
+    NGL_LOG("radio", NGL_LOG_INFO, "Header:\n%s\n", ToString().c_str());
 
 }
 
@@ -58,14 +58,14 @@ Mp3Header::Mp3Header(uint8* data, bool logging)
 : mLog(logging)
 {
   if (mLog)
-    printf("Mp3Header(%p)\n", data);
+    NGL_LOG("radio", NGL_LOG_INFO, "Mp3Header(%p)\n", data);
   Reset();
-  
+
   if (mLog)
-    printf("Header frame %x %x %x %x\n", data[0], data[1], data[2], data[3]);
+    NGL_LOG("radio", NGL_LOG_INFO, "Header frame %x %x %x %x\n", data[0], data[1], data[2], data[3]);
   ParseHeaderData(data);
   if (mLog)
-    printf("Header:\n%s\n", ToString().c_str());
+    NGL_LOG("radio", NGL_LOG_INFO, "Header:\n%s\n", ToString().c_str());
 }
 
 
@@ -86,14 +86,14 @@ void Mp3Header::Reset()
   mUsePadding = false;
   mIsCopyrighted = false;
   mIsOriginal = false;
-  
+
   mIsXing = false;
 }
 
 void Mp3Header::ParseHeaderData(unsigned char* data)
 {
   if (mLog)
-    printf("ParseHeaderData\n");
+    NGL_LOG("radio", NGL_LOG_INFO, "ParseHeaderData\n");
 
   Reset();
   unsigned int b0 = data[0];
@@ -109,8 +109,8 @@ void Mp3Header::ParseHeaderData(unsigned char* data)
   {
     if (mLog)
     {
-      printf("res != sync (%x != %x)\n", res, sync);
-      printf("ParseHeaderData broken\n");
+      NGL_LOG("radio", NGL_LOG_INFO, "res != sync (%x != %x)\n", res, sync);
+      NGL_LOG("radio", NGL_LOG_INFO, "ParseHeaderData broken\n");
     }
     return;
   }
@@ -140,9 +140,9 @@ void Mp3Header::ParseHeaderData(unsigned char* data)
   mIsCopyrighted = copyright;
   mIsOriginal = original;
 
-  
+
   if (mLog)
-    printf("ParseHeaderData ok\n");
+    NGL_LOG("radio", NGL_LOG_INFO, "ParseHeaderData ok\n");
 }
 
 bool Mp3Header::IsXing(nglIStream& rStream, unsigned char* data, int position) const
@@ -165,22 +165,22 @@ bool Mp3Header::IsXing(nglIStream& rStream, unsigned char* data, int position) c
     else
       ofs += (9+4);
   }
-  
+
   rStream.SetPos(position + ofs);
   char marker[4];
   rStream.Read(marker, 4, 1);
-  
+
   if (mLog)
-    printf("Marker: %c%c%c%c\n", marker[0], marker[1], marker[2], marker[3]);
+    NGL_LOG("radio", NGL_LOG_INFO, "Marker: %c%c%c%c\n", marker[0], marker[1], marker[2], marker[3]);
   if (marker[0] == 'X' && marker[1] == 'i' && marker[2] == 'n' && marker[3] == 'g')
     return true;
-  
+
   if (marker[0] == 'I' && marker[1] == 'n' && marker[2] == 'f' && marker[3] == 'o')
     return true;
-  
+
   if (marker[0] == 'L' && marker[1] == 'A' && marker[2] == 'M' && marker[3] == 'E')
     return true;
-  
+
   return false;
 }
 
@@ -286,7 +286,7 @@ const bool Mp3Header::IsValid() const
 
   if (!valid)
   {
-    //printf(".");
+    //NGL_LOG("radio", NGL_LOG_INFO, ".");
   }
   return valid;
 }
