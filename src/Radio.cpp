@@ -236,9 +236,10 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
   int32 done = 4;
   int32 todo = left;
   offset += 4;
+  data.resize(len);
+
   while (done != len && pClient->IsConnected())
   {
-    data.resize(len);
     int32 res = pClient->Receive(&data[len - todo], todo);
 
     if (res < 0)
@@ -385,7 +386,7 @@ void Radio::OnStart()
   int counter = 0;
 
   // Pre buffering:
-  while ((mBufferDurationPreview < IDEAL_BUFFER_SIZE && mLive))
+  while ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) && mLive)
   {
     ReadSet(chunk_count_preview, chunk_count);
     //NGL_LOG("radio", NGL_LOG_INFO, "Preload buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
@@ -501,7 +502,7 @@ bool Radio::LoadNextTrack()
   {
     // Try to get the new track from the app server:
     nglString url;
-    url.Format("https://newapi.yasound.com/api/v1/radio/%s/get_next_song/", mID.GetChars());
+    url.Format("https://api.yasound.com/api/v1/radio/%s/get_next_song/", mID.GetChars());
     nuiHTTPRequest request(url);
     nuiHTTPResponse* pResponse = request.SendRequest();
 
@@ -536,7 +537,7 @@ bool Radio::LoadNextTrack()
     }
     else
     {
-      NGL_LOG("radio", NGL_LOG_ERROR, "Server error: %d\n", pResponse->GetStatusCode());
+      NGL_LOG("radio", NGL_LOG_ERROR, "Server error (%s): %d\n", url.GetChars(), pResponse->GetStatusCode());
       NGL_LOG("radio", NGL_LOG_ERROR, "response data:\n%s\n", pResponse->GetBodyStr().GetChars());
       delete pResponse;
       return false;
@@ -551,17 +552,17 @@ bool Radio::LoadNextTrack()
     mTracks.pop_front();
     while (!SetTrack(p) && mLive)
     {
-//      NGL_LOG("radio", NGL_LOG_INFO, "Skipping unreadable '%s'\n", p.GetChars());
+      NGL_LOG("radio", NGL_LOG_INFO, "Skipping unreadable static file '%s'\n", p.GetChars());
       p = mTracks.front();
       mTracks.pop_front();
 
       if (mTracks.empty())
       {
-        //NGL_LOG("radio", NGL_LOG_INFO, "No more track in the list. Bailout...\n");
+        NGL_LOG("radio", NGL_LOG_INFO, "No more track in the static list. Bailout...\n");
         return false;
       }
     }
-//    NGL_LOG("radio", NGL_LOG_INFO, "Started '%s' from static track list\n", p.GetChars());
+    NGL_LOG("radio", NGL_LOG_INFO, "Started '%s' from static track list\n", p.GetChars());
     return true;
   }
 

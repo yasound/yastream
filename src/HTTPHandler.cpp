@@ -194,7 +194,7 @@ bool HTTPHandler::OnBodyStart()
 
     pChunk = GetNextChunk();
     int cnt = 0;
-    while (!pChunk)
+    while (!pChunk && mLive)
     {
       cnt++;
       nglThread::MsSleep(100);
@@ -204,9 +204,12 @@ bool HTTPHandler::OnBodyStart()
 //      NGL_LOG("radio", NGL_LOG_INFO, "%d", cnt);
     //NGL_LOG("radio", NGL_LOG_INFO, "^");
     //NGL_LOG("radio", NGL_LOG_INFO, "%d", cnt);
-    mpClient->Send(&pChunk->GetData()[0], pChunk->GetData().size());
+    if (pChunk)
+    {
+      mpClient->Send(&pChunk->GetData()[0], pChunk->GetData().size());
 
-    pChunk->Release();
+      pChunk->Release();
+    }
   }
 
   SendListenStatus(eStopListen);
@@ -287,7 +290,7 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
   }
 
   nglString url;
-  url.Format("https://dev.yasound.com/api/v1/radio/%s/%s/%s", mRadioID.GetChars(), statusStr.GetChars(), params.GetChars());
+  url.Format("https://api.yasound.com/api/v1/radio/%s/%s/%s", mRadioID.GetChars(), statusStr.GetChars(), params.GetChars());
   nuiHTTPRequest request(url, "POST");
   nuiHTTPResponse* pResponse = request.SendRequest();
 
