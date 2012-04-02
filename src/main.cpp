@@ -11,6 +11,13 @@
 
 #include <syslog.h>
 
+#include <execinfo.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <cxxabi.h>
+
+
 nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient);
 nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient)
 {
@@ -22,6 +29,101 @@ void SigPipeSink(int signal)
   // Ignore...
   //NGL_LOG("radio", NGL_LOG_INFO, "SigPipe!\n");
 }
+
+
+
+void print_trace(FILE *out, const char *file, int line)
+{
+  const size_t max_depth = 100;
+  size_t stack_depth;
+  void *stack_addrs[max_depth];
+  char **stack_strings;
+
+  stack_depth = backtrace(stack_addrs, max_depth);
+  stack_strings = backtrace_symbols(stack_addrs, stack_depth);
+
+  printf("Call stack from %s:%d (%d frames):\n", file, line, stack_depth);
+  if (out)
+    fprintf(out, "Call stack from %s:%d (%d frames):\n", file, line, stack_depth);
+
+  for (size_t i = 1; i < stack_depth; i++)
+  {
+    printf("%d: %s\n", i, stack_strings[i]);
+    size_t sz = 200; // just a guess, template names will go much wider
+    char *function = static_cast<char*>(malloc(sz));
+    char *begin = 0, *end = 0;
+
+    // find the parentheses and address offset surrounding the mangled name
+    for (char *j = stack_strings[i]; *j; ++j)
+    {
+      if (*j == '(')
+      {
+        begin = j;
+      }
+      else if (*j == '+')
+      {
+        end = j;
+      }
+    }
+
+    if (begin && end)
+    {
+      *begin++ = '\0';
+      *end = '\0';
+      // found our mangled name, now in [begin, end)
+
+      int status;
+      char *ret = abi::__cxa_demangle(begin, function, &sz, &status);
+      if (ret)
+      {
+        // return value may be a realloc() of the input
+        function = ret;
+      }
+      else
+      {
+        // demangling failed, just pretend it's a C function with no args
+        std::strncpy(function, begin, sz);
+        std::strncat(function, "()", sz);
+        function[sz-1] = '\0';
+      }
+      if (out)
+        fprintf(out, "    %s:%s\n", stack_strings[i], function);
+      printf("    %s:%s\n", stack_strings[i], function);
+    }
+    else
+    {
+      // didn't find the mangled name, just print the whole line
+      if (out)
+        fprintf(out, "    %s\n", stack_strings[i]);
+      printf("    %s\n", stack_strings[i]);
+    }
+    free(function);
+  }
+
+  free(stack_strings); // malloc()ed by backtrace_symbols
+  fflush(out);
+}
+
+
+void sig_handler(int sig)
+{
+  char file[1024];
+  time_t t = time(NULL);
+  struct tm* lt = localtime(&t);
+  char* tt = asctime(lt);
+  tt[strlen(tt) - 1] = '\0';
+  snprintf(file, 1024, "crash-%s.log", tt);
+
+  printf("Dumping crashlog to file '%s'\n", file);
+  FILE* out = fopen(file, "w");
+  print_trace(out, __FILE__, __LINE__);
+  free(lt);
+  free(tt);
+  fclose(out);
+  signal(sig, &sig_handler);
+}
+
+//    kill(0, SIGSEGV);
 
 class SyslogConsole : public nglConsole
 {
@@ -61,6 +163,7 @@ int main(int argc, const char** argv)
 
 #if defined _MINUI3_
   App->CatchSignal(SIGPIPE, SigPipeSink);
+  App->CatchSignal(SIGSEGV, sig_handler);
 #endif
 
 
@@ -159,6 +262,10 @@ int main(int argc, const char** argv)
 
       datapath = argv[i];
     }
+    else if (strcmp(argv[i], "-testsignal") == 0)
+    {
+      kill(0, SIGSEGV);
+    }
     else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0)
     {
       printf("%s [-p port] [-host hostname]\n", argv[0]);
@@ -169,6 +276,7 @@ int main(int argc, const char** argv)
       printf("\t-redisdb\tset the redis db index (must be an integer, default = 0).\n");
       printf("\t-datapath\tset the path to the song folder (the one that contains the mp3 hashes).\n");
       printf("\t-daemon\tlaunch in daemon mode (will fork!).\n");
+      printf("\t-syslog\tSend logs to syslog.\n");
       printf("\t-flushall\tBEWARE this option completely DESTROYS all records in the DB before proceeding to the server launch.\n");
 
       exit(0);

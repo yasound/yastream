@@ -46,6 +46,11 @@ bool HTTPHandler::OnURL(const nglString& rValue)
     ReplyLine("All systems nominal");
     return false; // We don't have a favicon right now...
   }
+  else if ((mURL.GetLeft(4) == "http") || (mURL.GetLeft(5) == "/http"))
+  {
+    ReplyError(404, "Not found");
+    return false;
+  }
 
   return true;
 }
@@ -128,6 +133,14 @@ bool HTTPHandler::OnBodyStart()
     return false;
   }
 #endif
+
+  if (mURL.GetLength() > 40)
+  {
+    nglString str;
+    str.Format("Unable to find %s on this server", mURL.GetChars());
+    ReplyError(404, str);
+    return false;
+  }
 
   std::vector<nglString> tokens;
   mURL.Tokenize(tokens, "/");
