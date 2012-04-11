@@ -18,7 +18,7 @@ solution "yastream"
 
     configuration { "Release*" }
         defines { "NDEBUG" }
-        flags   { "Optimize" }
+        flags   { "Optimize", "Symbols" }
         targetdir "bin/release"
         libdirs { "../nui3/bin/release/" }
 
