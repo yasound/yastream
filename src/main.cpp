@@ -16,11 +16,42 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <cxxabi.h>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <fstream>
+
+int port = 8000;
+nglString hostname = "0.0.0.0";
+nglPath datapath = "/data/glusterfs-storage/replica2all/song/";
+nglString redishost = "127.0.0.1";
+int redisport = 6379;
+int redisdb = 1;
+nglString bindhost = "0.0.0.0";
+bool flushall = false;
 
 
 nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient);
 nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient)
 {
+  nuiNetworkHost source(0, 0, nuiNetworkHost::eTCP);
+  nuiNetworkHost dest(0, 0, nuiNetworkHost::eTCP);
+  pClient->GetLocalHost(source);
+  pClient->GetDistantHost(dest);
+  uint32 S = source.GetIP();
+  uint32 D = dest.GetIP();
+  uint8* s = (uint8*)&S;
+  uint8* d = (uint8*)&D;
+
+  if (0x6f7f284e == S || 0x727f284e == S)
+  {
+    // This is the load balancer!!!
+    return NULL;
+  }
+
+  NGL_LOG("yastream", NGL_LOG_INFO, "connection from %d.%d.%d.%d:%d to %d.%d.%d.%d:%d (0x%08x -> 0x%08x)\n",
+                                    s[0], s[1], s[2], s[3], source.GetPort(),
+                                    d[0], d[1], d[2], d[3], dest.GetPort(), S, D);
   return new HTTPHandler(pClient);
 }
 
@@ -105,14 +136,19 @@ void print_trace(FILE *out, const char *file, int line)
 }
 
 
-void sig_handler(int sig)
+void old_sig_handler(int sig)
 {
   char file[1024];
   time_t t = time(NULL);
   struct tm* lt = localtime(&t);
   char* tt = asctime(lt);
   tt[strlen(tt) - 1] = '\0';
-  snprintf(file, 1024, "crash-%s.log", tt);
+  snprintf(file, 1024, "/data/logs/yastream/crash-%s-%s.log", hostname.GetChars(), tt);
+  for (int32 i = 0; i < strlen(file); i++)
+  {
+    if (file[i] <= ' ')
+      file[i] = '-';
+  }
 
   printf("Dumping crashlog to file '%s'\n", file);
   FILE* out = fopen(file, "w");
@@ -120,8 +156,68 @@ void sig_handler(int sig)
   free(lt);
   free(tt);
   fclose(out);
-  signal(sig, &sig_handler);
+  signal(sig, &old_sig_handler);
 }
+
+void cpp_sig_handler(int sig)
+{
+  std::stringstream stream;
+  void * array[25];
+  int nSize = backtrace(array, 25);
+  char ** symbols = backtrace_symbols(array, nSize);
+  for (unsigned int i = 0; i < nSize; i++)
+  {
+    int status;
+    char *realname;
+    std::string current = symbols[i];
+    size_t start = current.find("(");
+    size_t end = current.find("+");
+    realname = NULL;
+    if (start != std::string::npos && end != std::string::npos)
+    {
+      std::string symbol = current.substr(start+1, end-start-1);
+      realname = abi::__cxa_demangle(symbol.c_str(), 0, 0, &status);
+    }
+    if (realname != NULL)
+      stream << realname << std::endl;
+    else
+      stream << symbols[i] << std::endl;
+    free(realname);
+  }
+  free(symbols);
+  std::cerr << stream.str();
+  std::cout << stream.str();
+  std::ofstream file("/tmp/error.log");
+  if (file.is_open())
+  {
+    if (file.good())
+      file << stream.str();
+    file.close();
+  }
+  signal(sig, &cpp_sig_handler);
+}
+
+void sig_handler(int sig)
+{
+  printf("Crash\n");
+  void * array[25];
+  int nSize = backtrace(array, 25);
+  char ** symbols = backtrace_symbols(array, nSize);
+
+  for (int i = 0; i < nSize; i++)
+  {
+    printf("\t[%d] %s\n", i, symbols[i]);
+//      puts(symbols[i]);;
+  }
+
+  free(symbols);
+
+  //signal(sig, &sig_handler);
+  exit(-1);
+}
+
+
+
 
 //    kill(0, SIGSEGV);
 
@@ -152,11 +248,14 @@ public:
 
 int main(int argc, const char** argv)
 {
+  bool daemon = false;
+
   nuiInit(NULL);
 
   //nglOStream* pLogOutput = nglPath("/home/customer/yastreamlog.txt").OpenWrite(false);
   App->GetLog().SetLevel("yastream", 1000);
   App->GetLog().SetLevel("kernel", 1000);
+  App->GetLog().SetLevel("radio", 1000);
   //App->GetLog().AddOutput(pLogOutput);
   App->GetLog().Dump();
   NGL_LOG("yastream", NGL_LOG_INFO, "yasound streamer\n");
@@ -165,17 +264,6 @@ int main(int argc, const char** argv)
   App->CatchSignal(SIGPIPE, SigPipeSink);
   App->CatchSignal(SIGSEGV, sig_handler);
 #endif
-
-
-  int port = 8000;
-  nglString hostname = "0.0.0.0";
-  bool daemon = false;
-  nglPath datapath = "/data/glusterfs-storage/replica2all/song/";
-  nglString redishost = "127.0.0.1";
-  int redisport = 6379;
-  int redisdb = 1;
-  nglString bindhost = "0.0.0.0";
-  bool flushall = false;
 
   for (int i = 1; i < argc; i++)
   {

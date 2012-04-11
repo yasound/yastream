@@ -367,7 +367,8 @@ double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
 
       if (!mLive)
       {
-        NGL_LOG("radio", NGL_LOG_ERROR, "Error while getting next song for radio '%s'. Shutting down...\n", mID.GetChars());
+        NGL_LOG("radio", NGL_LOG_ERROR, "Error while getting next song for proxy radio '%s'. Shutting down...\n", mID.GetChars());
+        return 0;
       }
     }
   }

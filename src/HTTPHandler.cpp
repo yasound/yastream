@@ -200,14 +200,14 @@ bool HTTPHandler::OnBodyStart()
 
   // Do the streaming:
 
-  while (mLive && mpClient->IsConnected())
+  while (mLive && mpClient->IsWriteConnected())
   {
     // GetNext chunk:
     Mp3Chunk* pChunk = NULL;
 
     pChunk = GetNextChunk();
     int cnt = 0;
-    while (!pChunk && mLive)
+    while (!pChunk && mLive && mpClient->IsWriteConnected())
     {
       cnt++;
       nglThread::MsSleep(100);
@@ -230,6 +230,7 @@ bool HTTPHandler::OnBodyStart()
   NGL_LOG("radio", NGL_LOG_INFO, "Client disconnecting from %s\n", mRadioID.GetChars());
   pRadio->UnregisterClient(this);
 
+  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart DoneOK");
   return false;
 }
 
@@ -265,6 +266,7 @@ Mp3Chunk* HTTPHandler::GetNextChunk()
 
 void HTTPHandler::SendListenStatus(ListenStatus status)
 {
+  NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus");
   nglString statusStr;
   if (status == eStartListen)
     statusStr = "start_listening";
@@ -273,7 +275,7 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
 
   nglString params;
   if (!mUsername.IsEmpty() && !mApiKey.IsEmpty())
-    params.Format("?username=%s&api_key=%s", mUsername.GetChars(), mApiKey.GetChars());
+    params.CFormat("?username=%s&api_key=%s", mUsername.GetChars(), mApiKey.GetChars());
   else
   {
     nglString address;
@@ -283,31 +285,36 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
     {
       uint32 ip = client.GetIP();
       int port = client.GetPort();
-      address.Format("%d:%d", ip, port);
+      address.CFormat("%d:%d", ip, port);
     }
-    params.Format("?address=%s", address.GetChars());
+    params.CFormat("?address=%s", address.GetChars());
   }
 
   if (status == eStartListen)
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus Start Listen");
     mStartTime = nglTime();
   }
   else if (status == eStopListen)
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus Stop Listen");
     nglTime now;
     nglTime duration = now - mStartTime;
-    int32 seconds = ToBelow(now.GetValue());
+    int32 seconds = ToBelow(duration.GetValue());
     nglString durationParam;
-    durationParam.Format("&listening_duration=%d", seconds);
+    durationParam.CFormat("&listening_duration=%d", seconds);
     params += durationParam;
   }
 
   nglString url;
-  url.Format("https://api.yasound.com/api/v1/radio/%s/%s/%s", mRadioID.GetChars(), statusStr.GetChars(), params.GetChars());
+  url.CFormat("https://api.yasound.com/api/v1/radio/%s/%s/%s", mRadioID.GetChars(), statusStr.GetChars(), params.GetChars());
   nuiHTTPRequest request(url, "POST");
+  
+  NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus SendRequest");
+
   nuiHTTPResponse* pResponse = request.SendRequest();
 
-  /*
+/*
   nglString log;
   log = "\n(url:";
   log += url;
@@ -317,18 +324,23 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
   log += pResponse->GetBodyStr();
   log += " ###END###";
 
-  NGL_LOG("radio", NGL_LOG_INFO, "log length : %d\n", log.GetLength());
+  NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus log length : %d\n", log.GetLength());
+
   nglPath logPath = nglPath(ePathCurrent);
   logPath += "/log/ListenStatus.log";
   nglIOFile* pFile = new nglIOFile(logPath, eOFileAppend);
   pFile->WriteText(log);
   delete pFile;
   */
+
+  NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus DoneOK");
 }
 
 void HTTPHandler::GoOffline()
 {
+  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline");
   mLive = false;
   mpClient->Close();
+  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline OK");
 }
 
