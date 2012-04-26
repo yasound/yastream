@@ -199,14 +199,14 @@ void cpp_sig_handler(int sig)
 
 void sig_handler(int sig)
 {
-  printf("Crash\n");
+  syslog(LOG_ERR, "Crash\n");
   void * array[25];
   int nSize = backtrace(array, 25);
   char ** symbols = backtrace_symbols(array, nSize);
 
   for (int i = 0; i < nSize; i++)
   {
-    printf("\t[%d] %s\n", i, symbols[i]);
+    syslog(LOG_ERR, "\t[%d] %s\n", i, symbols[i]);
 //      puts(symbols[i]);;
   }
 

@@ -34,6 +34,16 @@ public:
 
   static void FlushRedis(bool FlushAll);
 
+  static const nglString& GetHostName()
+  {
+    return mHostname;
+  }
+
+  static RedisReplyType SendRedisCommand(RedisRequest& rRequest)
+  {
+    InitRedis();
+    return gRedis.SendCommand(rRequest);
+  }
 private:
   bool SetTrack(const nglPath& rPath);
   bool LoadNextTrack();

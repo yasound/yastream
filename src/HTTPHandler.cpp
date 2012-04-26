@@ -292,11 +292,33 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
 
   if (status == eStartListen)
   {
+    { // Store the stats in redis:
+      nglString id("listeners:");
+      if (mApiKey.IsEmpty())
+        id = "anonymouslisteners:";
+      id += Radio::GetHostName();
+
+      RedisRequest req;
+      req.INCR(id);
+      Radio::SendRedisCommand(req);
+    }
+
     NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus Start Listen");
     mStartTime = nglTime();
   }
   else if (status == eStopListen)
   {
+    { // Store the stats in redis:
+      nglString id("listeners:");
+      if (mApiKey.IsEmpty())
+        id = "anonymouslisteners:";
+      id += Radio::GetHostName();
+
+      RedisRequest req;
+      req.DECR(id);
+      Radio::SendRedisCommand(req);
+    }
+
     NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus Stop Listen");
     nglTime now;
     nglTime duration = now - mStartTime;
@@ -309,7 +331,7 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
   nglString url;
   url.CFormat("https://api.yasound.com/api/v1/radio/%s/%s/%s", mRadioID.GetChars(), statusStr.GetChars(), params.GetChars());
   nuiHTTPRequest request(url, "POST");
-  
+
   NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus SendRequest");
 
   nuiHTTPResponse* pResponse = request.SendRequest();

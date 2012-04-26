@@ -606,14 +606,12 @@ void Radio::InitRedis()
     if (!res)
       NGL_LOG("radio", NGL_LOG_ERROR, "Error connecting to redis server.\n");
 
-    gRedis.StartCommand("SELECT");
-    nglString db;
-    db.SetCInt(mRedisDB);
-    gRedis.AddArg(db);
-    RedisClient::ReplyType reply = gRedis.SendCommand();
-    if (reply == RedisClient::eRedisError)
+    RedisRequest req;
+    req.SELECT(mRedisDB);
+    RedisReplyType reply = gRedis.SendCommand(req);
+    if (reply == eRedisError)
     {
-      NGL_LOG("radio", NGL_LOG_ERROR, "Redis error: %s\n", gRedis.GetError().GetChars());
+      NGL_LOG("radio", NGL_LOG_ERROR, "Redis error: %s\n", req.GetError().GetChars());
     }
   }
 }
@@ -627,32 +625,33 @@ void Radio::FlushRedis(bool FlushAll)
   if (FlushAll)
   {
     NGL_LOG("radio", NGL_LOG_INFO, "------- FLUSH ALL !!! -------\n");
-    gRedis.StartCommand("FLUSHDB");
-    RedisClient::ReplyType reply = gRedis.SendCommand();
+    RedisRequest req;
+    req.FLUSHDB();
+    RedisReplyType reply = gRedis.SendCommand(req);
 
-    if (reply == RedisClient::eRedisError)
+    if (reply == eRedisError)
     {
-      NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while FLUSHDB: %s\n", gRedis.GetError().GetChars());
+      NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while FLUSHDB: %s\n", req.GetError().GetChars());
     }
 
     return;
   }
 
-  gRedis.StartCommand("SMEMBERS");
+  RedisRequest req;
   nglString server;
   server.Add("server:").Add(mHostname);
-  gRedis.AddArg(server);
-  RedisClient::ReplyType reply = gRedis.SendCommand();
+  req.SMEMBERS(server);
+  RedisReplyType reply = gRedis.SendCommand(req);
 
-  if (reply == RedisClient::eRedisError)
+  if (reply == eRedisError)
   {
-    NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while SMEMBERS: %s\n", gRedis.GetError().GetChars());
+    NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while SMEMBERS: %s\n", req.GetError().GetChars());
   }
 
   //NGL_LOG("radio", NGL_LOG_INFO, "Got %d items back\n", gRedis.GetCount());
 
   std::vector<nglString> radios;
-  int64 count = gRedis.GetCount();
+  int64 count = req.GetCount();
 
   NGL_LOG("radio", NGL_LOG_INFO, "\t%d radios to flush\n", count);
   if (count > 0)
@@ -660,32 +659,44 @@ void Radio::FlushRedis(bool FlushAll)
     radios.reserve(count);
     for (int i = 0; i < count; i++)
     {
-      radios.push_back(gRedis.GetReply(i));
+      radios.push_back(req.GetReply(i));
       NGL_LOG("radio", NGL_LOG_INFO, "\t\t%s\n", radios[i].GetChars());
     }
 
-    gRedis.StartCommand("DEL");
-
-    for (int i = 0; i < radios.size(); i++)
-      gRedis.AddArg(radios[i]);
-
-    reply = gRedis.SendCommand();
-    if (reply == RedisClient::eRedisError)
+    RedisRequest req;
+    req.DEL(radios);
+    reply = gRedis.SendCommand(req);
+    if (reply == eRedisError)
     {
-      NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while Flush DEL: %s\n", gRedis.GetError().GetChars());
+      NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while Flush DEL: %s\n", req.GetError().GetChars());
     }
   }
 
   // Clean the master key:
-  gRedis.StartCommand("DEL");
-  gRedis.AddArg(server);
-
-  reply = gRedis.SendCommand();
-  if (reply == RedisClient::eRedisError)
+  req.DEL(server);
+  reply = gRedis.SendCommand(req);
+  if (reply == eRedisError)
   {
-    NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while Master Flush DEL: %s\n", gRedis.GetError().GetChars());
+    NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while Master Flush DEL: %s\n", req.GetError().GetChars());
   }
 
+  // Clean the stats:
+  {
+    nglString id("listeners:");
+    id += mHostname;
+    RedisRequest req;
+    req.DEL(id);
+    Radio::SendRedisCommand(req);
+  }
+
+  {
+    nglString id("anonymouslisteners:");
+    id += mHostname;
+
+    RedisRequest req;
+    req.DEL(id);
+    Radio::SendRedisCommand(req);
+  }
 }
 
 
@@ -705,16 +716,16 @@ Radio* Radio::GetRadio(const nglString& rURL)
 
     if (gRedis.IsConnected())
     {
-      gRedis.StartCommand("GET");
-      gRedis.AddArg(r);
-      RedisClient::ReplyType reply = gRedis.SendCommand();
-      if (reply == RedisClient::eRedisError)
+      RedisRequest req;
+      req.GET(r);
+      RedisReplyType reply = gRedis.SendCommand(req);
+      if (reply == eRedisError)
       {
-        NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while GET: %s\n", gRedis.GetError().GetChars());
+        NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while GET: %s\n", req.GetError().GetChars());
       }
 
-      NGL_ASSERT(reply == RedisClient::eRedisBulk);
-      nglString host = gRedis.GetReply(0);
+      NGL_ASSERT(reply == eRedisBulk);
+      nglString host = req.GetReply(0);
       if (!host.IsNull())
       {
         // Create this radio from the actual server!
@@ -724,23 +735,19 @@ Radio* Radio::GetRadio(const nglString& rURL)
       }
 
       // The radio was not on the server. we need to create it:
-      gRedis.StartCommand("SET");
-      gRedis.AddArg(r);
-      gRedis.AddArg(mHostname);
-      reply = gRedis.SendCommand();
-      if (reply == RedisClient::eRedisError)
+      req.SET(r, mHostname);
+      reply = gRedis.SendCommand(req);
+      if (reply == eRedisError)
       {
-        NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while SET: %s\n", gRedis.GetError().GetChars());
+        NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while SET: %s\n", req.GetError().GetChars());
       }
 
-      gRedis.StartCommand("SADD");
       nglString server;
       server.Add("server:").Add(mHostname);
-      gRedis.AddArg(server);
-      gRedis.AddArg(rURL);
-      if (gRedis.SendCommand() == RedisClient::eRedisError)
+      req.SADD(server, rURL);
+      if (gRedis.SendCommand(req) == eRedisError)
       {
-        NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while SADD: %s\n", gRedis.GetError().GetChars());
+        NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while SADD: %s\n", req.GetError().GetChars());
       }
 
     }
@@ -782,22 +789,20 @@ void Radio::UnregisterRadio(const nglString& rURL)
   {
     nglString r;
     r.Add("radio:").Add(rURL);
-    gRedis.StartCommand("DEL");
-    gRedis.AddArg(r);
-    RedisClient::ReplyType reply = gRedis.SendCommand();
-    if (reply == RedisClient::eRedisError)
+    RedisRequest req;
+    req.DEL(r);
+    RedisReplyType reply = gRedis.SendCommand(req);
+    if (reply == eRedisError)
     {
-      NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while DEL: %s\n", gRedis.GetError().GetChars());
+      NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while DEL: %s\n", req.GetError().GetChars());
     }
 
-    gRedis.StartCommand("SREM");
     nglString server;
     server.Add("server:").Add(mHostname);
-    gRedis.AddArg(server);
-    gRedis.AddArg(rURL);
-    if (gRedis.SendCommand() == RedisClient::eRedisError)
+    req.SREM(server, rURL);
+    if (gRedis.SendCommand(req) == eRedisError)
     {
-      NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while SREM: %s\n", gRedis.GetError().GetChars());
+      NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while SREM: %s\n", req.GetError().GetChars());
     }
   }
 
