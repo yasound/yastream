@@ -46,6 +46,8 @@ int64 RedisRequest::GetCount() const
 
 const nglString& RedisRequest::GetReply(size_t index) const
 {
+  if (mReply.size() <= index)
+    return nglString::Null;
   return mReply[index];
 }
 

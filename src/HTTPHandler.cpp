@@ -33,6 +33,7 @@ bool HTTPHandler::OnMethod(const nglString& rValue)
 
 bool HTTPHandler::OnURL(const nglString& rValue)
 {
+  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnURL(%s)", rValue.GetChars());
   if (mURL == "/favicon.ico")
   {
     nglString str;
@@ -43,7 +44,33 @@ bool HTTPHandler::OnURL(const nglString& rValue)
   else if (mURL == "/ping")
   {
     ReplyLine("HTTP/1.1 200 OK\n");
-    ReplyLine("All systems nominal");
+    nglString str;
+    nglString listeners = "none yet";
+    nglString anonlisteners = "none yet";
+
+    {
+      nglString id("listeners:");
+      id += Radio::GetHostName();
+      RedisRequest req;
+      req.GET(id);
+      Radio::SendRedisCommand(req);
+      if (req.GetCount() > 0)
+        listeners = req.GetReply(0);
+    }
+
+    {
+      nglString id("anonymouslisteners:");
+      id += Radio::GetHostName();
+      RedisRequest req;
+      req.GET(id);
+      Radio::SendRedisCommand(req);
+
+      if (req.GetCount() > 0)
+        anonlisteners = req.GetReply(0);
+    }
+
+    str.CFormat("All systems nominal (listeners: %s - anonymous: %s)", listeners.GetChars(), anonlisteners.GetChars());
+    ReplyLine(str);
     return false; // We don't have a favicon right now...
   }
   else if ((mURL.GetLeft(4) == "http") || (mURL.GetLeft(5) == "/http"))
@@ -115,6 +142,8 @@ uint32 FakeRange(uint32 i)
 
 bool HTTPHandler::OnBodyStart()
 {
+  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart(%s)", mURL.GetChars());
+
 #if TEMPLATE_TEST
   if (mURL == "/")
   {

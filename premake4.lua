@@ -10,6 +10,8 @@ solution "yastream"
 
     defines { "_MINUI3_" }
 
+    linkoptions { "-rdynamic" }
+
     configuration { "Debug*" }
         defines { "_DEBUG", "DEBUG" }
         flags   { "Symbols" }
