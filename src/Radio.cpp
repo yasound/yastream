@@ -39,9 +39,11 @@ Radio::Radio(const nglString& rID, const nglString& rHost)
 
 Radio::~Radio()
 {
+  NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() [%s]", mID.GetChars());
   delete mpSource;
   delete mpPreviewSource;
   UnregisterRadio(mID);
+  NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() OK");
 }
 
 void Radio::Start()
@@ -104,7 +106,7 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   nglCriticalSectionGuard guard(mCS);
   mClients.remove(pClient);
   mClientsPreview.remove(pClient);
-  NGL_LOG("radio", NGL_LOG_INFO, "\t %d clients left in radio %s\n", mClientsPreview.size(), mID.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "    %d clients left in radio %s\n", mClientsPreview.size(), mID.GetChars());
 
   if (mClients.empty() && mClientsPreview.empty())
   {
@@ -480,7 +482,7 @@ void Radio::OnStartProxy()
 
 void Radio::KillClients()
 {
-  NGL_LOG("radio", NGL_LOG_INFO, "Make '%d' clients to stop relaying our data\n", mID.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "Make '%d' clients to stop relaying our data\n", mClientsPreview.size() + mClients.size());
   for (ClientList::const_iterator it = mClientsPreview.begin(); it != mClientsPreview.end(); ++it)
   {
     HTTPHandler* pClient = *it;
@@ -499,11 +501,11 @@ bool Radio::LoadNextTrack()
   if (mGoOffline) // We were asked to kill this radio once the current song was finished.
     return false;
 
-  //while (1)
+  while (1)
   {
     // Try to get the new track from the app server:
     nglString url;
-    url.Format("https://api.yasound.com/api/v1/radio/%s/get_next_song/", mID.GetChars());
+    url.Format("%s/api/v1/radio/%s/get_next_song/", mAppUrl.GetChars(), mID.GetChars());
     nuiHTTPRequest request(url);
     nuiHTTPResponse* pResponse = request.SendRequest();
 
@@ -533,7 +535,8 @@ bool Radio::LoadNextTrack()
       {
         NGL_LOG("radio", NGL_LOG_ERROR, "Unable to set track '%s'\n", path.GetChars());
         delete pResponse;
-        return false;
+        pResponse = request.SendRequest();
+        //return false;
       }
     }
     else
@@ -543,7 +546,6 @@ bool Radio::LoadNextTrack()
       delete pResponse;
       return false;
     }
-
   }
 
   // Otherwise load a track from mTracks
@@ -580,6 +582,7 @@ void Radio::AddTrack(const nglPath& rPath)
 nglCriticalSection Radio::gCS;
 std::map<nglString, Radio*> Radio::gRadios;
 nglString Radio::mHostname = "0.0.0.0";
+nglString Radio::mAppUrl = "https://api.yasound.com";
 int Radio::mPort = 8000;
 nglPath Radio::mDataPath = "/space/new/medias/song";
 nglString Radio::mRedisHost = "127.0.0.1";
@@ -587,9 +590,10 @@ int Radio::mRedisPort = 6379;
 int Radio::mRedisDB = 1;
 RedisClient Radio::gRedis;
 
-void Radio::SetParams(const nglString& hostname, int port, const nglPath& rDataPath, const nglString& rRedisHost, int RedisPort, int RedisDB)
+void Radio::SetParams(const nglString& appurl, const nglString& hostname, int port, const nglPath& rDataPath, const nglString& rRedisHost, int RedisPort, int RedisDB)
 {
   mHostname = hostname;
+  mAppUrl = appurl;
   mPort = port;
   mDataPath = rDataPath;
   mRedisHost = rRedisHost;
@@ -601,10 +605,14 @@ void Radio::InitRedis()
 {
   if (!gRedis.IsConnected())
   {
+    gRedis.Disconnect();
     NGL_LOG("radio", NGL_LOG_INFO, "Init Redis connection to server %s:%d with db index = %d.\n", mRedisHost.GetChars(), mRedisPort, mRedisDB);
     bool res = gRedis.Connect(nuiNetworkHost(mRedisHost, mRedisPort, nuiNetworkHost::eTCP));
     if (!res)
+    {
       NGL_LOG("radio", NGL_LOG_ERROR, "Error connecting to redis server.\n");
+      return;
+    }
 
     RedisRequest req;
     req.SELECT(mRedisDB);
@@ -709,11 +717,10 @@ Radio* Radio::GetRadio(const nglString& rURL)
   if (it == gRadios.end())
   {
     // Ask Redis if he knows a server that handles this radio:
-    InitRedis();
-
     nglString r;
     r.Add("radio:").Add(rURL);
 
+    InitRedis();
     if (gRedis.IsConnected())
     {
       RedisRequest req;
@@ -724,7 +731,7 @@ Radio* Radio::GetRadio(const nglString& rURL)
         NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while GET: %s\n", req.GetError().GetChars());
       }
 
-      NGL_ASSERT(reply == eRedisBulk);
+      NGL_ASSERT(reply != eRedisError);
       nglString host = req.GetReply(0);
       if (!host.IsNull())
       {
@@ -735,6 +742,7 @@ Radio* Radio::GetRadio(const nglString& rURL)
       }
 
       // The radio was not on the server. we need to create it:
+      NGL_LOG("radio", NGL_LOG_INFO, "Tell Redis we are creating radio %s\n", rURL.GetChars());
       req.SET(r, mHostname);
       reply = gRedis.SendCommand(req);
       if (reply == eRedisError)
@@ -749,7 +757,10 @@ Radio* Radio::GetRadio(const nglString& rURL)
       {
         NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while SADD: %s\n", req.GetError().GetChars());
       }
-
+    }
+    else
+    {
+      NGL_LOG("radio", NGL_LOG_ERROR, "redis not connected");
     }
 
     // Create the radio!
@@ -768,14 +779,14 @@ void Radio::RegisterRadio(const nglString& rURL, Radio* pRadio)
   if (it != gRadios.end())
     NGL_LOG("radio", NGL_LOG_ERROR, "the radio '%s' is already registered\n", rURL.GetChars());
 
-  //NGL_LOG("radio", NGL_LOG_INFO, "Registering radio '%s'\n", rURL.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "Registering radio '%s'\n", rURL.GetChars());
   gRadios[rURL] = pRadio;
 }
 
 void Radio::UnregisterRadio(const nglString& rURL)
 {
   nglCriticalSectionGuard guard(gCS);
-  //NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio '%s'\n", rURL.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio '%s'\n", rURL.GetChars());
 
   RadioMap::const_iterator it = gRadios.find(rURL);
   if (it == gRadios.end())
@@ -787,8 +798,10 @@ void Radio::UnregisterRadio(const nglString& rURL)
   InitRedis();
   if (gRedis.IsConnected())
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "Telling redis that radio '%s' is gone\n", rURL.GetChars());
     nglString r;
     r.Add("radio:").Add(rURL);
+    NGL_LOG("radio", NGL_LOG_INFO, "redis DEL '%s'\n", r.GetChars());
     RedisRequest req;
     req.DEL(r);
     RedisReplyType reply = gRedis.SendCommand(req);

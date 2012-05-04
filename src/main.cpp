@@ -23,6 +23,7 @@
 
 int port = 8000;
 nglString hostname = "0.0.0.0";
+nglString appurl = "https://api.yasound.com";
 nglPath datapath = "/data/glusterfs-storage/replica2all/song/";
 nglString redishost = "127.0.0.1";
 int redisport = 6379;
@@ -230,8 +231,6 @@ class SyslogConsole : public nglConsole
 public:
   SyslogConsole (bool IsVisible = false)
   {
-    openlog("yastream", LOG_PID, LOG_DAEMON);
-
     DumpStackTrace();
   }
 
@@ -254,9 +253,17 @@ public:
 
 int main(int argc, const char** argv)
 {
+  openlog("yastream", LOG_PID, LOG_DAEMON);
+  signal(SIGSEGV, &sig_handler);
+
   bool daemon = false;
 
   nuiInit(NULL);
+
+#if defined _MINUI3_
+  App->CatchSignal(SIGPIPE, SigPipeSink);
+  App->CatchSignal(SIGSEGV, sig_handler);
+#endif
 
   //nglOStream* pLogOutput = nglPath("/home/customer/yastreamlog.txt").OpenWrite(false);
   App->GetLog().SetLevel("yastream", 1000);
@@ -265,11 +272,6 @@ int main(int argc, const char** argv)
   //App->GetLog().AddOutput(pLogOutput);
   App->GetLog().Dump();
   NGL_LOG("yastream", NGL_LOG_INFO, "yasound streamer\n");
-
-#if defined _MINUI3_
-  App->CatchSignal(SIGPIPE, SigPipeSink);
-  App->CatchSignal(SIGSEGV, sig_handler);
-#endif
 
   for (int i = 1; i < argc; i++)
   {
@@ -306,6 +308,17 @@ int main(int argc, const char** argv)
       }
 
       hostname = argv[i];
+    }
+    else if (strcmp(argv[i], "-appurl") == 0)
+    {
+      i++;
+      if (i >= argc)
+      {
+        NGL_LOG("yastream", NGL_LOG_ERROR, "ERROR: -appurl must be followed by a hostname or an ip address\n");
+        exit(1);
+      }
+
+      appurl = argv[i];
     }
     else if (strcmp(argv[i], "-bindhost") == 0)
     {
@@ -365,6 +378,7 @@ int main(int argc, const char** argv)
       printf("%s [-p port] [-host hostname]\n", argv[0]);
       printf("\t-port\tset the server port.\n");
       printf("\t-host\tset the server host name or ip address.\n");
+      printf("\t-appurl\tset the app server url.\n");
       printf("\t-redisport\tset the redis server port.\n");
       printf("\t-redishost\tset the redis server host name or ip address.\n");
       printf("\t-redisdb\tset the redis db index (must be an integer, default = 0).\n");
@@ -443,7 +457,7 @@ int main(int argc, const char** argv)
     close(STDERR_FILENO);
   }
 
-  Radio::SetParams(hostname, port, datapath, redishost, redisport, redisdb);
+  Radio::SetParams(appurl, hostname, port, datapath, redishost, redisport, redisdb);
   Radio::FlushRedis(flushall);
 
   NGL_OUT("Starting http streaming server %s:%d\n", bindhost.GetChars(), port);

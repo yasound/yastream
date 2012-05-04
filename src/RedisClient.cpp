@@ -123,7 +123,7 @@ void RedisClient::Disconnect()
 
 bool RedisClient::IsConnected()
 {
-  return mpClient && mpClient->IsConnected();
+  return mpClient && mpClient->IsWriteConnected();
 }
 
 // Send commands:
@@ -176,6 +176,7 @@ RedisReplyType RedisClient::SendCommand(RedisRequest& rRequest)
           {
             rRequest.mError = line.Extract(1, line.GetLength() - 1);
   //printf("error\n");
+            NGL_LOG("radio", NGL_LOG_ERROR, "Redis error '%s'", rRequest.mError.GetChars());
             return rRequest.mReplyType = eRedisError;
           }
           break;

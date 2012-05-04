@@ -185,7 +185,7 @@ bool HTTPHandler::OnBodyStart()
     {
       // check if the user is allowed to play high quality stream
       nglString url;
-      url.Format("https://api.yasound.com/api/v1/subscription/?username=%s&api_key=%s", mUsername.GetChars(), mApiKey.GetChars());
+      url.CFormat("%s/api/v1/subscription/?username=%s&api_key=%s", Radio::GetAppUrl().GetChars(), mUsername.GetChars(), mApiKey.GetChars());
       nuiHTTPRequest request(url);
       nuiHTTPResponse* pResponse = request.SendRequest();
 
@@ -358,7 +358,7 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
   }
 
   nglString url;
-  url.CFormat("https://api.yasound.com/api/v1/radio/%s/%s/%s", mRadioID.GetChars(), statusStr.GetChars(), params.GetChars());
+  url.CFormat("%s/api/v1/radio/%s/%s/%s", Radio::GetAppUrl().GetChars(), mRadioID.GetChars(), statusStr.GetChars(), params.GetChars());
   nuiHTTPRequest request(url, "POST");
 
   NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus SendRequest");

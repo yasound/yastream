@@ -5,66 +5,71 @@
 # current est un symlink vers le dossier contenant l'application en prod.
 # pour changer de version il faut changer le symlink puis killer toutes les instances et les relancer.
 
-MAILDEST="dev@yasound.com"
+MAILDEST="seb@yasound.com"
 #MAILDEST="sebastien@iguanesolutions.com, dev@yasound.com"
 SUBJECT="[YASOUND][yastream-wrapper][FAILED] `hostname -f`"
-LOGS="/data/logs/yastream/yastream.log"
-USER="customer"
+LOGS="/home/meeloo/work/yastream/yastream.log"
+USER="meeloo"
 
 CMD="./yastream \
 -syslog \
 -port 8000 \
--host `hostname -a`.ig-1.net \
--datapath /data/glusterfs-mnt/replica2all/song/ \
--redishost yas-sql-01.sadm.ig-1.net \
 -flushall \
+-host dev.yasound.com \
+-datapath /home/customer/data/song \
+-appurl http://dev.yasound.com \
+-redishost 127.0.0.1 \
 -redisport 6379 >>$LOGS"
 
-export LD_LIBRARY_PATH=/data/glusterfs-mnt/replica2all/streamer/current:$LD_LIBRARY_PATH
-cd /data/glusterfs-mnt/replica2all/streamer/current
+export LD_LIBRARY_PATH=/home/meeloo/work/nui3/bin/debug/:$LD_LIBRARY_PATH
+cd /home/meeloo/work/yastream/bin/debug/
 
 whoami=$(whoami)
 
-if ! [ "x${whoami}" = "xroot" -o "x${whoami}" = "xcustomer" ];then
+if ! [ "x${whoami}" = "xroot" -o "x${whoami}" = "xmeeloo" ];then
   echo "error id"
   exit 2
 fi
 
-start_service () {
+start_service ()
+{
   CMDLOG="${CMD}"
-if [ "x${whoami}" == "xroot" ];then
-  su ${USER} -s /bin/bash -c "${CMDLOG}"
-else
-  /bin/bash -c "${CMDLOG}"
-fi
+  if [ "x${whoami}" == "xroot" ];then
+    echo "launching service with su"
+    su ${USER} -s /bin/bash -c "${CMDLOG}"
+  else
+    echo "launching service without su"
+    /bin/bash -c "${CMDLOG}"
+  fi
 }
 
-stop_service (){
-/usr/bin/pgrep yastream|while read p2k;do kill -9 $p2k;done
-echo "Done"
+stop_service ()
+{
+  /usr/bin/pgrep yastream|while read p2k;do kill -9 $p2k;done
+  echo "Done"
 }
 
 case $1 in
   test)
-	echo "Lancement du service en debug. Ne rends pas la main"
-	start_service 
+      echo "Lancement du service en debug. Ne rends pas la main"
+      start_service
   ;;
   loop)
-        while ( true )
-        do
-                start_service 
-                /usr/bin/logger -t yastream-wrapper "Arret non prévu du service yastream."
-		echo "`date` : Arret non prévu du service yastream. Restart dans 60 secondes."|mail -s "$SUBJECT" $MAILDEST
-                sleep 60
-        done
+      while ( true )
+      do
+        start_service
+        /usr/bin/logger -t yastream-wrapper "Arret non prévu du service yastream."
+      echo "`date` : Arret non prévu du service yastream. Restart dans 60 secondes."|mail -s "$SUBJECT" $MAILDEST
+        sleep 60
+      done
   ;;
   start)
-        echo "Lancement du service en demon. "
-	$0 loop &
+      echo "Lancement du service en demon. "
+      $0 loop &
   ;;
   stop)
-	echo "Arret du service."
-	/usr/bin/pgrep yastream|while read p2k;do kill -9 $p2k;done
+      echo "Arret du service."
+      /usr/bin/pgrep yastream|while read p2k;do kill -9 $p2k;done
   ;;
   *) echo "Argument inconnu. Usage : $0 (test|start|stop)"
   ;;

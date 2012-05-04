@@ -23,7 +23,7 @@ public:
   void OnStartProxy();
 
   static Radio* GetRadio(const nglString& rURL);
-  static void SetParams(const nglString& hostname, int port, const nglPath& rDataPath, const nglString& rRedisHost, int RedisPort, int RedisDB);
+  static void SetParams(const nglString& appurl, const nglString& hostname, int port, const nglPath& rDataPath, const nglString& rRedisHost, int RedisPort, int RedisDB);
 
   void AddTrack(const nglPath& rPath);
 
@@ -37,6 +37,11 @@ public:
   static const nglString& GetHostName()
   {
     return mHostname;
+  }
+
+  static const nglString& GetAppUrl()
+  {
+    return mAppUrl;
   }
 
   static RedisReplyType SendRedisCommand(RedisRequest& rRequest)
@@ -89,6 +94,7 @@ private:
   static RadioMap gRadios;
   static RedisClient gRedis;
   static nglString mHostname;
+  static nglString mAppUrl;
   static int mPort;
   static nglPath mDataPath;
   static nglString mRedisHost;
