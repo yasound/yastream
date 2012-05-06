@@ -11,7 +11,7 @@
 ///////////////////////////////////////////////////
 //class HTTPHandler : public nuiHTTPHandler
 HTTPHandler::HTTPHandler(nuiTCPClient* pClient)
-: nuiHTTPHandler(pClient), mLive(true)
+: nuiHTTPHandler(pClient), mOnline(true), mLive(false)
 {
 #if TEMPLATE_TEST
   mpTemplate = new nuiStringTemplate("<html><body><br>This template is a test<br>ClassName: {{Class}}<br>ObjectName: {{Name}}<br>{%for elem in array%}{{elem}}<br>{%end%}Is it ok?<br></body></html>");
@@ -202,7 +202,7 @@ bool HTTPHandler::OnBodyStart()
 
   // Find the Radio:
   Radio* pRadio = Radio::GetRadio(mRadioID);
-  if (!pRadio || !pRadio->IsLive())
+  if (!pRadio || !pRadio->IsOnline())
   {
     NGL_LOG("radio", NGL_LOG_ERROR, "HTTPHandler::Start unable to create radio %s\n", mRadioID.GetChars());
     nglString str;
@@ -214,29 +214,48 @@ bool HTTPHandler::OnBodyStart()
 
   Log(200);
 
+  NGL_LOG("radio", NGL_LOG_INFO, "HTTP Method: %s", mMethod.GetChars());
+
+  if (mMethod == "POST")
+  {
+    NGL_OUT("radio", NGL_LOG_INFO, "Starting to get data from client for radio %s", mURL.GetChars());
+    pRadio->SetNetworkSource(NULL, mpClient);
+    mLive = true;
+  }
 
   pRadio->RegisterClient(this, hq);
+
+
   SendListenStatus(eStartListen);
 
   // Reply + Headers:
   ReplyLine("HTTP/1.1 200 OK");
   ReplyHeader("Cache-Control", "no-cache");
-  ReplyHeader("Content-Type", "audio/mpeg");
   ReplyHeader("Server", "Yastream 1.0.0");
-  ReplyHeader("icy-name", "no name");
-  ReplyHeader("icy-pub", "1");
+
+  if (!mLive)
+  {
+    ReplyHeader("Content-Type", "audio/mpeg");
+    ReplyHeader("icy-name", "no name");
+    ReplyHeader("icy-pub", "1");
+  }
+  else
+  {
+    ReplyHeader("Content-Type", "text/plain");
+  }
+
   ReplyLine("");
 
   // Do the streaming:
 
-  while (mLive && mpClient->IsWriteConnected())
+  while (mOnline && mpClient->IsWriteConnected())
   {
     // GetNext chunk:
     Mp3Chunk* pChunk = NULL;
 
     pChunk = GetNextChunk();
     int cnt = 0;
-    while (!pChunk && mLive && mpClient->IsWriteConnected())
+    while (!pChunk && mOnline && mpClient->IsWriteConnected())
     {
       cnt++;
       nglThread::MsSleep(100);
@@ -248,13 +267,23 @@ bool HTTPHandler::OnBodyStart()
     //NGL_LOG("radio", NGL_LOG_INFO, "%d", cnt);
     if (pChunk)
     {
-      mpClient->Send(&pChunk->GetData()[0], pChunk->GetData().size());
+      if (mLive)
+      {
+        // As this client is the origin of the audio stream we just drop the data coming from the radio:
+      }
+      else
+      {
+        mpClient->Send(&pChunk->GetData()[0], pChunk->GetData().size());
+      }
 
       pChunk->Release();
     }
   }
 
   SendListenStatus(eStopListen);
+
+//   if (mLive)
+//     pRadio->SetNetworkSource(NULL, NULL);
 
   NGL_LOG("radio", NGL_LOG_INFO, "Client disconnecting from %s\n", mRadioID.GetChars());
   pRadio->UnregisterClient(this);
@@ -390,7 +419,7 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
 void HTTPHandler::GoOffline()
 {
   NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline");
-  mLive = false;
+  mOnline = false;
   mpClient->Close();
   NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline OK");
 }

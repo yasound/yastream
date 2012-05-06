@@ -13,6 +13,7 @@
 Radio::Radio(const nglString& rID, const nglString& rHost)
 : mID(rID),
   mLive(false),
+  mOnline(false),
   mGoOffline(false),
   mpParser(NULL),
   mpStream(NULL),
@@ -34,7 +35,7 @@ Radio::Radio(const nglString& rID, const nglString& rHost)
   }
 
   RegisterRadio(mID, this);
-  mLive = true;
+  mOnline = true;
 }
 
 Radio::~Radio()
@@ -46,22 +47,54 @@ Radio::~Radio()
   NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() OK");
 }
 
+void Radio::SetNetworkSource(nuiTCPClient* pHQSource, nuiTCPClient* pLQSource)
+{
+  nglCriticalSectionGuard guard(mCS);
+  NGL_LOG("radio", NGL_LOG_INFO, "Radio::Radio Set Network Source for radio '%s'\n", mID.GetChars());
+
+  if (mpSource)
+    mpSource->Close();
+  if (mpPreviewSource)
+    mpPreviewSource->Close();
+
+  if (!mLive)
+  {
+    delete mpSource;
+    delete mpPreviewSource;
+  }
+
+  mpSource = pHQSource;
+  mpPreviewSource = pLQSource;
+
+  bool old = mLive;
+  mLive = (mpSource || mpPreviewSource);
+
+  if (old && !mLive)
+  {
+    NGL_LOG("radio", NGL_LOG_INFO, "Stopping live");
+  }
+  else if (!old && mLive)
+  {
+    NGL_LOG("radio", NGL_LOG_INFO, "Starting live");
+  }
+}
+
 void Radio::Start()
 {
   size_t stacksize = 1024 * 1024 * 4;
 
   if (mpPreviewSource)
   {
-    mLive = mpPreviewSource->IsConnected();
+    mOnline = mpPreviewSource->IsConnected();
 
-    if (mLive)
+    if (mOnline)
       mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStartProxy), nglThread::Normal, stacksize);
   }
   else
   {
-    mLive = LoadNextTrack();
+    mOnline = LoadNextTrack();
 
-    if (mLive)
+    if (mOnline)
       mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), nglThread::Normal, stacksize);
     else
     {
@@ -86,7 +119,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
   ClientList& rClients            = highQuality ? mClients : mClientsPreview;
   std::deque<Mp3Chunk*>& rChunks  = highQuality ? mChunks : mChunksPreview;
 
-  mLive = true;
+  mOnline = true;
   mGoOffline = false;
   rClients.push_back(pClient);
 
@@ -112,7 +145,7 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   {
     //  Shutdown radio
     NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio %s\n", mID.GetChars());
-    //mLive = false;
+    //mOnline = false;
     mGoOffline = true;
   }
 }
@@ -214,6 +247,8 @@ int32 offset = 0;
 
 Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
 {
+  if (!pClient)
+    return NULL;
   Mp3Chunk* pChunk = new Mp3Chunk();
   std::vector<uint8>& data(pChunk->GetData());
   data.resize(4);
@@ -267,7 +302,7 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
 double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 {
   double duration = 0;
-  for (int32 i = 0; i < 13 && mLive; i++)
+  for (int32 i = 0; i < 13 && mOnline; i++)
   {
     bool nextFrameOK = true;
     bool nextFramePreviewOK = true;
@@ -306,9 +341,9 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
     if ((!skip && !pChunk) || !nextFramePreviewOK || !nextFrameOK)
     {
       NGL_LOG("radio", NGL_LOG_INFO, "[skip: %c][pChunk: %p][nextFrameOK: %c / %c]\n", skip?'y':'n', pChunk, nextFramePreviewOK?'y':'n', nextFrameOK?'y':'n');
-      mLive = LoadNextTrack();
+      mOnline = LoadNextTrack();
 
-      if (!mLive)
+      if (!mOnline)
       {
         NGL_LOG("radio", NGL_LOG_ERROR, "Error while getting next song for radio '%s'. Shutting down...\n", mID.GetChars());
         return 0;
@@ -322,8 +357,10 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 
 double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
 {
+  nglCriticalSectionGuard guard(mCS);
+
   double duration = 0;
-  for (int32 i = 0; i < 13 && mLive; i++)
+  for (int32 i = 0; i < 13 && mOnline; i++)
   {
     bool nextFrameOK = true;
     bool nextFramePreviewOK = true;
@@ -333,8 +370,6 @@ double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
     {
       pChunk = GetChunk(mpSource);
     }
-
-    Mp3Chunk* pChunkPreview = GetChunk(mpPreviewSource);
 
     if (pChunk)
     {
@@ -346,7 +381,11 @@ double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
       AddChunk(pChunk, false);
     }
 
-    if (pChunkPreview)
+
+    Mp3Chunk* pChunkPreview = GetChunk(mpPreviewSource);
+
+    double dur = 0;
+    while (pChunkPreview && dur == 0)
     {
       chunk_count_preview++;
       //if (!(chunk_count_preview % 100))
@@ -354,7 +393,14 @@ double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
 
       // Store this chunk locally for incomming connections and push it to current clients:
       AddChunk(pChunkPreview, true);
-      duration += pChunkPreview->GetDuration();
+      dur = pChunkPreview->GetDuration();
+      duration += dur;
+
+      if (dur == 0)
+      {
+        NGL_LOG("radio", NGL_LOG_INFO, "Skipping 0 length chunk");
+        pChunkPreview = GetChunk(mpPreviewSource);
+      }
     }
 
 //    if (!skip)
@@ -362,16 +408,11 @@ double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
 //    nextFramePreviewOK = mpParserPreview->GoToNextFrame();
 
     //if ((!skip && !pChunk) || !nextFramePreviewOK || !mpPreviewSource->IsConnected() || !mpSource->IsConnected())
-    if (!nextFramePreviewOK || !mpPreviewSource->IsConnected()) // #FIXME Handle high quality stream (see commented line above)
+    if (!nextFramePreviewOK || !pChunkPreview) // #FIXME Handle high quality stream (see commented line above)
     {
       NGL_LOG("radio", NGL_LOG_INFO, "PROXY [skip: %c][pChunk: %p][nextFrameOK: %c / %c]\n", skip?'y':'n', pChunk, nextFramePreviewOK?'y':'n', nextFrameOK?'y':'n');
-      mLive = mpPreviewSource->IsConnected(); //#FIXME Handle HQ Stream: && mpSource->IsConnected();
-
-      if (!mLive)
-      {
-        NGL_LOG("radio", NGL_LOG_ERROR, "Error while getting next song for proxy radio '%s'. Shutting down...\n", mID.GetChars());
-        return 0;
-      }
+      NGL_LOG("radio", NGL_LOG_ERROR, "Error while getting next song for proxy radio '%s'. Shutting down...\n", mID.GetChars());
+      return 0;
     }
   }
 
@@ -389,22 +430,56 @@ void Radio::OnStart()
   int counter = 0;
 
   // Pre buffering:
-  while ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) && mLive)
+  while ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) && mOnline)
   {
     ReadSet(chunk_count_preview, chunk_count);
     //NGL_LOG("radio", NGL_LOG_INFO, "Preload buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
   }
-
   // Do the actual regular streaming:
   double nexttime = nglTime();
-  while (mLive)
+  while (mOnline)
   {
-    while (mLive && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || nglTime() >= nexttime))
     {
-      nexttime += ReadSet(chunk_count_preview, chunk_count);
-      //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
-    }
+      nglCriticalSectionGuard guard(mCS);
+      if (mLive)
+      {
+        double over = nglTime() - nexttime;
+        while (mOnline && mLive && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || over >= 0))
+        {
+          double duration = ReadSetProxy(chunk_count_preview, chunk_count);
+          nexttime += duration;
+          if (duration == 0)
+          {
+            if (mLive)
+            {
+              SetNetworkSource(NULL, NULL);
+              nexttime = nglTime();
 
+              NGL_LOG("radio", NGL_LOG_INFO, "Radio source broken");
+              if (!mOnline)
+              {
+                NGL_LOG("radio", NGL_LOG_INFO, "Radio offline");
+              }
+            }
+            else
+            {
+              NGL_LOG("radio", NGL_LOG_INFO, "Radio broken AND offline");
+              mOnline = false; //#FIXME Handle HQ Stream: && mpSource->IsConnected();
+            }
+          }
+          //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
+        }
+      }
+      else
+      {
+        double now = nglTime();
+        while (mOnline && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || now >= nexttime))
+        {
+          nexttime += ReadSet(chunk_count_preview, chunk_count);
+          //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
+        }
+      }
+    }
     nglThread::MsSleep(100);
   }
 
@@ -453,7 +528,7 @@ void Radio::OnStartProxy()
   int counter = 0;
 
   // Pre buffering:
-  while ((mBufferDurationPreview < IDEAL_BUFFER_SIZE && mLive))
+  while ((mBufferDurationPreview < IDEAL_BUFFER_SIZE && mOnline))
   {
     ReadSetProxy(chunk_count_preview, chunk_count);
     //NGL_LOG("radio", NGL_LOG_INFO, "Preload buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
@@ -461,11 +536,16 @@ void Radio::OnStartProxy()
 
   // Do the actual regular streaming:
   double nexttime = nglTime();
-  while (mLive)
+  while (mOnline)
   {
-    while (mLive && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || nglTime() >= nexttime))
+    while (mOnline && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || nglTime() >= nexttime))
     {
-      nexttime += ReadSetProxy(chunk_count_preview, chunk_count);
+      double duration = ReadSetProxy(chunk_count_preview, chunk_count);
+      nexttime += duration;
+      if (duration == 0)
+      {
+        mOnline = false;
+      }
       //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
     }
 
@@ -553,7 +633,7 @@ bool Radio::LoadNextTrack()
   {
     nglPath p = mTracks.front();
     mTracks.pop_front();
-    while (!SetTrack(p) && mLive)
+    while (!SetTrack(p) && mOnline)
     {
       NGL_LOG("radio", NGL_LOG_INFO, "Skipping unreadable static file '%s'\n", p.GetChars());
       p = mTracks.front();
@@ -825,7 +905,7 @@ Radio* Radio::CreateRadio(const nglString& rURL, const nglString& rHost)
 {
   Radio* pRadio = new Radio(rURL, rHost);
   pRadio->Start();
-  if (pRadio->IsLive())
+  if (pRadio->IsOnline())
     return pRadio;
 
   NGL_LOG("radio", NGL_LOG_ERROR, "Radio::CreateRadio unable to create radio\n");
@@ -838,5 +918,11 @@ bool Radio::IsLive() const
 {
   nglCriticalSectionGuard guard(gCS);
   return mLive;
+}
+
+bool Radio::IsOnline() const
+{
+  nglCriticalSectionGuard guard(gCS);
+  return mOnline;
 }
 

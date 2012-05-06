@@ -40,6 +40,7 @@ private:
 
   bool SendFromTemplate(const nglString& rString, nuiObject* pObject);
 
+  bool mOnline;
   bool mLive;
   nglString mUsername;
   nglString mApiKey;

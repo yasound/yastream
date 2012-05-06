@@ -28,6 +28,7 @@ public:
   void AddTrack(const nglPath& rPath);
 
   bool IsLive() const;
+  bool IsOnline() const;
 
   static void AddRadioSource(const nglString& rID, const nglString& rURL);
   static void DelRadioSource(const nglString& rID, const nglString& rURL);
@@ -49,6 +50,8 @@ public:
     InitRedis();
     return gRedis.SendCommand(rRequest);
   }
+
+  void SetNetworkSource(nuiTCPClient* pHQSource, nuiTCPClient* pLQSource);
 private:
   bool SetTrack(const nglPath& rPath);
   bool LoadNextTrack();
@@ -59,6 +62,7 @@ private:
   Mp3Chunk* GetChunk(nuiTCPClient* pClient);
 
   bool mLive;
+  bool mOnline;
   bool mGoOffline;
   nglCriticalSection mCS;
   nglString mID;
