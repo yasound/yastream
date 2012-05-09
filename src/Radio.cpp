@@ -220,7 +220,7 @@ nglPath Radio::GetPreviewPath(const nglPath& rOriginalPath)
 
 void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
 {
-  nglCriticalSectionGuard guard(mCS);
+  //nglCriticalSectionGuard guard(mCS);
   pChunk->Acquire();
 
   ClientList& rClients            = previewMode ? mClientsPreview : mClients;
@@ -369,7 +369,7 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
 {
 NGL_LOG("radio", NGL_LOG_INFO, "ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)");
-  nglCriticalSectionGuard guard(mCS);
+  //nglCriticalSectionGuard guard(mCS);
 
   double duration = 0;
   for (int32 i = 0; i < 13 && mOnline; i++)
