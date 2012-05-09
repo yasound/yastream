@@ -115,15 +115,19 @@ void Radio::Start()
 void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 {
   NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p)", pClient);
-  nglCriticalSectionGuard guard(mCS);
-  NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) CS OK", pClient);
-
   ClientList& rClients            = highQuality ? mClients : mClientsPreview;
   std::deque<Mp3Chunk*>& rChunks  = highQuality ? mChunks : mChunksPreview;
 
-  mOnline = true;
-  mGoOffline = false;
-  rClients.push_back(pClient);
+  if (pClient)
+  {
+    nglCriticalSectionGuard guard(mCS);
+    NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) CS OK", pClient);
+
+
+    mOnline = true;
+    mGoOffline = false;
+    rClients.push_back(pClient);
+  }
 
   //NGL_LOG("radio", NGL_LOG_INFO, "Prepare the new client:\n");
   // Fill the buffer:
