@@ -199,6 +199,8 @@ bool HTTPHandler::OnBodyStart()
       }
     }
   }
+  if (!hq)
+    NGL_LOG("radio", NGL_LOG_WARNING, "Requesting low quality stream\n");
 
   // Find the Radio:
   Radio* pRadio = Radio::GetRadio(mRadioID);
@@ -225,7 +227,6 @@ bool HTTPHandler::OnBodyStart()
 
   pRadio->RegisterClient(this, hq);
 
-
   SendListenStatus(eStartListen);
 
   // Reply + Headers:
@@ -247,6 +248,7 @@ bool HTTPHandler::OnBodyStart()
   ReplyLine("");
 
   // Do the streaming:
+  NGL_LOG("radio", NGL_LOG_ERROR, "Do the streaming\n");
 
   while (mOnline && mpClient->IsWriteConnected())
   {
@@ -258,6 +260,7 @@ bool HTTPHandler::OnBodyStart()
     while (!pChunk && mOnline && mpClient->IsWriteConnected())
     {
       cnt++;
+      //NGL_LOG("radio", NGL_LOG_ERROR, "no chuck, wait 100ms (%d rounds)\n", cnt);
       nglThread::MsSleep(100);
       pChunk = GetNextChunk();
     }

@@ -114,7 +114,9 @@ void Radio::Start()
 
 void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 {
+  NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p)", pClient);
   nglCriticalSectionGuard guard(mCS);
+  NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) CS OK", pClient);
 
   ClientList& rClients            = highQuality ? mClients : mClientsPreview;
   std::deque<Mp3Chunk*>& rChunks  = highQuality ? mChunks : mChunksPreview;
@@ -131,6 +133,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
     pClient->AddChunk(pChunk);
     //NGL_LOG("radio", NGL_LOG_INFO, "Chunk %f\n", pChunk->GetTime());
   }
+  NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) DONE", pClient);
 }
 
 void Radio::UnregisterClient(HTTPHandler* pClient)
@@ -224,6 +227,10 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
   rBufferDuration += pChunk->GetDuration();
 
   //NGL_LOG("radio", NGL_LOG_INFO, "AddChunk %p -> %f\n", pChunk, rBufferDuration);
+  if (previewMode)
+  {
+    //NGL_LOG("radio", NGL_LOG_INFO, "AddChunk %p to %d clients\n", pChunk, rClients.size());
+  }
 
   // Push the new chunk to the current connections:
   for (ClientList::const_iterator it = rClients.begin(); it != rClients.end(); ++it)
@@ -357,6 +364,7 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 
 double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
 {
+NGL_LOG("radio", NGL_LOG_INFO, "ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)");
   nglCriticalSectionGuard guard(mCS);
 
   double duration = 0;
@@ -384,6 +392,8 @@ double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
 
     Mp3Chunk* pChunkPreview = GetChunk(mpPreviewSource);
 
+if (0)
+{
     double dur = 0;
     while (pChunkPreview && dur == 0)
     {
@@ -398,9 +408,25 @@ double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
 
       if (dur == 0)
       {
-        NGL_LOG("radio", NGL_LOG_INFO, "Skipping 0 length chunk");
+        //NGL_LOG("radio", NGL_LOG_INFO, "Skipping 0 length chunk");
         pChunkPreview = GetChunk(mpPreviewSource);
       }
+      else
+      {
+        //NGL_LOG("radio", NGL_LOG_INFO, "length chunk ok");
+      }
+    }
+}
+
+    if (pChunkPreview)
+    {
+      chunk_count_preview++;
+      //if (!(chunk_count_preview % 100))
+      //NGL_LOG("radio", NGL_LOG_INFO, "%ld chunks preview\n", chunk_count_preview);
+
+      // Store this chunk locally for incomming connections and push it to current clients:
+      AddChunk(pChunkPreview, true);
+      duration += pChunkPreview->GetDuration();
     }
 
 //    if (!skip)
@@ -412,11 +438,12 @@ double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
     {
       NGL_LOG("radio", NGL_LOG_INFO, "PROXY [skip: %c][pChunk: %p][nextFrameOK: %c / %c]\n", skip?'y':'n', pChunk, nextFramePreviewOK?'y':'n', nextFrameOK?'y':'n');
       NGL_LOG("radio", NGL_LOG_ERROR, "Error while getting next song for proxy radio '%s'. Shutting down...\n", mID.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "ReadSetProxy UNLOCK ABORT");
       return 0;
     }
   }
 
-  //NGL_LOG("radio", NGL_LOG_INFO, "mBufferDurationPreview: %f / mBufferDuration: %f\n", mBufferDurationPreview, mBufferDuration);
+  NGL_LOG("radio", NGL_LOG_INFO, "mBufferDurationPreview: %f / mBufferDuration: %f\n", mBufferDurationPreview, mBufferDuration);
   return duration;
 }
 
@@ -440,12 +467,12 @@ void Radio::OnStart()
   while (mOnline)
   {
     {
-      nglCriticalSectionGuard guard(mCS);
       if (mLive)
       {
         double over = nglTime() - nexttime;
         while (mOnline && mLive && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || over >= 0))
         {
+          nglCriticalSectionGuard guard(mCS);
           double duration = ReadSetProxy(chunk_count_preview, chunk_count);
           nexttime += duration;
           if (duration == 0)
@@ -475,6 +502,7 @@ void Radio::OnStart()
         double now = nglTime();
         while (mOnline && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || now >= nexttime))
         {
+          nglCriticalSectionGuard guard(mCS);
           nexttime += ReadSet(chunk_count_preview, chunk_count);
           //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
         }
