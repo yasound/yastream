@@ -25,7 +25,7 @@ cd /home/customer/streamer/work/yastream/bin/debug/
 
 whoami=$(whoami)
 
-if ! [ "x${whoami}" = "xroot" -o "x${whoami}" = "xmeeloo" ];then
+if ! [ "x${whoami}" = "xroot" -o "x${whoami}" = "xcustomer" ];then
   echo "error id"
   exit 2
 fi

@@ -281,6 +281,7 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
     return NULL;
   }
 
+  pChunk->SetDuration(hdr.GetFrameDuration());
   int32 len = hdr.GetFrameByteLength();
   int32 left = len - 4;
   int32 done = 4;
@@ -304,6 +305,7 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
     done += res;
     offset += res;
   }
+
 
   //NGL_ASSERT(res == left);
 
