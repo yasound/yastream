@@ -65,6 +65,7 @@ private:
   bool mOnline;
   bool mGoOffline;
   nglCriticalSection mCS;
+  nglCriticalSection mClientListCS;
   nglString mID;
 
   typedef std::list<HTTPHandler*> ClientList;

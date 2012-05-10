@@ -120,7 +120,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 
   if (pClient)
   {
-    nglCriticalSectionGuard guard(mCS);
+    nglCriticalSectionGuard guard(mClientListCS);
     NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) CS OK", pClient);
 
 
@@ -143,7 +143,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 void Radio::UnregisterClient(HTTPHandler* pClient)
 {
   NGL_LOG("radio", NGL_LOG_INFO, "client is gone for radio %s\n", mID.GetChars());
-  nglCriticalSectionGuard guard(mCS);
+  nglCriticalSectionGuard guard(mClientListCS);
   mClients.remove(pClient);
   mClientsPreview.remove(pClient);
   NGL_LOG("radio", NGL_LOG_INFO, "    %d clients left in radio %s\n", mClientsPreview.size(), mID.GetChars());
@@ -220,7 +220,6 @@ nglPath Radio::GetPreviewPath(const nglPath& rOriginalPath)
 
 void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
 {
-  //nglCriticalSectionGuard guard(mCS);
   pChunk->Acquire();
 
   ClientList& rClients            = previewMode ? mClientsPreview : mClients;
@@ -237,10 +236,13 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
   }
 
   // Push the new chunk to the current connections:
-  for (ClientList::const_iterator it = rClients.begin(); it != rClients.end(); ++it)
   {
-    HTTPHandler* pClient = *it;
-    pClient->AddChunk(pChunk);
+    nglCriticalSectionGuard guard(mClientListCS);
+    for (ClientList::const_iterator it = rClients.begin(); it != rClients.end(); ++it)
+    {
+      HTTPHandler* pClient = *it;
+      pClient->AddChunk(pChunk);
+    }
   }
 
   while (rBufferDuration > MAX_BUFFER_SIZE)
@@ -369,7 +371,6 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
 {
 NGL_LOG("radio", NGL_LOG_INFO, "ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)");
-  //nglCriticalSectionGuard guard(mCS);
 
   double duration = 0;
   for (int32 i = 0; i < 13 && mOnline; i++)
@@ -595,6 +596,7 @@ void Radio::OnStartProxy()
 void Radio::KillClients()
 {
   NGL_LOG("radio", NGL_LOG_INFO, "Make '%d' clients to stop relaying our data\n", mClientsPreview.size() + mClients.size());
+  nglCriticalSectionGuard guard(mClientListCS);
   for (ClientList::const_iterator it = mClientsPreview.begin(); it != mClientsPreview.end(); ++it)
   {
     HTTPHandler* pClient = *it;
