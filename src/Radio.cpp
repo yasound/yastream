@@ -131,18 +131,21 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 
   //NGL_LOG("radio", NGL_LOG_INFO, "Prepare the new client:\n");
   // Fill the buffer:
-  for (std::deque<Mp3Chunk*>::const_iterator it = rChunks.begin(); it != rChunks.end(); ++it)
   {
-    Mp3Chunk* pChunk = *it;
-    pClient->AddChunk(pChunk);
-    //NGL_LOG("radio", NGL_LOG_INFO, "Chunk %f\n", pChunk->GetTime());
+    nglCriticalSectionGuard guard(mClientListCS);
+    for (std::deque<Mp3Chunk*>::const_iterator it = rChunks.begin(); it != rChunks.end(); ++it)
+    {
+      Mp3Chunk* pChunk = *it;
+      pClient->AddChunk(pChunk);
+      //NGL_LOG("radio", NGL_LOG_INFO, "Chunk %f\n", pChunk->GetTime());
+    }
   }
   NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) DONE", pClient);
 }
 
 void Radio::UnregisterClient(HTTPHandler* pClient)
 {
-  NGL_LOG("radio", NGL_LOG_INFO, "client is gone for radio %s\n", mID.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "client is gone for radio %p %s\n", this, mID.GetChars());
   nglCriticalSectionGuard guard(mClientListCS);
   mClients.remove(pClient);
   mClientsPreview.remove(pClient);
