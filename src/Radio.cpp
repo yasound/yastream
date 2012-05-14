@@ -114,14 +114,14 @@ void Radio::Start()
 
 void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 {
-  NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p)", pClient);
+  //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p)", pClient);
   ClientList& rClients            = highQuality ? mClients : mClientsPreview;
   std::deque<Mp3Chunk*>& rChunks  = highQuality ? mChunks : mChunksPreview;
 
   if (pClient)
   {
     nglCriticalSectionGuard guard(mClientListCS);
-    NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) CS OK", pClient);
+    //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) CS OK", pClient);
 
 
     mOnline = true;
@@ -140,21 +140,21 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
       //NGL_LOG("radio", NGL_LOG_INFO, "Chunk %f\n", pChunk->GetTime());
     }
   }
-  NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) DONE", pClient);
+  //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) DONE", pClient);
 }
 
 void Radio::UnregisterClient(HTTPHandler* pClient)
 {
-  NGL_LOG("radio", NGL_LOG_INFO, "client is gone for radio %p %s\n", this, mID.GetChars());
+  //NGL_LOG("radio", NGL_LOG_INFO, "client is gone for radio %p %s\n", this, mID.GetChars());
   nglCriticalSectionGuard guard(mClientListCS);
   mClients.remove(pClient);
   mClientsPreview.remove(pClient);
-  NGL_LOG("radio", NGL_LOG_INFO, "    %d clients left in radio %s\n", mClientsPreview.size(), mID.GetChars());
+  //NGL_LOG("radio", NGL_LOG_INFO, "    %d clients left in radio %s\n", mClientsPreview.size(), mID.GetChars());
 
   if (mClients.empty() && mClientsPreview.empty())
   {
     //  Shutdown radio
-    NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio %s\n", mID.GetChars());
+    //NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio %s\n", mID.GetChars());
     //mOnline = false;
     mGoOffline = true;
   }
@@ -375,7 +375,7 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 
 double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
 {
-NGL_LOG("radio", NGL_LOG_INFO, "ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)");
+  //NGL_LOG("radio", NGL_LOG_INFO, "ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)");
 
   double duration = 0;
   for (int32 i = 0; i < 13 && mOnline; i++)
@@ -446,9 +446,9 @@ if (0)
     //if ((!skip && !pChunk) || !nextFramePreviewOK || !mpPreviewSource->IsConnected() || !mpSource->IsConnected())
     if (!nextFramePreviewOK || !pChunkPreview) // #FIXME Handle high quality stream (see commented line above)
     {
-      NGL_LOG("radio", NGL_LOG_INFO, "PROXY [skip: %c][pChunk: %p][nextFrameOK: %c / %c]\n", skip?'y':'n', pChunk, nextFramePreviewOK?'y':'n', nextFrameOK?'y':'n');
+      //NGL_LOG("radio", NGL_LOG_INFO, "PROXY [skip: %c][pChunk: %p][nextFrameOK: %c / %c]\n", skip?'y':'n', pChunk, nextFramePreviewOK?'y':'n', nextFrameOK?'y':'n');
       NGL_LOG("radio", NGL_LOG_ERROR, "Error while getting next song for proxy radio '%s'. Shutting down...\n", mID.GetChars());
-  NGL_LOG("radio", NGL_LOG_INFO, "ReadSetProxy UNLOCK ABORT");
+  //NGL_LOG("radio", NGL_LOG_INFO, "ReadSetProxy UNLOCK ABORT");
       return 0;
     }
   }
@@ -492,7 +492,7 @@ void Radio::OnStart()
               SetNetworkSource(NULL, NULL);
               nexttime = nglTime();
 
-              NGL_LOG("radio", NGL_LOG_INFO, "Radio source broken");
+              //NGL_LOG("radio", NGL_LOG_INFO, "Radio source broken");
               if (!mOnline)
               {
                 NGL_LOG("radio", NGL_LOG_INFO, "Radio offline");
@@ -557,7 +557,7 @@ void Radio::OnStartProxy()
       cont = false;
   }
 
-  NGL_LOG("radio", NGL_LOG_INFO, "Headers:\n%s", headers.GetChars());
+  //NGL_LOG("radio", NGL_LOG_INFO, "Headers:\n%s", headers.GetChars());
 
   int64 chunk_count = 0;
   int64 chunk_count_preview = 0;
@@ -633,7 +633,7 @@ bool Radio::LoadNextTrack()
 
     if (pResponse->GetStatusCode() == 200)
     {
-      NGL_LOG("radio", NGL_LOG_INFO, "new trackid: %s\n", pResponse->GetBodyStr().GetChars());
+      //NGL_LOG("radio", NGL_LOG_INFO, "new trackid: %s\n", pResponse->GetBodyStr().GetChars());
 
       nglString p = pResponse->GetBodyStr();
       //p.Insert("_preview64", 9);

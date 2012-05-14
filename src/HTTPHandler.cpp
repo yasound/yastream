@@ -327,7 +327,7 @@ Mp3Chunk* HTTPHandler::GetNextChunk()
 
 void HTTPHandler::SendListenStatus(ListenStatus status)
 {
-  NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus");
+  //NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus");
   nglString statusStr;
   if (status == eStartListen)
     statusStr = "start_listening";
@@ -364,7 +364,7 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
       Radio::SendRedisCommand(req);
     }
 
-    NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus Start Listen");
+    //NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus Start Listen");
     mStartTime = nglTime();
   }
   else if (status == eStopListen)
@@ -380,7 +380,7 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
       Radio::SendRedisCommand(req);
     }
 
-    NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus Stop Listen");
+    //NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus Stop Listen");
     nglTime now;
     nglTime duration = now - mStartTime;
     int32 seconds = ToBelow(duration.GetValue());
@@ -393,7 +393,7 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
   url.CFormat("%s/api/v1/radio/%s/%s/%s", Radio::GetAppUrl().GetChars(), mRadioID.GetChars(), statusStr.GetChars(), params.GetChars());
   nuiHTTPRequest request(url, "POST");
 
-  NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus SendRequest");
+  //NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus SendRequest");
 
   nuiHTTPResponse* pResponse = request.SendRequest();
 
@@ -416,7 +416,7 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
   delete pFile;
   */
 
-  NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus DoneOK");
+  //NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus DoneOK");
 }
 
 void HTTPHandler::GoOffline()
