@@ -203,7 +203,7 @@ bool HTTPHandler::OnBodyStart()
     NGL_LOG("radio", NGL_LOG_WARNING, "Requesting low quality stream\n");
 
   // Find the Radio:
-  Radio* pRadio = Radio::GetRadio(mRadioID);
+  Radio* pRadio = Radio::GetRadio(mRadioID, this, hq);
   if (!pRadio || !pRadio->IsOnline())
   {
     NGL_LOG("radio", NGL_LOG_ERROR, "HTTPHandler::Start unable to create radio %s\n", mRadioID.GetChars());
@@ -224,8 +224,6 @@ bool HTTPHandler::OnBodyStart()
     pRadio->SetNetworkSource(NULL, mpClient);
     mLive = true;
   }
-
-  pRadio->RegisterClient(this, hq);
 
   SendListenStatus(eStartListen);
 

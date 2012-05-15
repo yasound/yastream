@@ -17,12 +17,11 @@ public:
 
   void Start();
 
-  void RegisterClient(HTTPHandler* pClient, bool highQuality = false);
   void UnregisterClient(HTTPHandler* pClient);
   void OnStart();
   void OnStartProxy();
 
-  static Radio* GetRadio(const nglString& rURL);
+  static Radio* GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ);
   static void SetParams(const nglString& appurl, const nglString& hostname, int port, const nglPath& rDataPath, const nglString& rRedisHost, int RedisPort, int RedisDB);
 
   void AddTrack(const nglPath& rPath);
@@ -53,6 +52,7 @@ public:
 
   void SetNetworkSource(nuiTCPClient* pHQSource, nuiTCPClient* pLQSource);
 private:
+  void RegisterClient(HTTPHandler* pClient, bool highQuality);
   bool SetTrack(const nglPath& rPath);
   bool LoadNextTrack();
   double ReadSet(int64& chunk_count_preview, int64& chunk_count);

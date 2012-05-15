@@ -43,7 +43,6 @@ Radio::~Radio()
   NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() [%s]", mID.GetChars());
   delete mpSource;
   delete mpPreviewSource;
-  UnregisterRadio(mID);
   NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() OK");
 }
 
@@ -145,17 +144,16 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 
 void Radio::UnregisterClient(HTTPHandler* pClient)
 {
-  //NGL_LOG("radio", NGL_LOG_INFO, "client is gone for radio %p %s\n", this, mID.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "client is gone for radio %p %s\n", this, mID.GetChars());
   nglCriticalSectionGuard guard(mClientListCS);
   mClients.remove(pClient);
   mClientsPreview.remove(pClient);
-  //NGL_LOG("radio", NGL_LOG_INFO, "    %d clients left in radio %s\n", mClientsPreview.size(), mID.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "    %d clients left in radio %s\n", mClientsPreview.size(), mID.GetChars());
 
   if (mClients.empty() && mClientsPreview.empty())
   {
     //  Shutdown radio
-    //NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio %s\n", mID.GetChars());
-    //mOnline = false;
+    NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio %s\n", mID.GetChars());
     mGoOffline = true;
   }
 }
@@ -827,7 +825,7 @@ void Radio::FlushRedis(bool FlushAll)
 }
 
 
-Radio* Radio::GetRadio(const nglString& rURL)
+Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
 {
   //NGL_LOG("radio", NGL_LOG_INFO, "Getting radio %s\n", rURL.GetChars());
   nglCriticalSectionGuard guard(gCS);
@@ -857,7 +855,13 @@ Radio* Radio::GetRadio(const nglString& rURL)
         // Create this radio from the actual server!
         NGL_LOG("radio", NGL_LOG_INFO, "Radio found on %s\n", host.GetChars());
 
-        return CreateRadio(rURL, host);
+        Radio* pRadio = CreateRadio(rURL, host);
+        if (pRadio)
+          if (pRadio->IsOnline())
+            pRadio->RegisterClient(pClient, HQ);
+          else
+            pRadio = NULL;
+        return pRadio;
       }
 
       // The radio was not on the server. we need to create it:
@@ -884,11 +888,23 @@ Radio* Radio::GetRadio(const nglString& rURL)
 
     // Create the radio!
     //NGL_LOG("radio", NGL_LOG_INFO, "Trying to create the radio '%s'\n", rURL.GetChars());
-    return CreateRadio(rURL, nglString::Null);
+    Radio* pRadio = CreateRadio(rURL, nglString::Null);
+    if (pRadio)
+      if (pRadio->IsOnline())
+        pRadio->RegisterClient(pClient, HQ);
+      else
+        pRadio = NULL;
+    return pRadio;
     //return NULL;
   }
   //NGL_LOG("radio", NGL_LOG_INFO, "Getting existing radio %s\n", rURL.GetChars());
-  return it->second;
+  Radio* pRadio = it->second;
+  if (pRadio)
+    if (pRadio->IsOnline())
+      pRadio->RegisterClient(pClient, HQ);
+    else
+      pRadio = NULL;
+  return pRadio;
 }
 
 void Radio::RegisterRadio(const nglString& rURL, Radio* pRadio)

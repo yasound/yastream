@@ -44,7 +44,7 @@ nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient)
   uint8* s = (uint8*)&S;
   uint8* d = (uint8*)&D;
 
-  if (0x6f7f284e == S || 0x727f284e == S)
+  if (0x6f7f284e == S || 0x727f284e == S || (!S && !D))
   {
     // This is the load balancer!!!
     return NULL;
