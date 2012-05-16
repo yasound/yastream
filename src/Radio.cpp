@@ -43,6 +43,7 @@ Radio::~Radio()
   NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() [%s]", mID.GetChars());
   delete mpSource;
   delete mpPreviewSource;
+  UnregisterRadio(mID);
   NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() OK");
 }
 
@@ -144,7 +145,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 
 void Radio::UnregisterClient(HTTPHandler* pClient)
 {
-  NGL_LOG("radio", NGL_LOG_INFO, "client is gone for radio %p %s\n", this, mID.GetChars());
+  //NGL_LOG("radio", NGL_LOG_INFO, "client is gone for radio %p %s\n", this, mID.GetChars());
   nglCriticalSectionGuard guard(mClientListCS);
   mClients.remove(pClient);
   mClientsPreview.remove(pClient);
@@ -154,6 +155,7 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   {
     //  Shutdown radio
     NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio %s\n", mID.GetChars());
+    //mOnline = false;
     mGoOffline = true;
   }
 }
@@ -857,10 +859,7 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
 
         Radio* pRadio = CreateRadio(rURL, host);
         if (pRadio)
-          if (pRadio->IsOnline())
-            pRadio->RegisterClient(pClient, HQ);
-          else
-            pRadio = NULL;
+          pRadio->RegisterClient(pClient, HQ);
         return pRadio;
       }
 
@@ -890,20 +889,14 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
     //NGL_LOG("radio", NGL_LOG_INFO, "Trying to create the radio '%s'\n", rURL.GetChars());
     Radio* pRadio = CreateRadio(rURL, nglString::Null);
     if (pRadio)
-      if (pRadio->IsOnline())
-        pRadio->RegisterClient(pClient, HQ);
-      else
-        pRadio = NULL;
+      pRadio->RegisterClient(pClient, HQ);
     return pRadio;
     //return NULL;
   }
   //NGL_LOG("radio", NGL_LOG_INFO, "Getting existing radio %s\n", rURL.GetChars());
   Radio* pRadio = it->second;
   if (pRadio)
-    if (pRadio->IsOnline())
-      pRadio->RegisterClient(pClient, HQ);
-    else
-      pRadio = NULL;
+    pRadio->RegisterClient(pClient, HQ);
   return pRadio;
 }
 
