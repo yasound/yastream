@@ -31,10 +31,13 @@ int redisdb = 1;
 nglString bindhost = "0.0.0.0";
 bool flushall = false;
 
+nuiSocketPool MainPool;
 
-nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient);
-nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient)
+
+nuiHTTPHandler* HandlerDelegate(nuiSocket::SocketType sock);
+nuiHTTPHandler* HandlerDelegate(nuiSocket::SocketType sock)
 {
+  HTTPHandler* pClient = new HTTPHandler(sock);
   nuiNetworkHost source(0, 0, nuiNetworkHost::eTCP);
   nuiNetworkHost dest(0, 0, nuiNetworkHost::eTCP);
   pClient->GetLocalHost(source);
@@ -47,13 +50,15 @@ nuiHTTPHandler* HandlerDelegate(nuiTCPClient* pClient)
   if (0x6f7f284e == S || 0x727f284e == S || (!S && !D))
   {
     // This is the load balancer!!!
+    delete pClient;
     return NULL;
   }
 
   NGL_LOG("yastream", NGL_LOG_INFO, "connection from %d.%d.%d.%d:%d to %d.%d.%d.%d:%d (0x%08x -> 0x%08x)\n",
                                     s[0], s[1], s[2], s[3], source.GetPort(),
                                     d[0], d[1], d[2], d[3], dest.GetPort(), S, D);
-  return new HTTPHandler(pClient);
+  
+  return pClient;
 }
 
 void SigPipeSink(int signal)
@@ -250,6 +255,24 @@ public:
   }
 };
 
+class HTTPServer : public nuiHTTPServer
+{
+public:
+  HTTPServer()
+  {
+    
+  }
+  
+  void OnCanRead()
+  {
+    nuiTCPClient* pClient = Accept();
+    if (pClient)
+    {
+      pClient->SetNonBlocking(true);
+      MainPool.Add(pClient, nuiSocketPool::eContinuous);
+    }
+  }
+};
 
 int main(int argc, const char** argv)
 {
@@ -461,17 +484,21 @@ int main(int argc, const char** argv)
   Radio::FlushRedis(flushall);
 
   NGL_OUT("Starting http streaming server %s:%d\n", bindhost.GetChars(), port);
-  nuiHTTPServer* pServer = new nuiHTTPServer();
+  nuiHTTPServer* pServer = new HTTPServer();
   //pServer->SetClientStackSize(1024 * 1024 * 4);
   pServer->SetHandlerDelegate(HandlerDelegate);
-
-  if (pServer->Bind(bindhost, port))
+  pServer->SetNonBlocking(true);
+  
+  if (pServer->Bind(bindhost, port) && pServer->Listen())
   {
-    pServer->AcceptConnections();
+    MainPool.Add(pServer, nuiSocketPool::eContinuous);
+    while (MainPool.DispatchEvents(1000000) >= 0)
+      ;
+    //pServer->AcceptConnections();
   }
   else
   {
-    NGL_OUT("Unable to bind %s:%d\n", bindhost.GetChars(), port);
+    NGL_OUT("Unable to bind or listen %s:%d\n", bindhost.GetChars(), port);
   }
 
   delete pServer;

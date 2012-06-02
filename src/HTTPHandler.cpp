@@ -10,8 +10,8 @@
 
 ///////////////////////////////////////////////////
 //class HTTPHandler : public nuiHTTPHandler
-HTTPHandler::HTTPHandler(nuiTCPClient* pClient)
-: nuiHTTPHandler(pClient), mOnline(true), mLive(false)
+HTTPHandler::HTTPHandler(nuiSocket::SocketType s)
+: nuiHTTPHandler(s), mOnline(true), mLive(false)
 {
 #if TEMPLATE_TEST
   mpTemplate = new nuiStringTemplate("<html><body><br>This template is a test<br>ClassName: {{Class}}<br>ObjectName: {{Name}}<br>{%for elem in array%}{{elem}}<br>{%end%}Is it ok?<br></body></html>");
@@ -123,7 +123,7 @@ bool HTTPHandler::OnHeader(const nglString& rKey, const nglString& rValue)
 
 bool HTTPHandler::SendFromTemplate(const nglString& rString, nuiObject* pObject)
 {
-  return mpClient->Send(rString);
+  return BufferedSend(rString);
 }
 
 uint32 FakeGetter(uint32 i)
@@ -221,7 +221,7 @@ bool HTTPHandler::OnBodyStart()
   if (mMethod == "POST")
   {
     NGL_OUT("radio", NGL_LOG_INFO, "Starting to get data from client for radio %s", mURL.GetChars());
-    pRadio->SetNetworkSource(NULL, mpClient);
+    pRadio->SetNetworkSource(NULL, this);
     mLive = true;
   }
 
@@ -248,14 +248,14 @@ bool HTTPHandler::OnBodyStart()
   // Do the streaming:
   NGL_LOG("radio", NGL_LOG_ERROR, "Do the streaming\n");
 
-  while (mOnline && mpClient->IsWriteConnected())
+  while (mOnline && IsWriteConnected())
   {
     // GetNext chunk:
     Mp3Chunk* pChunk = NULL;
 
     pChunk = GetNextChunk();
     int cnt = 0;
-    while (!pChunk && mOnline && mpClient->IsWriteConnected())
+    while (!pChunk && mOnline && IsWriteConnected())
     {
       cnt++;
       //NGL_LOG("radio", NGL_LOG_ERROR, "no chuck, wait 100ms (%d rounds)\n", cnt);
@@ -274,7 +274,7 @@ bool HTTPHandler::OnBodyStart()
       }
       else
       {
-        mpClient->Send(&pChunk->GetData()[0], pChunk->GetData().size());
+        BufferedSend(&pChunk->GetData()[0], pChunk->GetData().size());
       }
 
       pChunk->Release();
@@ -339,7 +339,7 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
   {
     nglString address;
     nuiNetworkHost client(0, 0, nuiNetworkHost::eTCP);
-    bool res = mpClient->GetDistantHost(client);
+    bool res = GetDistantHost(client);
     if (res)
     {
       uint32 ip = client.GetIP();
@@ -421,7 +421,8 @@ void HTTPHandler::GoOffline()
 {
   NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline");
   mOnline = false;
-  mpClient->Close();
+  Close();
   NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline OK");
 }
+
 

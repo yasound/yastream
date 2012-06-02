@@ -12,7 +12,7 @@ class Mp3Chunk;
 class HTTPHandler : public nuiHTTPHandler
 {
 public:
-  HTTPHandler(nuiTCPClient* pClient);
+  HTTPHandler(nuiSocket::SocketType s);
   virtual ~HTTPHandler();
   bool OnMethod(const nglString& rValue);
   bool OnURL(const nglString& rValue);
@@ -22,7 +22,7 @@ public:
   bool OnBodyData(const std::vector<uint8>& rData);
   void OnBodyEnd();
   void AddChunk(Mp3Chunk* pChunk);
-
+  
   void GoOffline();
 private:
   nglCriticalSection mCS;
