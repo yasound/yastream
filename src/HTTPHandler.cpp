@@ -8,6 +8,8 @@
 #define SUBSCRIPTION_NONE "none"
 #define SUBSCRIPTION_PREMIUM "premium"
 
+#define TEMPLATE_TEST 1
+
 ///////////////////////////////////////////////////
 //class HTTPHandler : public nuiHTTPHandler
 HTTPHandler::HTTPHandler(nuiSocket::SocketType s)
