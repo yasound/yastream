@@ -230,15 +230,15 @@ bool HTTPHandler::OnBodyStart()
   SendListenStatus(eStartListen);
 
   // Reply + Headers:
-  ReplyLine("HTTP/1.1 200 OK");
+  ReplyLine("HTTP/1.0 200 OK");
   ReplyHeader("Cache-Control", "no-cache");
   ReplyHeader("Server", "Yastream 1.0.0");
 
   if (!mLive)
   {
     ReplyHeader("Content-Type", "audio/mpeg");
-    ReplyHeader("icy-name", "no name");
-    ReplyHeader("icy-pub", "1");
+    //ReplyHeader("icy-name", "no name");
+    //ReplyHeader("icy-pub", "1");
   }
   else
   {
@@ -276,6 +276,7 @@ bool HTTPHandler::OnBodyStart()
       }
       else
       {
+        //NGL_LOG("radio", NGL_LOG_INFO, "Send chunk %d", cnt);
         BufferedSend(&pChunk->GetData()[0], pChunk->GetData().size());
       }
 
