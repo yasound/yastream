@@ -22,7 +22,8 @@ public:
   bool OnBodyData(const std::vector<uint8>& rData);
   void OnBodyEnd();
   void AddChunk(Mp3Chunk* pChunk);
-  
+  void OnWriteClosed();
+
   void GoOffline();
 private:
   nglCriticalSection mCS;
@@ -48,5 +49,7 @@ private:
   nglTime mStartTime;
 
   nuiStringTemplate* mpTemplate;
+
+  Radio* mpRadio;
 };
 

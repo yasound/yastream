@@ -13,7 +13,7 @@
 ///////////////////////////////////////////////////
 //class HTTPHandler : public nuiHTTPHandler
 HTTPHandler::HTTPHandler(nuiSocket::SocketType s)
-: nuiHTTPHandler(s), mOnline(true), mLive(false)
+: nuiHTTPHandler(s), mOnline(true), mLive(false), mpRadio(NULL)
 {
 #if TEMPLATE_TEST
   mpTemplate = new nuiStringTemplate("<html><body><br>This template is a test<br>ClassName: {{Class}}<br>ObjectName: {{Name}}<br>{%for elem in array%}{{elem}}<br>{%end%}Is it ok?<br></body></html>");
@@ -26,6 +26,17 @@ HTTPHandler::~HTTPHandler()
 {
   if (mpTemplate)
     delete mpTemplate;
+
+  if (mpRadio)
+  {
+    SendListenStatus(eStopListen);
+
+//   if (mLive)
+//     pRadio->SetNetworkSource(NULL, NULL);
+
+    NGL_LOG("radio", NGL_LOG_INFO, "Client disconnecting from %s\n", mRadioID.GetChars());
+    mpRadio->UnregisterClient(this);
+  }
 }
 
 bool HTTPHandler::OnMethod(const nglString& rValue)
@@ -205,14 +216,14 @@ bool HTTPHandler::OnBodyStart()
     NGL_LOG("radio", NGL_LOG_WARNING, "Requesting low quality stream\n");
 
   // Find the Radio:
-  Radio* pRadio = Radio::GetRadio(mRadioID, this, hq);
-  if (!pRadio || !pRadio->IsOnline())
+  mpRadio = Radio::GetRadio(mRadioID, this, hq);
+  if (!mpRadio || !mpRadio->IsOnline())
   {
     NGL_LOG("radio", NGL_LOG_ERROR, "HTTPHandler::Start unable to create radio %s\n", mRadioID.GetChars());
     nglString str;
     str.Format("Unable to find %s on this server", mURL.GetChars());
     ReplyError(404, str);
-
+    mpRadio = NULL;
     return false;
   }
 
@@ -223,7 +234,7 @@ bool HTTPHandler::OnBodyStart()
   if (mMethod == "POST")
   {
     NGL_OUT("radio", NGL_LOG_INFO, "Starting to get data from client for radio %s", mURL.GetChars());
-    pRadio->SetNetworkSource(NULL, this);
+    mpRadio->SetNetworkSource(NULL, this);
     mLive = true;
   }
 
@@ -250,6 +261,7 @@ bool HTTPHandler::OnBodyStart()
   // Do the streaming:
   NGL_LOG("radio", NGL_LOG_ERROR, "Do the streaming\n");
 
+/*
   while (mOnline && IsWriteConnected())
   {
     // GetNext chunk:
@@ -287,10 +299,11 @@ bool HTTPHandler::OnBodyStart()
   SendListenStatus(eStopListen);
 
 //   if (mLive)
-//     pRadio->SetNetworkSource(NULL, NULL);
+//     mpRadio->SetNetworkSource(NULL, NULL);
 
   NGL_LOG("radio", NGL_LOG_INFO, "Client disconnecting from %s\n", mRadioID.GetChars());
-  pRadio->UnregisterClient(this);
+  mpRadio->UnregisterClient(this);
+*/
 
   NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart DoneOK");
   return false;
@@ -309,8 +322,9 @@ void HTTPHandler::AddChunk(Mp3Chunk* pChunk)
 {
   nglCriticalSectionGuard guard(mCS);
   //NGL_LOG("radio", NGL_LOG_INFO, "handle id = %d\n", pChunk->GetId());
-  pChunk->Acquire();
-  mChunks.push_back(pChunk);
+  //pChunk->Acquire();
+  BufferedSend(&pChunk->GetData()[0], pChunk->GetData().size());
+  //mChunks.push_back(pChunk);
 }
 
 Mp3Chunk* HTTPHandler::GetNextChunk()
@@ -426,6 +440,13 @@ void HTTPHandler::GoOffline()
   mOnline = false;
   Close();
   NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline OK");
+
+  delete this;
 }
 
+void HTTPHandler::OnWriteClosed()
+{
+  nuiTCPClient::OnWriteClosed();
+  delete this;
+}
 
