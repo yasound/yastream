@@ -84,12 +84,14 @@ bool HTTPHandler::OnURL(const nglString& rValue)
 
     str.CFormat("All systems nominal (listeners: %s - anonymous: %s)", listeners.GetChars(), anonlisteners.GetChars());
     ReplyLine(str);
-    return false; // We don't have a favicon right now...
+
+    return ReplyAndClose();
   }
   else if ((mURL.GetLeft(4) == "http") || (mURL.GetLeft(5) == "/http"))
   {
     ReplyError(404, "Not found");
-    return false;
+    SetAutoDelete(true);
+    return ReplyAndClose();
   }
 
   return true;
@@ -172,7 +174,7 @@ bool HTTPHandler::OnBodyStart()
     obj->AddInstanceAttribute("array", pAttrib);
     mpTemplate->Generate(obj, nuiMakeDelegate(this, &HTTPHandler::SendFromTemplate));
 
-    return false;
+    return ReplyAndClose();
   }
 #endif
 
@@ -181,7 +183,7 @@ bool HTTPHandler::OnBodyStart()
     nglString str;
     str.Format("Unable to find %s on this server", mURL.GetChars());
     ReplyError(404, str);
-    return false;
+    return ReplyAndClose();
   }
 
   std::vector<nglString> tokens;
@@ -224,7 +226,7 @@ bool HTTPHandler::OnBodyStart()
     str.Format("Unable to find %s on this server", mURL.GetChars());
     ReplyError(404, str);
     mpRadio = NULL;
-    return false;
+    return ReplyAndClose();
   }
 
   Log(200);
