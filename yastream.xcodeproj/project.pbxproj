@@ -7,8 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		40F3191115A49381005F6D20 /* libnui3CocoaD.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E511CACC142A29460079F31F /* libnui3CocoaD.a */; };
 		E542980A150E47BC005A8CB3 /* RedisClient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E5429809150E47BC005A8CB3 /* RedisClient.cpp */; };
-		E567346D1433293500974A3C /* libnui3CocoaD.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E511CACC142A29460079F31F /* libnui3CocoaD.a */; };
 		E57200E214BB861200D8E91D /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E57200E114BB861200D8E91D /* OpenGL.framework */; };
 		E573203D14BDE0E0008D488E /* Radio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E573203B14BDE0E0008D488E /* Radio.cpp */; };
 		E573204014BDE591008D488E /* HTTPHandler.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E573203E14BDE591008D488E /* HTTPHandler.cpp */; };
@@ -152,8 +152,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				40F3191115A49381005F6D20 /* libnui3CocoaD.a in Frameworks */,
 				E57200E214BB861200D8E91D /* OpenGL.framework in Frameworks */,
-				E567346D1433293500974A3C /* libnui3CocoaD.a in Frameworks */,
 				E5D2CF3E142A2B9700139E27 /* libz.dylib in Frameworks */,
 				E5D2CF34142A2B6E00139E27 /* Cocoa.framework in Frameworks */,
 				E5D2CF38142A2B6E00139E27 /* CoreServices.framework in Frameworks */,

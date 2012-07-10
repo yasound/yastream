@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4085AB12147E8F5E000D3EBE /* libmp3lame.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4085AB11147E8F5E000D3EBE /* libmp3lame.dylib */; };
 		4085AB14147E8FA2000D3EBE /* libmpg123.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4085AB0F147E8F18000D3EBE /* libmpg123.0.dylib */; };
 		409F26AD147D45F60059A839 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 409F26AC147D45F60059A839 /* Foundation.framework */; };
 		409F26B0147D45F60059A839 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 409F26AF147D45F60059A839 /* main.mm */; };
@@ -15,7 +14,101 @@
 		409F26C1147D46020059A839 /* Mp3Frame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 409F26BB147D46020059A839 /* Mp3Frame.cpp */; };
 		409F26C2147D46020059A839 /* Mp3Header.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 409F26BD147D46020059A839 /* Mp3Header.cpp */; };
 		409F26C3147D46020059A839 /* Mp3Parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 409F26BF147D46020059A839 /* Mp3Parser.cpp */; };
+		40F3193215A4AB86005F6D20 /* libmp3lame.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 40F3193115A4AB86005F6D20 /* libmp3lame.0.dylib */; };
+		40F3193315A4AC4E005F6D20 /* libnui3CocoaD.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 40F318DC15A48817005F6D20 /* libnui3CocoaD.a */; };
+		40F3193515A4AC70005F6D20 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40F3193415A4AC70005F6D20 /* OpenGL.framework */; };
+		40F3193C15A4AC95005F6D20 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40F3193B15A4AC95005F6D20 /* Cocoa.framework */; };
+		40F3193E15A4AC9A005F6D20 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40F3193D15A4AC9A005F6D20 /* CoreServices.framework */; };
+		40F3194015A4ACA1005F6D20 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40F3193F15A4ACA1005F6D20 /* CoreFoundation.framework */; };
+		40F3194715A4ACED005F6D20 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 40F3194615A4ACED005F6D20 /* libz.dylib */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		40F318D115A48817005F6D20 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 40F318C015A48815005F6D20 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E58172D80C3D103300902DFE;
+			remoteInfo = nui3D;
+		};
+		40F318D315A48817005F6D20 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 40F318C015A48815005F6D20 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E542A1AE0C3F0A5900225219;
+			remoteInfo = nui3;
+		};
+		40F318D515A48817005F6D20 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 40F318C015A48815005F6D20 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E52417F311CB860B0025CA71;
+			remoteInfo = nuiPhoneD;
+		};
+		40F318D715A48817005F6D20 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 40F318C015A48815005F6D20 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E52420E511CBCE9E0025CA71;
+			remoteInfo = nuiPhone;
+		};
+		40F318D915A48817005F6D20 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 40F318C015A48815005F6D20 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 73F086E612E9BA0700656E84;
+			remoteInfo = nuiPhone_arm7;
+		};
+		40F318DB15A48817005F6D20 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 40F318C015A48815005F6D20 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E5A8D1D311E33A54004E14CE;
+			remoteInfo = nui3CocoaD;
+		};
+		40F318DD15A48817005F6D20 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 40F318C015A48815005F6D20 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E5D643E51209AB9C009C26A9;
+			remoteInfo = nui3Cocoa;
+		};
+		40F318DF15A48817005F6D20 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 40F318C015A48815005F6D20 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E5DD341012E09CA800F1EF4E;
+			remoteInfo = thirdparty;
+		};
+		40F318E115A48817005F6D20 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 40F318C015A48815005F6D20 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E5DD3FF412E0B08300F1EF4E;
+			remoteInfo = thirdparty_ios;
+		};
+		40F318E315A48817005F6D20 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 40F318C015A48815005F6D20 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 73F09AC312E9D09E00656E84;
+			remoteInfo = thirdparty_ios_arm7;
+		};
+		40F318E515A48817005F6D20 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 40F318C015A48815005F6D20 /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E5FB9CF3147D5CEE001A1829;
+			remoteInfo = minui3D;
+		};
+		40F3192515A49A88005F6D20 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 40F318C015A48815005F6D20 /* nui3.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = E5A8CCAE11E33A54004E14CE;
+			remoteInfo = nui3CocoaD;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		409F26A6147D45F60059A839 /* CopyFiles */ = {
@@ -32,7 +125,6 @@
 
 /* Begin PBXFileReference section */
 		4085AB0F147E8F18000D3EBE /* libmpg123.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpg123.0.dylib; path = ../../../../../../../../opt/local/lib/libmpg123.0.dylib; sourceTree = "<group>"; };
-		4085AB11147E8F5E000D3EBE /* libmp3lame.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmp3lame.dylib; path = usr/local/lib/libmp3lame.dylib; sourceTree = SDKROOT; };
 		409F26A8147D45F60059A839 /* testMp3Mix */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testMp3Mix; sourceTree = BUILT_PRODUCTS_DIR; };
 		409F26AC147D45F60059A839 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		409F26AF147D45F60059A839 /* main.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = main.mm; sourceTree = "<group>"; };
@@ -44,6 +136,13 @@
 		409F26BE147D46020059A839 /* Mp3Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp3Header.h; sourceTree = "<group>"; };
 		409F26BF147D46020059A839 /* Mp3Parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mp3Parser.cpp; sourceTree = "<group>"; };
 		409F26C0147D46020059A839 /* Mp3Parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp3Parser.h; sourceTree = "<group>"; };
+		40F318C015A48815005F6D20 /* nui3.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = nui3.xcodeproj; path = ../../../nui3/nui3.xcodeproj; sourceTree = "<group>"; };
+		40F3193115A4AB86005F6D20 /* libmp3lame.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmp3lame.0.dylib; path = /usr/local/lib/libmp3lame.0.dylib; sourceTree = "<absolute>"; };
+		40F3193415A4AC70005F6D20 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		40F3193B15A4AC95005F6D20 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		40F3193D15A4AC9A005F6D20 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
+		40F3193F15A4ACA1005F6D20 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		40F3194615A4ACED005F6D20 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,8 +150,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				40F3194715A4ACED005F6D20 /* libz.dylib in Frameworks */,
+				40F3194015A4ACA1005F6D20 /* CoreFoundation.framework in Frameworks */,
+				40F3193E15A4AC9A005F6D20 /* CoreServices.framework in Frameworks */,
+				40F3193C15A4AC95005F6D20 /* Cocoa.framework in Frameworks */,
+				40F3193515A4AC70005F6D20 /* OpenGL.framework in Frameworks */,
+				40F3193315A4AC4E005F6D20 /* libnui3CocoaD.a in Frameworks */,
+				40F3193215A4AB86005F6D20 /* libmp3lame.0.dylib in Frameworks */,
 				4085AB14147E8FA2000D3EBE /* libmpg123.0.dylib in Frameworks */,
-				4085AB12147E8F5E000D3EBE /* libmp3lame.dylib in Frameworks */,
 				409F26AD147D45F60059A839 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -63,8 +168,13 @@
 		409F269D147D45F60059A839 = {
 			isa = PBXGroup;
 			children = (
-				4085AB11147E8F5E000D3EBE /* libmp3lame.dylib */,
+				40F3194615A4ACED005F6D20 /* libz.dylib */,
+				40F3193F15A4ACA1005F6D20 /* CoreFoundation.framework */,
+				40F3193D15A4AC9A005F6D20 /* CoreServices.framework */,
+				40F3193B15A4AC95005F6D20 /* Cocoa.framework */,
+				40F318C015A48815005F6D20 /* nui3.xcodeproj */,
 				4085AB0F147E8F18000D3EBE /* libmpg123.0.dylib */,
+				40F3193115A4AB86005F6D20 /* libmp3lame.0.dylib */,
 				409F26AE147D45F60059A839 /* testMp3Mix */,
 				409F26AB147D45F60059A839 /* Frameworks */,
 				409F26A9147D45F60059A839 /* Products */,
@@ -82,6 +192,7 @@
 		409F26AB147D45F60059A839 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				40F3193415A4AC70005F6D20 /* OpenGL.framework */,
 				409F26AC147D45F60059A839 /* Foundation.framework */,
 			);
 			name = Frameworks;
@@ -120,6 +231,24 @@
 			path = ../../../tools/Mp3Parser;
 			sourceTree = "<group>";
 		};
+		40F318C115A48815005F6D20 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				40F318D215A48817005F6D20 /* libnui3D.a */,
+				40F318D415A48817005F6D20 /* libnui3.a */,
+				40F318D615A48817005F6D20 /* libnuiPhoneD.a */,
+				40F318D815A48817005F6D20 /* libnuiPhone.a */,
+				40F318DA15A48817005F6D20 /* libnuiPhone_arm7.a */,
+				40F318DC15A48817005F6D20 /* libnui3CocoaD.a */,
+				40F318DE15A48817005F6D20 /* libnui3Cocoa.a */,
+				40F318E015A48817005F6D20 /* libthirdparty.a */,
+				40F318E215A48817005F6D20 /* libthirdparty_ios.a */,
+				40F318E415A48817005F6D20 /* libthirdparty_ios_arm7.a */,
+				40F318E615A48817005F6D20 /* libminui3D.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -134,6 +263,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				40F3192615A49A88005F6D20 /* PBXTargetDependency */,
 			);
 			name = testMp3Mix;
 			productName = testMp3Mix;
@@ -159,12 +289,98 @@
 			mainGroup = 409F269D147D45F60059A839;
 			productRefGroup = 409F26A9147D45F60059A839 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 40F318C115A48815005F6D20 /* Products */;
+					ProjectRef = 40F318C015A48815005F6D20 /* nui3.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				409F26A7147D45F60059A839 /* testMp3Mix */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		40F318D215A48817005F6D20 /* libnui3D.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libnui3D.a;
+			remoteRef = 40F318D115A48817005F6D20 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		40F318D415A48817005F6D20 /* libnui3.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libnui3.a;
+			remoteRef = 40F318D315A48817005F6D20 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		40F318D615A48817005F6D20 /* libnuiPhoneD.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libnuiPhoneD.a;
+			remoteRef = 40F318D515A48817005F6D20 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		40F318D815A48817005F6D20 /* libnuiPhone.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libnuiPhone.a;
+			remoteRef = 40F318D715A48817005F6D20 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		40F318DA15A48817005F6D20 /* libnuiPhone_arm7.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libnuiPhone_arm7.a;
+			remoteRef = 40F318D915A48817005F6D20 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		40F318DC15A48817005F6D20 /* libnui3CocoaD.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libnui3CocoaD.a;
+			remoteRef = 40F318DB15A48817005F6D20 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		40F318DE15A48817005F6D20 /* libnui3Cocoa.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libnui3Cocoa.a;
+			remoteRef = 40F318DD15A48817005F6D20 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		40F318E015A48817005F6D20 /* libthirdparty.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libthirdparty.a;
+			remoteRef = 40F318DF15A48817005F6D20 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		40F318E215A48817005F6D20 /* libthirdparty_ios.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libthirdparty_ios.a;
+			remoteRef = 40F318E115A48817005F6D20 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		40F318E415A48817005F6D20 /* libthirdparty_ios_arm7.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libthirdparty_ios_arm7.a;
+			remoteRef = 40F318E315A48817005F6D20 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		40F318E615A48817005F6D20 /* libminui3D.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libminui3D.a;
+			remoteRef = 40F318E515A48817005F6D20 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
 		409F26A4147D45F60059A839 /* Sources */ = {
@@ -179,6 +395,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		40F3192615A49A88005F6D20 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = nui3CocoaD;
+			targetProxy = 40F3192515A49A88005F6D20 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		409F26B5147D45F60059A839 /* Debug */ = {
@@ -231,9 +455,19 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "testMp3Mix/testMp3Mix-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+					_COCOA_,
+				);
+				HEADER_SEARCH_PATHS = (
+					../../../nui3/include,
+					/usr/local/include,
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/opt/local/lib,
+					/usr/local/lib,
 				);
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -249,9 +483,15 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "testMp3Mix/testMp3Mix-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = _COCOA_;
+				HEADER_SEARCH_PATHS = (
+					../../../nui3/include,
+					/usr/local/include,
+				);
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					/opt/local/lib,
+					/usr/local/lib,
 				);
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
