@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4027600615AC30BA007B3262 /* Utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4027600515AC30BA007B3262 /* Utils.mm */; };
 		4085AB14147E8FA2000D3EBE /* libmpg123.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4085AB0F147E8F18000D3EBE /* libmpg123.0.dylib */; };
 		409F26AD147D45F60059A839 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 409F26AC147D45F60059A839 /* Foundation.framework */; };
 		409F26B0147D45F60059A839 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 409F26AF147D45F60059A839 /* main.mm */; };
@@ -124,6 +125,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4027600515AC30BA007B3262 /* Utils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Utils.mm; sourceTree = "<group>"; };
+		4027601215AC30C6007B3262 /* Utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
 		4085AB0F147E8F18000D3EBE /* libmpg123.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpg123.0.dylib; path = ../../../../../../../../opt/local/lib/libmpg123.0.dylib; sourceTree = "<group>"; };
 		409F26A8147D45F60059A839 /* testMp3Mix */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testMp3Mix; sourceTree = BUILT_PRODUCTS_DIR; };
 		409F26AC147D45F60059A839 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -205,6 +208,8 @@
 				409F26B3147D45F60059A839 /* testMp3Mix.1 */,
 				409F26BA147D46020059A839 /* Mp3Parser */,
 				409F26B1147D45F60059A839 /* Supporting Files */,
+				4027600515AC30BA007B3262 /* Utils.mm */,
+				4027601215AC30C6007B3262 /* Utils.h */,
 			);
 			path = testMp3Mix;
 			sourceTree = "<group>";
@@ -391,6 +396,7 @@
 				409F26C1147D46020059A839 /* Mp3Frame.cpp in Sources */,
 				409F26C2147D46020059A839 /* Mp3Header.cpp in Sources */,
 				409F26C3147D46020059A839 /* Mp3Parser.cpp in Sources */,
+				4027600615AC30BA007B3262 /* Utils.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
