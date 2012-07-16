@@ -20,9 +20,13 @@ void OnLameError(const char *format, va_list ap);
 void OnLameDebug(const char *format, va_list ap);
 void OnLameMsg(const char *format, va_list ap);
 
-NSData* decode(NSString* srcPath, int nbInFrames, int nbSkipInFrames, bool skipDecoderDelay=true);
 void writeToFile(NSString* destFileName, NSData* data);
+
+NSData* decode(NSString* srcPath, int nbInFrames, int nbSkipInFrames, bool skipDecoderDelay=true);
 bool decodeAndWriteToFile(NSString* srcPath, int nbInFrames, int nbSkipInFrames, NSString* destFileName, bool skipDecoderDelay=true);
+
+NSData* decode(NSData* inData, int nbInFrames, int nbSkipInFrames, bool skipDecoderDelay=true);
+bool decodeAndWriteToFile(NSData* inData, int nbInFrames, int nbSkipInFrames, NSString* destFileName, bool skipDecoderDelay=true);
 
 void generateTestSignal(int nbSampleFrames, int nbChannels, std::vector<float>& rBuffer);
 
@@ -39,47 +43,203 @@ Mp3Parser getParser(NSData* data);
 
 int gNbSampleFramesPerMPEGFrame = 1152;
 
+void test1();
+void test1_2();
+void test1_3();
+void test2();
+void test3();
+void test4();
+
+
 int main (int argc, const char * argv[])
 {
   @autoreleasepool 
   { 
-      
-      NSString* src = @"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/test.mp3";
-      int channels = 2;
-      int sampleFramesPerFrame = gNbSampleFramesPerMPEGFrame;
-      int samplesPerFrame = sampleFramesPerFrame * channels;
-   
-      int nbFrames1 = 3;
-      int framesToCopy = nbFrames1 - 1;
-      NSData* data1 = copyFrames(src, framesToCopy, 0);
-      writeToFile(@"data1.mp3", data1);
-      
-      NSData* decoded = decode(src, 3/*enough to get 1 frame*/, framesToCopy);
-      
-      std::vector<float> wav2;
-      int nbFramesGenerated = 10;
-      generateTestSignal(gNbSampleFramesPerMPEGFrame * nbFramesGenerated, channels, wav2);
-
-      std::vector<float> wav;
-      wav.resize((1 + nbFramesGenerated) * samplesPerFrame);
-      memcpy(&wav[0], decoded.bytes, 1 * samplesPerFrame * sizeof(float));
-
-      memcpy(&wav[1 * samplesPerFrame], &wav2[0], nbFramesGenerated * samplesPerFrame * sizeof(float));
-      
-      NSData* wavData = [NSData dataWithBytes:&wav[0] length:(1 + nbFramesGenerated) * samplesPerFrame * sizeof(float)];
-      writeToFile(@"wav.raw", wavData);
-      
-      NSData* data2 = encode(wav, channels, 1 + nbFramesGenerated, 0/*skip*/);
-      writeToFile(@"data2.mp3", data2);
-      
-      NSMutableData* outData = [NSMutableData data];
-      [outData appendData:data1];
-      [outData appendData:data2];
-
-      // result
-      writeToFile(@"mix.mp3", outData);
+//      test1_3();
+      test1();
   }
   return 0;
+}
+
+void test4()
+{
+    NSString* src = @"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/test.mp3";
+    
+    NSData* f1 = copyFrames(src, 1, 0);
+    NSMutableData* d = [NSMutableData data];
+    
+    for (int i = 0 ; i < 10; i++)
+        [d appendData:f1];
+    
+    writeToFile(@"frame1_x3.mp3", d);
+}
+
+void test3()
+{
+    NSString* src = @"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/test.mp3";
+    
+    copyFramesAndWriteToFile(src, 8, 0, @"copy-8-0.mp3");
+    
+    NSData* d1 = copyFrames(src, 8, 0);
+    decodeAndWriteToFile(d1, 8, 0, @"copy-decode-8-0.raw", false);
+    
+    
+    copyFramesAndWriteToFile(src, 8, 1, @"copy-8-1.mp3");
+    copyFramesAndWriteToFile(src, 8, 2, @"copy-8-2.mp3");
+    copyFramesAndWriteToFile(src, 8, 3, @"copy-8-3.mp3");
+}
+
+void test2()
+{
+    int channels = 2;
+    int samplesPerFrame = gNbSampleFramesPerMPEGFrame * channels;
+    
+    int nbWhiteFrames = 10;
+    int nbSignalFrames = 10;
+    
+    std::vector<float> white;
+    white.resize(nbWhiteFrames * samplesPerFrame);
+    for (int i = 0; i < white.size(); i++)
+        white[i] = 0;
+    
+    for (int i = 0; i < 2000; i++)
+    {
+        white[i] = 0.5;
+        white[white.size() - 1- i] = 0.5;
+    }
+    
+    std::vector<float> signal;
+    generateTestSignal(nbSignalFrames * gNbSampleFramesPerMPEGFrame, channels, signal);
+    
+    std::vector<float> input;
+    input.resize(white.size() + signal.size());
+    memcpy(&input[0], &white[0], white.size() * sizeof(float));
+    memcpy(&input[white.size()], &signal[0], signal.size() * sizeof(float));
+    
+    NSData* inputData = [NSData dataWithBytes:&input[0] length:input.size() * sizeof(float)];
+    writeToFile(@"input.raw", inputData);
+    
+    NSData* whiteEncoded = encode(white, channels);
+    NSData* signalEncoded = encode(signal, channels);
+    NSData* totalEncoded = encode(input, channels);
+    
+    writeToFile(@"white.mp3", whiteEncoded);
+    writeToFile(@"signal.mp3", signalEncoded);
+    writeToFile(@"total.mp3", totalEncoded);
+}
+
+void test1()
+{
+    NSString* src = @"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/please.mp3";
+    
+    int channels = 2;
+    int samplesPerFrame = gNbSampleFramesPerMPEGFrame * channels;
+    
+    int nbCopyFrames = 101;
+    int nbJointFrames = 1;
+    int nbEncodedFrames = 100;
+    
+    NSData* copied = copyFrames(src, nbCopyFrames, 0);
+    
+    writeToFile(@"copied.mp3", copied);
+    
+    int nbFeedDecodeFrames = 200;
+    NSData* wavData = decode(src, nbFeedDecodeFrames, nbCopyFrames - nbJointFrames);
+    
+    std::vector<float> wav;
+    wav.resize(nbFeedDecodeFrames * samplesPerFrame);
+    memcpy(&wav[0], wavData.bytes, nbFeedDecodeFrames * samplesPerFrame * sizeof(float));
+    NSData* encoded = encode(wav, channels, nbEncodedFrames, nbJointFrames);
+    
+    writeToFile(@"encoded.mp3", encoded);
+    
+    NSMutableData* outData = [NSMutableData data];
+    [outData appendData:copied];
+    [outData appendData:encoded];
+    
+    writeToFile(@"glue.mp3", outData);
+}
+
+void test1_2()
+{
+    NSString* src = @"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/test.mp3";
+    
+    int channels = 2;
+    int samplesPerFrame = gNbSampleFramesPerMPEGFrame * channels;
+    
+    int nbCopyFrames = 4;
+    int nbJointFrames = 1;
+    
+    NSData* copied = copyFrames(src, nbCopyFrames, 0);
+    
+    writeToFile(@"copied.mp3", copied);
+    
+    int nbFeedDecodeFrames = 4;
+    NSData* wavData = decode(src, nbFeedDecodeFrames, nbCopyFrames - nbJointFrames, true);
+    
+    writeToFile(@"decoded.raw", wavData);	
+    
+    float* granule = ((float*)wavData.bytes);
+    
+    int nbGeneratedFrames = 8;
+    std::vector<float> generated;
+    generateTestSignal(nbGeneratedFrames * gNbSampleFramesPerMPEGFrame, channels, generated);
+    
+    std::vector<float> wav;
+    wav.resize((samplesPerFrame / 2) + generated.size());
+
+    memcpy(&wav[0], granule, (samplesPerFrame / 2) * sizeof(float));
+    memcpy(&wav[samplesPerFrame / 2], &generated[0], generated.size() * sizeof(float));
+    
+    NSData* w = [NSData dataWithBytes:&wav[0] length:wav.size() * sizeof(float)];
+    writeToFile(@"encoder_in.raw", w);
+
+    NSData* encoded = encode(wav, channels, nbGeneratedFrames, nbJointFrames);
+    
+    writeToFile(@"encoded.mp3", encoded);
+    
+    NSMutableData* outData = [NSMutableData data];
+    [outData appendData:copied];
+    [outData appendData:encoded];
+    
+    writeToFile(@"glue.mp3", outData);
+}
+
+void test1_3()
+{
+    NSString* src = @"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/test.mp3";
+    
+    int channels = 2;
+    int nbSamplesPerFrame = gNbSampleFramesPerMPEGFrame * channels;
+    int nbCopyFrames = 4;
+    int nbEncodedFrames = 8;
+    
+    NSData* copied = copyFrames(src, nbCopyFrames, 0);
+    
+    writeToFile(@"copied.mp3", copied);
+    
+    int nbGeneratedFrames = 8;
+    std::vector<float> generated;
+    generateTestSignal(nbGeneratedFrames * gNbSampleFramesPerMPEGFrame, channels, generated);
+//    generated.resize(nbGeneratedFrames * nbSamplesPerFrame);
+    for (int i = 0; i < generated.size(); i++)
+    {
+        generated[i] *= 0.1;
+    }
+    
+        
+    
+    NSData* generatedData = [NSData dataWithBytes:&generated[0] length:generated.size() * sizeof(float)];
+    writeToFile(@"generated.raw", generatedData);
+    
+    NSData* encoded = encode(generated, channels, nbEncodedFrames, 1);
+    writeToFile(@"encoded.mp3", encoded);
+    
+    NSMutableData* outData = [NSMutableData data];
+    [outData appendData:copied];
+    [outData appendData:encoded];
+    
+    writeToFile(@"glue.mp3", outData);
 }
 
 void generateTestSignal(int nbSampleFrames, int nbChannels, std::vector<float>& rBuffer)
@@ -304,8 +464,7 @@ void copyFramesAndWriteToFile(NSString* srcPath, int nbFrames, int nbSkipFrames,
 }
 
 
-
-NSData* decode(NSString* srcPath, int nbInFrames, int nbSkipInFrames, bool skipDecoderDelay)
+NSData* decode(NSData* inData, int nbInFrames, int nbSkipInFrames, bool skipDecoderDelay)
 {
     double samplerate = 44100;
     int err = mpg123_init();
@@ -317,7 +476,6 @@ NSData* decode(NSString* srcPath, int nbInFrames, int nbSkipInFrames, bool skipD
     err = mpg123_format(handle, samplerate, MPG123_STEREO, MPG123_ENC_FLOAT_32);
     
     
-    NSData* inData = [NSData dataWithContentsOfFile:srcPath];
     Mp3Parser parser = getParser(inData);
     
     int f = 0;
@@ -362,7 +520,8 @@ NSData* decode(NSString* srcPath, int nbInFrames, int nbSkipInFrames, bool skipD
     
     if (skipDecoderDelay)
     {
-        int skip = 1104 * channels * sizeof(float);
+//        int skip = 1104 * channels * sizeof(float);
+        int skip = 528 * channels * sizeof(float);
         const char* bytes = (const char*)outData.bytes;
         int nbBytes = outData.length;
         nbBytes -= skip;
@@ -371,8 +530,23 @@ NSData* decode(NSString* srcPath, int nbInFrames, int nbSkipInFrames, bool skipD
             nbBytes = 0;
         outData = [NSMutableData dataWithBytes:bytes length:nbBytes];
     }
+    
+    
+    return outData;
+}
+
+bool decodeAndWriteToFile(NSData* inData, int nbInFrames, int nbSkipInFrames, NSString* destFileName, bool skipDecoderDelay)
+{
+    NSData* data = decode(inData, nbInFrames, nbSkipInFrames, skipDecoderDelay);
+    writeToFile(destFileName, data);
+    return true;
+}
 
 
+NSData* decode(NSString* srcPath, int nbInFrames, int nbSkipInFrames, bool skipDecoderDelay)
+{
+    NSData* inData = [NSData dataWithContentsOfFile:srcPath];
+    NSData* outData = decode(inData, nbInFrames, nbSkipInFrames);
     return outData;
 }
 
