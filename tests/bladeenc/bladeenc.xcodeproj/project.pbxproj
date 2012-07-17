@@ -1,0 +1,314 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		E5641B8515B5C1DC00159686 /* bladesys.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B7415B5C1DC00159686 /* bladesys.c */; };
+		E5641B8615B5C1DC00159686 /* bladtab.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B7515B5C1DC00159686 /* bladtab.c */; };
+		E5641B8715B5C1DC00159686 /* codec.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B7615B5C1DC00159686 /* codec.c */; };
+		E5641B8815B5C1DC00159686 /* common.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B7715B5C1DC00159686 /* common.c */; };
+		E5641B8915B5C1DC00159686 /* encode.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B7815B5C1DC00159686 /* encode.c */; };
+		E5641B8A15B5C1DC00159686 /* formatbitstream2.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B7915B5C1DC00159686 /* formatbitstream2.c */; };
+		E5641B8B15B5C1DC00159686 /* huffman.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B7A15B5C1DC00159686 /* huffman.c */; };
+		E5641B8C15B5C1DC00159686 /* l3bitstream.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B7B15B5C1DC00159686 /* l3bitstream.c */; };
+		E5641B8D15B5C1DC00159686 /* l3psy.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B7C15B5C1DC00159686 /* l3psy.c */; };
+		E5641B8E15B5C1DC00159686 /* loop.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B7D15B5C1DC00159686 /* loop.c */; };
+		E5641B8F15B5C1DC00159686 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B7E15B5C1DC00159686 /* main.c */; };
+		E5641B9015B5C1DC00159686 /* mdct.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B7F15B5C1DC00159686 /* mdct.c */; };
+		E5641B9115B5C1DC00159686 /* reservoir.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B8015B5C1DC00159686 /* reservoir.c */; };
+		E5641B9215B5C1DC00159686 /* samplein.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B8115B5C1DC00159686 /* samplein.c */; };
+		E5641B9315B5C1DC00159686 /* strupr.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B8215B5C1DC00159686 /* strupr.c */; };
+		E5641B9415B5C1DC00159686 /* subs.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B8315B5C1DC00159686 /* subs.c */; };
+		E5641B9515B5C1DC00159686 /* tables.c in Sources */ = {isa = PBXBuildFile; fileRef = E5641B8415B5C1DC00159686 /* tables.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		E5641B5415B5C1AE00159686 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		E5641B5615B5C1AE00159686 /* bladeenc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = bladeenc; sourceTree = BUILT_PRODUCTS_DIR; };
+		E5641B6315B5C1DC00159686 /* bladesys.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = bladesys.h; sourceTree = "<group>"; };
+		E5641B6415B5C1DC00159686 /* codec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = codec.h; sourceTree = "<group>"; };
+		E5641B6515B5C1DC00159686 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = common.h; sourceTree = "<group>"; };
+		E5641B6615B5C1DC00159686 /* encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = encoder.h; sourceTree = "<group>"; };
+		E5641B6715B5C1DC00159686 /* formatbitstream2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = formatbitstream2.h; sourceTree = "<group>"; };
+		E5641B6815B5C1DC00159686 /* huffman.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = huffman.h; sourceTree = "<group>"; };
+		E5641B6915B5C1DC00159686 /* l3bitstream-pvt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "l3bitstream-pvt.h"; sourceTree = "<group>"; };
+		E5641B6A15B5C1DC00159686 /* l3bitstream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = l3bitstream.h; sourceTree = "<group>"; };
+		E5641B6B15B5C1DC00159686 /* l3psy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = l3psy.h; sourceTree = "<group>"; };
+		E5641B6C15B5C1DC00159686 /* l3side.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = l3side.h; sourceTree = "<group>"; };
+		E5641B6D15B5C1DC00159686 /* loop-pvt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "loop-pvt.h"; sourceTree = "<group>"; };
+		E5641B6E15B5C1DC00159686 /* loop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = loop.h; sourceTree = "<group>"; };
+		E5641B6F15B5C1DC00159686 /* mdct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mdct.h; sourceTree = "<group>"; };
+		E5641B7015B5C1DC00159686 /* reservoir.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = reservoir.h; sourceTree = "<group>"; };
+		E5641B7115B5C1DC00159686 /* samplein.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = samplein.h; sourceTree = "<group>"; };
+		E5641B7215B5C1DC00159686 /* system.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = system.h; sourceTree = "<group>"; };
+		E5641B7315B5C1DC00159686 /* tables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tables.h; sourceTree = "<group>"; };
+		E5641B7415B5C1DC00159686 /* bladesys.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bladesys.c; sourceTree = "<group>"; };
+		E5641B7515B5C1DC00159686 /* bladtab.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = bladtab.c; sourceTree = "<group>"; };
+		E5641B7615B5C1DC00159686 /* codec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = codec.c; sourceTree = "<group>"; };
+		E5641B7715B5C1DC00159686 /* common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = common.c; sourceTree = "<group>"; };
+		E5641B7815B5C1DC00159686 /* encode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = encode.c; sourceTree = "<group>"; };
+		E5641B7915B5C1DC00159686 /* formatbitstream2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = formatbitstream2.c; sourceTree = "<group>"; };
+		E5641B7A15B5C1DC00159686 /* huffman.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = huffman.c; sourceTree = "<group>"; };
+		E5641B7B15B5C1DC00159686 /* l3bitstream.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = l3bitstream.c; sourceTree = "<group>"; };
+		E5641B7C15B5C1DC00159686 /* l3psy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = l3psy.c; sourceTree = "<group>"; };
+		E5641B7D15B5C1DC00159686 /* loop.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = loop.c; sourceTree = "<group>"; };
+		E5641B7E15B5C1DC00159686 /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		E5641B7F15B5C1DC00159686 /* mdct.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mdct.c; sourceTree = "<group>"; };
+		E5641B8015B5C1DC00159686 /* reservoir.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = reservoir.c; sourceTree = "<group>"; };
+		E5641B8115B5C1DC00159686 /* samplein.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = samplein.c; sourceTree = "<group>"; };
+		E5641B8215B5C1DC00159686 /* strupr.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = strupr.c; sourceTree = "<group>"; };
+		E5641B8315B5C1DC00159686 /* subs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = subs.c; sourceTree = "<group>"; };
+		E5641B8415B5C1DC00159686 /* tables.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tables.c; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E5641B5315B5C1AE00159686 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E5641B4B15B5C1AE00159686 = {
+			isa = PBXGroup;
+			children = (
+				E5641B5915B5C1AE00159686 /* bladeenc */,
+				E5641B5715B5C1AE00159686 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E5641B5715B5C1AE00159686 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E5641B5615B5C1AE00159686 /* bladeenc */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		E5641B5915B5C1AE00159686 /* bladeenc */ = {
+			isa = PBXGroup;
+			children = (
+				E5641B6315B5C1DC00159686 /* bladesys.h */,
+				E5641B6415B5C1DC00159686 /* codec.h */,
+				E5641B6515B5C1DC00159686 /* common.h */,
+				E5641B6615B5C1DC00159686 /* encoder.h */,
+				E5641B6715B5C1DC00159686 /* formatbitstream2.h */,
+				E5641B6815B5C1DC00159686 /* huffman.h */,
+				E5641B6915B5C1DC00159686 /* l3bitstream-pvt.h */,
+				E5641B6A15B5C1DC00159686 /* l3bitstream.h */,
+				E5641B6B15B5C1DC00159686 /* l3psy.h */,
+				E5641B6C15B5C1DC00159686 /* l3side.h */,
+				E5641B6D15B5C1DC00159686 /* loop-pvt.h */,
+				E5641B6E15B5C1DC00159686 /* loop.h */,
+				E5641B6F15B5C1DC00159686 /* mdct.h */,
+				E5641B7015B5C1DC00159686 /* reservoir.h */,
+				E5641B7115B5C1DC00159686 /* samplein.h */,
+				E5641B7215B5C1DC00159686 /* system.h */,
+				E5641B7315B5C1DC00159686 /* tables.h */,
+				E5641B7415B5C1DC00159686 /* bladesys.c */,
+				E5641B7515B5C1DC00159686 /* bladtab.c */,
+				E5641B7615B5C1DC00159686 /* codec.c */,
+				E5641B7715B5C1DC00159686 /* common.c */,
+				E5641B7815B5C1DC00159686 /* encode.c */,
+				E5641B7915B5C1DC00159686 /* formatbitstream2.c */,
+				E5641B7A15B5C1DC00159686 /* huffman.c */,
+				E5641B7B15B5C1DC00159686 /* l3bitstream.c */,
+				E5641B7C15B5C1DC00159686 /* l3psy.c */,
+				E5641B7D15B5C1DC00159686 /* loop.c */,
+				E5641B7E15B5C1DC00159686 /* main.c */,
+				E5641B7F15B5C1DC00159686 /* mdct.c */,
+				E5641B8015B5C1DC00159686 /* reservoir.c */,
+				E5641B8115B5C1DC00159686 /* samplein.c */,
+				E5641B8215B5C1DC00159686 /* strupr.c */,
+				E5641B8315B5C1DC00159686 /* subs.c */,
+				E5641B8415B5C1DC00159686 /* tables.c */,
+			);
+			path = bladeenc;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E5641B5515B5C1AE00159686 /* bladeenc */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E5641B6015B5C1AE00159686 /* Build configuration list for PBXNativeTarget "bladeenc" */;
+			buildPhases = (
+				E5641B5215B5C1AE00159686 /* Sources */,
+				E5641B5315B5C1AE00159686 /* Frameworks */,
+				E5641B5415B5C1AE00159686 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = bladeenc;
+			productName = bladeenc;
+			productReference = E5641B5615B5C1AE00159686 /* bladeenc */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E5641B4D15B5C1AE00159686 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0450;
+				ORGANIZATIONNAME = "Sébastien Métrot";
+			};
+			buildConfigurationList = E5641B5015B5C1AE00159686 /* Build configuration list for PBXProject "bladeenc" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = E5641B4B15B5C1AE00159686;
+			productRefGroup = E5641B5715B5C1AE00159686 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E5641B5515B5C1AE00159686 /* bladeenc */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E5641B5215B5C1AE00159686 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E5641B8515B5C1DC00159686 /* bladesys.c in Sources */,
+				E5641B8615B5C1DC00159686 /* bladtab.c in Sources */,
+				E5641B8715B5C1DC00159686 /* codec.c in Sources */,
+				E5641B8815B5C1DC00159686 /* common.c in Sources */,
+				E5641B8915B5C1DC00159686 /* encode.c in Sources */,
+				E5641B8A15B5C1DC00159686 /* formatbitstream2.c in Sources */,
+				E5641B8B15B5C1DC00159686 /* huffman.c in Sources */,
+				E5641B8C15B5C1DC00159686 /* l3bitstream.c in Sources */,
+				E5641B8D15B5C1DC00159686 /* l3psy.c in Sources */,
+				E5641B8E15B5C1DC00159686 /* loop.c in Sources */,
+				E5641B8F15B5C1DC00159686 /* main.c in Sources */,
+				E5641B9015B5C1DC00159686 /* mdct.c in Sources */,
+				E5641B9115B5C1DC00159686 /* reservoir.c in Sources */,
+				E5641B9215B5C1DC00159686 /* samplein.c in Sources */,
+				E5641B9315B5C1DC00159686 /* strupr.c in Sources */,
+				E5641B9415B5C1DC00159686 /* subs.c in Sources */,
+				E5641B9515B5C1DC00159686 /* tables.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		E5641B5E15B5C1AE00159686 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"SYSTEM=DARWIN",
+					__FreeBSD__,
+					"DEBUG=1",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		E5641B5F15B5C1AE00159686 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"SYSTEM=DARWIN",
+					__FreeBSD__,
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		E5641B6115B5C1AE00159686 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		E5641B6215B5C1AE00159686 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E5641B5015B5C1AE00159686 /* Build configuration list for PBXProject "bladeenc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E5641B5E15B5C1AE00159686 /* Debug */,
+				E5641B5F15B5C1AE00159686 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E5641B6015B5C1AE00159686 /* Build configuration list for PBXNativeTarget "bladeenc" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E5641B6115B5C1AE00159686 /* Debug */,
+				E5641B6215B5C1AE00159686 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = E5641B4D15B5C1AE00159686 /* Project object */;
+}
