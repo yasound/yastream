@@ -17,10 +17,9 @@
 
 #include	<stdio.h>
 #include	<string.h>
+
 #include	"system.h"
 #include	"samplein.h"
-
-
 
 /* Errorcodes
   -------------
@@ -252,12 +251,13 @@ static int	initWAV( SplIn * psInfo )
 	char	header[3*4];	
 	int		fFmtChunkFound = FALSE;
 
-struct 
+#pragma pack(1)
+struct
 { 
 	short		wFormatTag;						/* Format category */
   short		wChannels;						/* Number of channels */
-  long		dwSamplesPerSec;			/* Sampling rate */
-  long		dwAvgBytesPerSec;			/* For buffer estimation */
+  int		dwSamplesPerSec;			/* Sampling rate */
+  int		dwAvgBytesPerSec;			/* For buffer estimation */
   short		wBlockAlign;					/* Data block size */
 	short		bitsPerSample;				/* Actually a PCM-specific additional byte... */
 } sFmtChunk;
@@ -276,7 +276,10 @@ struct
 		{
 			if( fread( aTemp, sizeof( sFmtChunk ), 1, psInfo->fp ) != 1 ) 
 				goto unexpEndOfFile;
-			myFseek( psInfo->fp, intlLong( &header[4] ) - sizeof( sFmtChunk ) );
+      int s1 = intlLong( &header[4] );
+      int s2 = sizeof( sFmtChunk );
+      int s = s1 - s2;
+			myFseek( psInfo->fp, s );
 			fFmtChunkFound = TRUE;
 		}
 		else
@@ -366,7 +369,7 @@ static int	initAIFF( SplIn * psInfo )
 	struct 
 	{ 
 		short           numChannels;
-    unsigned long   numSampleFrames;
+    unsigned int   numSampleFrames;
     short           sampleSize;
 /*    char						sampleRate[10]; */
 

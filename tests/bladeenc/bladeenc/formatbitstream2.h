@@ -25,6 +25,8 @@
 #define MAX_CHANNELS 2
 #define MAX_GRANULES 2
 
+#pragma pack(push, 1)
+
 
 /*____ Structure Definitions ________________________________________________*/
 
@@ -75,5 +77,7 @@ void				addBits( BitHolder * wp, unsigned int value, int length );
 void				writeFrame( BF_FrameData *psFrame, BF_FrameResults *results );
 void				initFormatBitstream( void );
 void				exitFormatBitstream( void );
+
+#pragma pack(pop)
 
 #endif
