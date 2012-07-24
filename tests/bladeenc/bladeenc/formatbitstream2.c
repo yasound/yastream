@@ -17,7 +17,7 @@
 
 #include	<stdio.h>
 #include	<stdlib.h>
-#if !defined(__OpenBSD__) && !defined(__FreeBSD__) && !defined(__NetBSD__)
+#if !defined(__OpenBSD__) && !defined(__FreeBSD__) && !defined(__NetBSD__) && !defined(_COCOA_)
 #include	<malloc.h>
 #endif
 #include	"formatbitstream2.h"

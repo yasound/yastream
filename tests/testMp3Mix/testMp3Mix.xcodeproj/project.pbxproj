@@ -8,6 +8,19 @@
 
 /* Begin PBXBuildFile section */
 		4027600615AC30BA007B3262 /* Utils.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4027600515AC30BA007B3262 /* Utils.mm */; };
+		405B4D6615B6EECB00466899 /* codec.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D6415B6EECB00466899 /* codec.c */; };
+		405B4D6915B6EF2F00466899 /* mdct.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D6715B6EF2F00466899 /* mdct.c */; };
+		405B4D6C15B6EF6E00466899 /* l3psy.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D6A15B6EF6E00466899 /* l3psy.c */; };
+		405B4D6F15B6EF8E00466899 /* encode.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D6D15B6EF8E00466899 /* encode.c */; };
+		405B4D7115B6EFB400466899 /* subs.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D7015B6EFB400466899 /* subs.c */; };
+		405B4D7415B6EFD800466899 /* loop.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D7215B6EFD800466899 /* loop.c */; };
+		405B4D7715B6F00B00466899 /* reservoir.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D7515B6F00A00466899 /* reservoir.c */; };
+		405B4D7A15B6F02800466899 /* formatbitstream2.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D7815B6F02800466899 /* formatbitstream2.c */; };
+		405B4D7D15B6F1D400466899 /* common.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D7B15B6F1D400466899 /* common.c */; };
+		405B4D8015B6F24D00466899 /* huffman.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D7E15B6F24D00466899 /* huffman.c */; };
+		405B4D8215B6F27100466899 /* bladtab.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D8115B6F27100466899 /* bladtab.c */; };
+		405B4D8515B6F2A900466899 /* tables.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D8315B6F2A900466899 /* tables.c */; };
+		405B4D8815B6F48E00466899 /* l3bitstream.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D8615B6F48E00466899 /* l3bitstream.c */; };
 		4085AB14147E8FA2000D3EBE /* libmpg123.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4085AB0F147E8F18000D3EBE /* libmpg123.0.dylib */; };
 		409F26AD147D45F60059A839 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 409F26AC147D45F60059A839 /* Foundation.framework */; };
 		409F26B0147D45F60059A839 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 409F26AF147D45F60059A839 /* main.mm */; };
@@ -127,6 +140,32 @@
 /* Begin PBXFileReference section */
 		4027600515AC30BA007B3262 /* Utils.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = Utils.mm; sourceTree = "<group>"; };
 		4027601215AC30C6007B3262 /* Utils.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
+		4033B59A15B83F0F00B81518 /* system.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = system.h; path = ../../bladeenc/bladeenc/system.h; sourceTree = "<group>"; };
+		4033B59B15B83F2300B81518 /* l3side.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = l3side.h; path = ../../bladeenc/bladeenc/l3side.h; sourceTree = "<group>"; };
+		405B4D6415B6EECB00466899 /* codec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = codec.c; path = ../../bladeenc/bladeenc/codec.c; sourceTree = "<group>"; };
+		405B4D6515B6EECB00466899 /* codec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = codec.h; path = ../../bladeenc/bladeenc/codec.h; sourceTree = "<group>"; };
+		405B4D6715B6EF2F00466899 /* mdct.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = mdct.c; path = ../../bladeenc/bladeenc/mdct.c; sourceTree = "<group>"; };
+		405B4D6815B6EF2F00466899 /* mdct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mdct.h; path = ../../bladeenc/bladeenc/mdct.h; sourceTree = "<group>"; };
+		405B4D6A15B6EF6E00466899 /* l3psy.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = l3psy.c; path = ../../bladeenc/bladeenc/l3psy.c; sourceTree = "<group>"; };
+		405B4D6B15B6EF6E00466899 /* l3psy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = l3psy.h; path = ../../bladeenc/bladeenc/l3psy.h; sourceTree = "<group>"; };
+		405B4D6D15B6EF8E00466899 /* encode.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = encode.c; path = ../../bladeenc/bladeenc/encode.c; sourceTree = "<group>"; };
+		405B4D6E15B6EF8E00466899 /* encoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = encoder.h; path = ../../bladeenc/bladeenc/encoder.h; sourceTree = "<group>"; };
+		405B4D7015B6EFB400466899 /* subs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = subs.c; path = ../../bladeenc/bladeenc/subs.c; sourceTree = "<group>"; };
+		405B4D7215B6EFD800466899 /* loop.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = loop.c; path = ../../bladeenc/bladeenc/loop.c; sourceTree = "<group>"; };
+		405B4D7315B6EFD800466899 /* loop.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = loop.h; path = ../../bladeenc/bladeenc/loop.h; sourceTree = "<group>"; };
+		405B4D7515B6F00A00466899 /* reservoir.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = reservoir.c; path = ../../bladeenc/bladeenc/reservoir.c; sourceTree = "<group>"; };
+		405B4D7615B6F00B00466899 /* reservoir.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = reservoir.h; path = ../../bladeenc/bladeenc/reservoir.h; sourceTree = "<group>"; };
+		405B4D7815B6F02800466899 /* formatbitstream2.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = formatbitstream2.c; path = ../../bladeenc/bladeenc/formatbitstream2.c; sourceTree = "<group>"; };
+		405B4D7915B6F02800466899 /* formatbitstream2.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = formatbitstream2.h; path = ../../bladeenc/bladeenc/formatbitstream2.h; sourceTree = "<group>"; };
+		405B4D7B15B6F1D400466899 /* common.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = common.c; path = ../../bladeenc/bladeenc/common.c; sourceTree = "<group>"; };
+		405B4D7C15B6F1D400466899 /* common.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = common.h; path = ../../bladeenc/bladeenc/common.h; sourceTree = "<group>"; };
+		405B4D7E15B6F24D00466899 /* huffman.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = huffman.c; path = ../../bladeenc/bladeenc/huffman.c; sourceTree = "<group>"; };
+		405B4D7F15B6F24D00466899 /* huffman.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = huffman.h; path = ../../bladeenc/bladeenc/huffman.h; sourceTree = "<group>"; };
+		405B4D8115B6F27100466899 /* bladtab.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = bladtab.c; path = ../../bladeenc/bladeenc/bladtab.c; sourceTree = "<group>"; };
+		405B4D8315B6F2A900466899 /* tables.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = tables.c; path = ../../bladeenc/bladeenc/tables.c; sourceTree = "<group>"; };
+		405B4D8415B6F2A900466899 /* tables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tables.h; path = ../../bladeenc/bladeenc/tables.h; sourceTree = "<group>"; };
+		405B4D8615B6F48E00466899 /* l3bitstream.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = l3bitstream.c; path = ../../bladeenc/bladeenc/l3bitstream.c; sourceTree = "<group>"; };
+		405B4D8715B6F48E00466899 /* l3bitstream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = l3bitstream.h; path = ../../bladeenc/bladeenc/l3bitstream.h; sourceTree = "<group>"; };
 		4085AB0F147E8F18000D3EBE /* libmpg123.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpg123.0.dylib; path = ../../../../../../../../opt/local/lib/libmpg123.0.dylib; sourceTree = "<group>"; };
 		409F26A8147D45F60059A839 /* testMp3Mix */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testMp3Mix; sourceTree = BUILT_PRODUCTS_DIR; };
 		409F26AC147D45F60059A839 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -168,6 +207,39 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		405B4D6315B6EEB100466899 /* BladeEnc */ = {
+			isa = PBXGroup;
+			children = (
+				405B4D6415B6EECB00466899 /* codec.c */,
+				405B4D6515B6EECB00466899 /* codec.h */,
+				405B4D6715B6EF2F00466899 /* mdct.c */,
+				405B4D6815B6EF2F00466899 /* mdct.h */,
+				405B4D6A15B6EF6E00466899 /* l3psy.c */,
+				405B4D6B15B6EF6E00466899 /* l3psy.h */,
+				405B4D6D15B6EF8E00466899 /* encode.c */,
+				405B4D6E15B6EF8E00466899 /* encoder.h */,
+				405B4D7015B6EFB400466899 /* subs.c */,
+				405B4D7215B6EFD800466899 /* loop.c */,
+				405B4D7315B6EFD800466899 /* loop.h */,
+				405B4D7515B6F00A00466899 /* reservoir.c */,
+				405B4D7615B6F00B00466899 /* reservoir.h */,
+				405B4D7815B6F02800466899 /* formatbitstream2.c */,
+				405B4D7915B6F02800466899 /* formatbitstream2.h */,
+				405B4D7B15B6F1D400466899 /* common.c */,
+				405B4D7C15B6F1D400466899 /* common.h */,
+				405B4D7E15B6F24D00466899 /* huffman.c */,
+				405B4D7F15B6F24D00466899 /* huffman.h */,
+				405B4D8115B6F27100466899 /* bladtab.c */,
+				405B4D8315B6F2A900466899 /* tables.c */,
+				405B4D8415B6F2A900466899 /* tables.h */,
+				405B4D8615B6F48E00466899 /* l3bitstream.c */,
+				405B4D8715B6F48E00466899 /* l3bitstream.h */,
+				4033B59A15B83F0F00B81518 /* system.h */,
+				4033B59B15B83F2300B81518 /* l3side.h */,
+			);
+			name = BladeEnc;
+			sourceTree = "<group>";
+		};
 		409F269D147D45F60059A839 = {
 			isa = PBXGroup;
 			children = (
@@ -204,6 +276,7 @@
 		409F26AE147D45F60059A839 /* testMp3Mix */ = {
 			isa = PBXGroup;
 			children = (
+				405B4D6315B6EEB100466899 /* BladeEnc */,
 				409F26AF147D45F60059A839 /* main.mm */,
 				409F26B3147D45F60059A839 /* testMp3Mix.1 */,
 				409F26BA147D46020059A839 /* Mp3Parser */,
@@ -397,6 +470,19 @@
 				409F26C2147D46020059A839 /* Mp3Header.cpp in Sources */,
 				409F26C3147D46020059A839 /* Mp3Parser.cpp in Sources */,
 				4027600615AC30BA007B3262 /* Utils.mm in Sources */,
+				405B4D6615B6EECB00466899 /* codec.c in Sources */,
+				405B4D6915B6EF2F00466899 /* mdct.c in Sources */,
+				405B4D6C15B6EF6E00466899 /* l3psy.c in Sources */,
+				405B4D6F15B6EF8E00466899 /* encode.c in Sources */,
+				405B4D7115B6EFB400466899 /* subs.c in Sources */,
+				405B4D7415B6EFD800466899 /* loop.c in Sources */,
+				405B4D7715B6F00B00466899 /* reservoir.c in Sources */,
+				405B4D7A15B6F02800466899 /* formatbitstream2.c in Sources */,
+				405B4D7D15B6F1D400466899 /* common.c in Sources */,
+				405B4D8015B6F24D00466899 /* huffman.c in Sources */,
+				405B4D8215B6F27100466899 /* bladtab.c in Sources */,
+				405B4D8515B6F2A900466899 /* tables.c in Sources */,
+				405B4D8815B6F48E00466899 /* l3bitstream.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -464,6 +550,7 @@
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
+					"SYSTEM=DARWIN",
 					_COCOA_,
 				);
 				HEADER_SEARCH_PATHS = (
@@ -489,7 +576,10 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "testMp3Mix/testMp3Mix-Prefix.pch";
-				GCC_PREPROCESSOR_DEFINITIONS = _COCOA_;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"SYSTEM=DARWIN",
+					_COCOA_,
+				);
 				HEADER_SEARCH_PATHS = (
 					../../../nui3/include,
 					/usr/local/include,
