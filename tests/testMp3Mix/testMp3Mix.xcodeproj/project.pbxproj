@@ -21,7 +21,8 @@
 		405B4D8215B6F27100466899 /* bladtab.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D8115B6F27100466899 /* bladtab.c */; };
 		405B4D8515B6F2A900466899 /* tables.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D8315B6F2A900466899 /* tables.c */; };
 		405B4D8815B6F48E00466899 /* l3bitstream.c in Sources */ = {isa = PBXBuildFile; fileRef = 405B4D8615B6F48E00466899 /* l3bitstream.c */; };
-		4085AB14147E8FA2000D3EBE /* libmpg123.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4085AB0F147E8F18000D3EBE /* libmpg123.0.dylib */; };
+		4068B43015D963D6008FC581 /* libmpg123.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4068B42F15D963D6008FC581 /* libmpg123.0.dylib */; };
+		4068B43315D96600008FC581 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4068B43215D96600008FC581 /* libiconv.dylib */; };
 		409F26AD147D45F60059A839 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 409F26AC147D45F60059A839 /* Foundation.framework */; };
 		409F26B0147D45F60059A839 /* main.mm in Sources */ = {isa = PBXBuildFile; fileRef = 409F26AF147D45F60059A839 /* main.mm */; };
 		409F26B4147D45F60059A839 /* testMp3Mix.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 409F26B3147D45F60059A839 /* testMp3Mix.1 */; };
@@ -108,13 +109,6 @@
 			remoteGlobalIDString = 73F09AC312E9D09E00656E84;
 			remoteInfo = thirdparty_ios_arm7;
 		};
-		40F318E515A48817005F6D20 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 40F318C015A48815005F6D20 /* nui3.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = E5FB9CF3147D5CEE001A1829;
-			remoteInfo = minui3D;
-		};
 		40F3192515A49A88005F6D20 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 40F318C015A48815005F6D20 /* nui3.xcodeproj */;
@@ -166,6 +160,8 @@
 		405B4D8415B6F2A900466899 /* tables.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = tables.h; path = ../../bladeenc/bladeenc/tables.h; sourceTree = "<group>"; };
 		405B4D8615B6F48E00466899 /* l3bitstream.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = l3bitstream.c; path = ../../bladeenc/bladeenc/l3bitstream.c; sourceTree = "<group>"; };
 		405B4D8715B6F48E00466899 /* l3bitstream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = l3bitstream.h; path = ../../bladeenc/bladeenc/l3bitstream.h; sourceTree = "<group>"; };
+		4068B42F15D963D6008FC581 /* libmpg123.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpg123.0.dylib; path = ../../../../../../../usr/local/Cellar/mpg123/1.14.4/lib/libmpg123.0.dylib; sourceTree = "<group>"; };
+		4068B43215D96600008FC581 /* libiconv.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.dylib; path = usr/lib/libiconv.dylib; sourceTree = SDKROOT; };
 		4085AB0F147E8F18000D3EBE /* libmpg123.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libmpg123.0.dylib; path = ../../../../../../../../opt/local/lib/libmpg123.0.dylib; sourceTree = "<group>"; };
 		409F26A8147D45F60059A839 /* testMp3Mix */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = testMp3Mix; sourceTree = BUILT_PRODUCTS_DIR; };
 		409F26AC147D45F60059A839 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -192,6 +188,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4068B43315D96600008FC581 /* libiconv.dylib in Frameworks */,
+				4068B43015D963D6008FC581 /* libmpg123.0.dylib in Frameworks */,
 				40F3194715A4ACED005F6D20 /* libz.dylib in Frameworks */,
 				40F3194015A4ACA1005F6D20 /* CoreFoundation.framework in Frameworks */,
 				40F3193E15A4AC9A005F6D20 /* CoreServices.framework in Frameworks */,
@@ -199,7 +197,6 @@
 				40F3193515A4AC70005F6D20 /* OpenGL.framework in Frameworks */,
 				40F3193315A4AC4E005F6D20 /* libnui3CocoaD.a in Frameworks */,
 				40F3193215A4AB86005F6D20 /* libmp3lame.0.dylib in Frameworks */,
-				4085AB14147E8FA2000D3EBE /* libmpg123.0.dylib in Frameworks */,
 				409F26AD147D45F60059A839 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -243,6 +240,8 @@
 		409F269D147D45F60059A839 = {
 			isa = PBXGroup;
 			children = (
+				4068B43215D96600008FC581 /* libiconv.dylib */,
+				4068B42F15D963D6008FC581 /* libmpg123.0.dylib */,
 				40F3194615A4ACED005F6D20 /* libz.dylib */,
 				40F3193F15A4ACA1005F6D20 /* CoreFoundation.framework */,
 				40F3193D15A4AC9A005F6D20 /* CoreServices.framework */,
@@ -322,7 +321,6 @@
 				40F318E015A48817005F6D20 /* libthirdparty.a */,
 				40F318E215A48817005F6D20 /* libthirdparty_ios.a */,
 				40F318E415A48817005F6D20 /* libthirdparty_ios_arm7.a */,
-				40F318E615A48817005F6D20 /* libminui3D.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -451,13 +449,6 @@
 			remoteRef = 40F318E315A48817005F6D20 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		40F318E615A48817005F6D20 /* libminui3D.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libminui3D.a;
-			remoteRef = 40F318E515A48817005F6D20 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -553,6 +544,7 @@
 					"SYSTEM=DARWIN",
 					_COCOA_,
 				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					../../../nui3/include,
 					/usr/local/include,
@@ -561,6 +553,7 @@
 					"$(inherited)",
 					/opt/local/lib,
 					/usr/local/lib,
+					/usr/local/Cellar/mpg123/1.14.4/lib,
 				);
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -580,6 +573,7 @@
 					"SYSTEM=DARWIN",
 					_COCOA_,
 				);
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					../../../nui3/include,
 					/usr/local/include,
@@ -588,6 +582,7 @@
 					"$(inherited)",
 					/opt/local/lib,
 					/usr/local/lib,
+					/usr/local/Cellar/mpg123/1.14.4/lib,
 				);
 				OTHER_LDFLAGS = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";

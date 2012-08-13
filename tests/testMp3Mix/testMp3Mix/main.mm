@@ -9,7 +9,7 @@
 #include "Mp3Parser.h"
 
 #include <lame/lame.h>
-#include </opt/local/include/mpg123.h>
+#include </usr/local/include/mpg123.h>
 
 #include <vector>
 #include <math.h>
