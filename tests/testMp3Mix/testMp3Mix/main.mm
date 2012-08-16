@@ -59,6 +59,7 @@ void encodeAndWriteToFile(std::vector<float>& buffer, int nbInChannels, NSString
 NSArray* encode_flush(std::vector<float>& buffer, int nbInChannels, int nbFramesBeforeFlush, int nbFramesAfterFlush);
 
 
+NSData* copyFrames(NSData* inData, int nbFrames, int nbSkipFrames);
 NSData* copyFrames(NSString* srcPath, int nbFrames, int nbSkipFrames);
 void copyFramesAndWriteToFile(NSString* srcPath, int nbFrames, int nbSkipFrames, NSString* destFileName);
 
@@ -84,9 +85,9 @@ int main (int argc, const char * argv[])
 {
   @autoreleasepool 
   {            
-      test_nogap(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3");
+//      test_nogap(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3");
       
-//      test_minimal_preflush(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3", 993, 1000, 5);
+      test_minimal_preflush(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3", 995, 1000, 2);
   }
   return 0;
 }
@@ -108,9 +109,11 @@ void test_minimal_preflush(NSString* mp3Path, int A_nbFrames, int B_nbFrames, in
     int nbSkipFrames = A_nbFrames - preflush_nbFrames;
     NSData* preflush_plus_B_decoded = decode(mp3Path, nbFeedFrames, nbSkipFrames);
     
+    unsigned char* pSrc = (unsigned char*)preflush_plus_B_decoded.bytes + 3 * (bytesPerMPEGFrame / 2);
+    
     std::vector<float> preflush_plus_B_wav;
     preflush_plus_B_wav.resize(preflush_plus_B_nbFrames * samplesPerMPEGFrame);
-    memcpy(&preflush_plus_B_wav[0], preflush_plus_B_decoded.bytes, preflush_plus_B_nbFrames * bytesPerMPEGFrame);
+    memcpy(&preflush_plus_B_wav[0], pSrc, preflush_plus_B_nbFrames * bytesPerMPEGFrame);
     
     NSArray* encoded_datas = encode_flush(preflush_plus_B_wav, channels, preflush_nbFrames, B_nbFrames);
     NSData* B_flush_encoded = [encoded_datas objectAtIndex:1];
@@ -207,19 +210,24 @@ void test_nogap(NSString* mp3Path)
         writeToFile(@"A_copy+B_flush.mp3", A_copy_plus_B_flush);
     }
     
-    int nbBytes = A_copy_plus_B_flush.length;
-    const char* bytes = (const char*)A_copy_plus_B_flush.bytes;
-    
-    nglIMemory stream(bytes, nbBytes);
-    Mp3Parser parser(stream, false, true);
-    bool ok = true;
-    while (ok)
+    NSData* A_copy_plus_B_fluash_minus_Xing = copyFrames(A_copy_plus_B_flush, AB_frames, 0);
     {
-        const Mp3Frame& f = parser.GetCurrentFrame();
-        int byteLength = f.GetByteLength();
-        NSLog(@"frame length = %d bytes", byteLength);
-        ok = parser.GoToNextFrame();
+        writeToFile(@"A_copy+B_flush-Xing.mp3", A_copy_plus_B_fluash_minus_Xing);
     }
+    
+//    int nbBytes = A_copy_plus_B_flush.length;
+//    const char* bytes = (const char*)A_copy_plus_B_flush.bytes;
+//    
+//    nglIMemory stream(bytes, nbBytes);
+//    Mp3Parser parser(stream, false, true);
+//    bool ok = true;
+//    while (ok)
+//    {
+//        const Mp3Frame& f = parser.GetCurrentFrame();
+//        int byteLength = f.GetByteLength();
+//        NSLog(@"frame length = %d bytes", byteLength);
+//        ok = parser.GoToNextFrame();
+//    }
     
 }
 
@@ -940,9 +948,8 @@ void encodeAndWriteToFile(std::vector<float>& buffer, int nbInChannels, NSString
     writeToFile(destFileName, data);
 }
 
-NSData* copyFrames(NSString* srcPath, int nbFrames, int nbSkipFrames)
+NSData* copyFrames(NSData* inData, int nbFrames, int nbSkipFrames)
 {
-    NSData* inData = [NSData dataWithContentsOfFile:srcPath];
     Mp3Parser parser = getParser(inData);
     
     NSMutableData* outData = [NSMutableData data];
@@ -951,7 +958,7 @@ NSData* copyFrames(NSString* srcPath, int nbFrames, int nbSkipFrames)
     int f = 0;
     int skip = nbSkipFrames;
     bool ok = true;
-    while (f < nbFrames && ok) 
+    while (f < nbFrames && ok)
     {
         Mp3Frame frame = parser.GetCurrentFrame();
         if (frame.IsValid() && !frame.GetHeader().mIsXing)
@@ -965,7 +972,7 @@ NSData* copyFrames(NSString* srcPath, int nbFrames, int nbSkipFrames)
                 parser.ReadFrameBytes(data);
                 [outData appendBytes:&data[0] length:bytes];
             }
-            else 
+            else
             {
                 skip--;
             }
@@ -973,6 +980,13 @@ NSData* copyFrames(NSString* srcPath, int nbFrames, int nbSkipFrames)
         ok = parser.GoToNextFrame();
     }
     
+    return outData;
+
+}
+NSData* copyFrames(NSString* srcPath, int nbFrames, int nbSkipFrames)
+{
+    NSData* inData = [NSData dataWithContentsOfFile:srcPath];
+    NSData* outData = copyFrames(inData, nbFrames, nbSkipFrames);
     return outData;
 }
 
