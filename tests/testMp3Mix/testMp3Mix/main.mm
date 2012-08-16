@@ -80,6 +80,7 @@ void test_fadeout(NSString* srcPath1, NSString* dstFile);
 void test_crossfade(NSString* srcPath1, NSString* srcPath2, NSString* dstFile);
 void test_nogap(NSString* mp3Path);
 void test_minimal_preflush(NSString* mp3Path, int A_nbFrames, int B_nbFrames, int preflush_nbFrames);
+void test_double_jonsction(NSString* mp3Path, int A_nbFrames, int B_nbFrames, int C_nbFrames, int preflush_nbFrames);
 
 int main (int argc, const char * argv[])
 {
@@ -87,9 +88,65 @@ int main (int argc, const char * argv[])
   {            
 //      test_nogap(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3");
       
-      test_minimal_preflush(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3", 995, 1000, 2);
+//      test_minimal_preflush(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3", 995, 1000, 2);
+      
+      test_double_jonsction(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/please.mp3", 995, 1000, 1000, 2);
   }
   return 0;
+}
+
+void test_double_jonsction(NSString* mp3Path, int A_nbFrames, int B_nbFrames, int C_nbFrames, int preflush_nbFrames)
+{
+    int channels = 2;
+    int samplesPerMPEGFrame = gNbSampleFramesPerMPEGFrame * channels;
+    int bytesPerMPEGFrame = samplesPerMPEGFrame * sizeof(float);
+    
+    NSData* A_copy = copyFrames(mp3Path, A_nbFrames, 0);
+    
+    {
+        writeToFile(@"A_copy.mp3", A_copy);
+    }
+    
+    int preflush_plus_B_nbFrames = preflush_nbFrames + B_nbFrames;
+    int nbFeedFrames = preflush_plus_B_nbFrames + 10;
+    int nbSkipFrames = A_nbFrames - preflush_nbFrames;
+    NSData* preflush_plus_B_decoded = decode(mp3Path, nbFeedFrames, nbSkipFrames);
+    
+    unsigned char* pSrc = (unsigned char*)preflush_plus_B_decoded.bytes + 3 * (bytesPerMPEGFrame / 2);
+    
+    std::vector<float> preflush_plus_B_wav;
+    preflush_plus_B_wav.resize(preflush_plus_B_nbFrames * samplesPerMPEGFrame);
+    memcpy(&preflush_plus_B_wav[0], pSrc, preflush_plus_B_nbFrames * bytesPerMPEGFrame);
+    
+    NSArray* encoded_datas = encode_flush(preflush_plus_B_wav, channels, preflush_nbFrames, B_nbFrames);
+    NSData* B_flush_encoded = [encoded_datas objectAtIndex:1];
+    
+    {
+        writeToFile(@"B_flush_encoded.mp3", B_flush_encoded);
+    }
+    
+    NSMutableData* A_copy_plus_B_flush = [NSMutableData data];
+    [A_copy_plus_B_flush appendData:A_copy];
+    [A_copy_plus_B_flush appendData:B_flush_encoded];
+    
+    {
+        writeToFile(@"A_copy+B_flush.mp3", A_copy_plus_B_flush);
+    }
+    
+    NSData* C_copy = copyFrames(mp3Path, C_nbFrames, A_nbFrames + B_nbFrames);
+    
+    {
+        writeToFile(@"C_copy.mp3", C_copy);
+    }
+    
+    NSMutableData* total = [NSMutableData data];
+    [total appendData:A_copy];
+    [total appendData:B_flush_encoded];
+    [total appendData:C_copy];
+
+    {
+        writeToFile(@"total.mp3", total);
+    }
 }
 
 void test_minimal_preflush(NSString* mp3Path, int A_nbFrames, int B_nbFrames, int preflush_nbFrames)
@@ -730,6 +787,9 @@ NSArray* encode_flush(std::vector<float>& buffer, int nbInChannels, int nbFrames
     
     int inNbSampleFrames = buffer.size() / nbInChannels;
     
+    int mp3buf_size = 1.25 * 1152 + 7200;
+    unsigned char mp3buf[mp3buf_size];
+    
     int toFeed = inNbSampleFrames;
     int inputOffset = 0;
     int res = 1;
@@ -739,8 +799,6 @@ NSArray* encode_flush(std::vector<float>& buffer, int nbInChannels, int nbFrames
         int nbInputSampleFrames = MIN(1152, toFeed);
         const float* input = &buffer[inputOffset * nbInChannels];
         
-        int mp3buf_size = 1.25 * 1152 + 7200;
-        unsigned char mp3buf[mp3buf_size];
         if (nbInChannels == 1)
             res = lame_encode_buffer_ieee_float(lameFlags, input, input, nbInputSampleFrames, mp3buf, mp3buf_size);
         else
@@ -759,11 +817,20 @@ NSArray* encode_flush(std::vector<float>& buffer, int nbInChannels, int nbFrames
         
         if (framesDone == nbFramesBeforeFlush)
         {
-            lame_encode_flush_nogap(lameFlags, mp3buf, mp3buf_size);
+            res = lame_encode_flush_nogap(lameFlags, mp3buf, mp3buf_size);
             [encoded_current appendBytes:mp3buf length:res];
             encoded_current = encoded2;
         }
     }
+    
+    res = 1;
+    while (res > 0)
+    {
+        res = lame_encode_flush_nogap(lameFlags, mp3buf, mp3buf_size);
+        [encoded_current appendBytes:mp3buf length:res];
+        NSLog(@"flush: %d bytes", res);
+    }
+    
     
     NSArray* array = [NSArray arrayWithObjects:encoded1, encoded2, nil];
     return array;
