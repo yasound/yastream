@@ -147,6 +147,72 @@ void test_double_jonsction(NSString* mp3Path, int A_nbFrames, int B_nbFrames, in
     {
         writeToFile(@"total.mp3", total);
     }
+    
+    
+    {
+        int frameCount = 0;
+        int nbBytes = A_copy.length;
+        const char* bytes = (const char*)A_copy.bytes;
+        
+        nglIMemory stream(bytes, nbBytes);
+        Mp3Parser parser(stream, false, true);
+        bool ok = true;
+        while (ok)
+        {
+            const Mp3Frame& f = parser.GetCurrentFrame();
+            if (f.IsValid() && !f.GetHeader().mIsXing)
+            {
+                frameCount++;
+            }
+            ok = parser.GoToNextFrame();
+        }
+        
+        NSLog(@"A_copy   %d frames (%d frames asked)", frameCount, A_nbFrames);
+    }
+    
+    {
+        int frameCount = 0;
+        int nbBytes = B_flush_encoded.length;
+        const char* bytes = (const char*)B_flush_encoded.bytes;
+        
+        nglIMemory stream(bytes, nbBytes);
+        Mp3Parser parser(stream, false, true);
+        bool ok = true;
+        while (ok)
+        {
+            const Mp3Frame& f = parser.GetCurrentFrame();
+            if (f.IsValid() && !f.GetHeader().mIsXing)
+            {
+                frameCount++;
+            }
+            ok = parser.GoToNextFrame();
+        }
+
+        NSLog(@"B_flush_encoded   %d frames (%d frames asked)", frameCount, B_nbFrames);
+    }
+    
+    {
+        int frameCount = 0;
+        int nbBytes = C_copy.length;
+        const char* bytes = (const char*)C_copy.bytes;
+        
+        nglIMemory stream(bytes, nbBytes);
+        Mp3Parser parser(stream, false, true);
+        bool ok = true;
+        while (ok)
+        {
+            const Mp3Frame& f = parser.GetCurrentFrame();
+            if (f.IsValid() && !f.GetHeader().mIsXing)
+            {
+                frameCount++;
+            }
+            ok = parser.GoToNextFrame();
+        }
+        
+        NSLog(@"C_copy   %d frames (%d frames asked)", frameCount, C_nbFrames);
+    }
+    
+    
 }
 
 void test_minimal_preflush(NSString* mp3Path, int A_nbFrames, int B_nbFrames, int preflush_nbFrames)
