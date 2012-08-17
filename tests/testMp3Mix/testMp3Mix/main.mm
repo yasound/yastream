@@ -212,6 +212,45 @@ void test_double_jonsction(NSString* mp3Path, int A_nbFrames, int B_nbFrames, in
         NSLog(@"C_copy   %d frames (%d frames asked)", frameCount, C_nbFrames);
     }
     
+    {
+        int frameCount = 0;
+        int nbBytes = total.length;
+        const char* bytes = (const char*)total.bytes;
+        
+        nglIMemory stream(bytes, nbBytes);
+        Mp3Parser parser(stream, false, true);
+        bool ok = true;
+        while (ok)
+        {
+            const Mp3Frame& f = parser.GetCurrentFrame();
+            if (f.IsValid() && !f.GetHeader().mIsXing)
+            {
+                frameCount++;
+            }
+            ok = parser.GoToNextFrame();
+        }
+        
+        NSLog(@"total   %d frames (%d frames asked)", frameCount, A_nbFrames + B_nbFrames + C_nbFrames);
+    }
+    
+    
+    NSData* A_decoded = decode(A_copy, A_nbFrames + 10, 0);
+    NSData* B_flush_decoded = decode(B_flush_encoded, B_nbFrames + 10, 0);
+    NSData* C_decoded = decode(C_copy, C_nbFrames + 10, 0);
+    NSData* total_decoded = decode(total, A_nbFrames + B_nbFrames + C_nbFrames + 10, 0);
+    
+    NSData* B_copy = copyFrames(mp3Path, B_nbFrames, A_nbFrames);
+    NSData* B_copy_decoded = decode(B_copy, B_nbFrames + 10, 0);
+    {
+        writeToFile(@"A_copy_decoded.raw", A_decoded);
+        writeToFile(@"B_flush_decoded.raw", B_flush_decoded);
+        writeToFile(@"C_copy_decoded.raw", C_decoded);
+        writeToFile(@"total_decoded.raw", total_decoded);
+        
+        writeToFile(@"B_copy_decoded.raw", B_copy_decoded);
+    }
+    
+    
     
 }
 
