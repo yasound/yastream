@@ -100,13 +100,6 @@
 			remoteGlobalIDString = E5A8CCAE11E33A54004E14CE;
 			remoteInfo = nui3CocoaD;
 		};
-		E57200CE14BB649900D8E91D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E511CA80142A27E90079F31F /* nui3.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = E5FB9CF3147D5CEE001A1829;
-			remoteInfo = minui3D;
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -208,7 +201,6 @@
 				E511CAD0142A29460079F31F /* libthirdparty.a */,
 				E511CAD2142A29460079F31F /* libthirdparty_ios.a */,
 				E511CAD4142A29460079F31F /* libthirdparty_ios_arm7.a */,
-				E57200CF14BB649900D8E91D /* libminui3D.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -366,13 +358,6 @@
 			fileType = archive.ar;
 			path = libthirdparty_ios_arm7.a;
 			remoteRef = E511CAD3142A29460079F31F /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		E57200CF14BB649900D8E91D /* libminui3D.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libminui3D.a;
-			remoteRef = E57200CE14BB649900D8E91D /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
