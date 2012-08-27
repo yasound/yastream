@@ -30,6 +30,24 @@ extern "C"
 
 #include "nuiAudioConvert.h"
 
+#define LOW_QUALITY 0
+
+#if LOW_QUALITY
+
+#define MP3_BITRATE 64
+#define MP3_ENCODE_SAMPLERATE 22050
+#define MP3_DECODE_SAMPLERATE 22050
+#define SAMPLEFRAMES_PER_MPEGFRAME 576
+
+#else
+
+#define MP3_BITRATE 192
+#define MP3_ENCODE_SAMPLERATE 44100
+#define MP3_DECODE_SAMPLERATE 44100
+#define SAMPLEFRAMES_PER_MPEGFRAME 1152
+
+#endif
+
 void OnLameError(const char *format, va_list ap);
 void OnLameDebug(const char *format, va_list ap);
 void OnLameMsg(const char *format, va_list ap);
@@ -65,7 +83,7 @@ void copyFramesAndWriteToFile(NSString* srcPath, int nbFrames, int nbSkipFrames,
 
 Mp3Parser getParser(NSData* data);
 
-int gNbSampleFramesPerMPEGFrame = 1152;
+int gNbSampleFramesPerMPEGFrame = SAMPLEFRAMES_PER_MPEGFRAME;
 
 void test1(NSString* srcFilePath, NSString* destFileName);
 void test1_2();
@@ -80,7 +98,7 @@ void test_fadeout(NSString* srcPath1, NSString* dstFile);
 void test_crossfade(NSString* srcPath1, NSString* srcPath2, NSString* dstFile);
 void test_nogap(NSString* mp3Path);
 void test_minimal_preflush(NSString* mp3Path, int A_nbFrames, int B_nbFrames, int preflush_nbFrames);
-void test_double_jonsction(NSString* mp3Path, int A_nbFrames, int B_nbFrames, int C_nbFrames, int preflush_nbFrames);
+void test_double_joint(NSString* mp3Path, int A_nbFrames, int B_nbFrames, int C_nbFrames, int preflush_nbFrames);
 
 int main (int argc, const char * argv[])
 {
@@ -91,12 +109,13 @@ int main (int argc, const char * argv[])
 //      test_minimal_preflush(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3", 995, 1000, 2);
       
     //test_double_jonsction(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/please.mp3", 995, 1000, 1000, 2);
-    test_double_jonsction(@"/Users/meeloo/work/yastream/tests/testMp3Mix/testMp3Mix/resources/please.mp3", 995, 1000, 1000, 2);
+    //test_double_jonsction(@"/Users/meeloo/work/yastream/tests/testMp3Mix/testMp3Mix/resources/please.mp3", 995, 1000, 1000, 2);
+      test_double_joint(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3", 1000, 1000, 1000, 2);
   }
   return 0;
 }
 
-void test_double_jonsction(NSString* mp3Path, int A_nbFrames, int B_nbFrames, int C_nbFrames, int preflush_nbFrames)
+void test_double_joint(NSString* mp3Path, int A_nbFrames, int B_nbFrames, int C_nbFrames, int preflush_nbFrames)
 {
     int channels = 2;
     int samplesPerMPEGFrame = gNbSampleFramesPerMPEGFrame * channels;
@@ -426,7 +445,7 @@ void test_crossfade(NSString* srcPath1, NSString* srcPath2, NSString* dstFile)
     memcpy(&wav1[0], pSrc1, wav1.size() * sizeof(float));
     memcpy(&wav2[0], pSrc2, wav2.size() * sizeof(float));
     
-    int crossfadeLength = 3 * 44100;
+    int crossfadeLength = 3 * MP3_DECODE_SAMPLERATE;
     
     std::vector<float> wav;
     wav.resize(wav1.size());
@@ -856,8 +875,7 @@ void generateTestSignal(int nbSampleFrames, int nbChannels, std::vector<float>& 
 
 NSArray* encode_flush(std::vector<float>& buffer, int nbInChannels, int nbFramesBeforeFlush, int nbFramesAfterFlush)
 {
-    float samplerate = 44100;
-    float bitrate = 192;
+    float bitrate = MP3_BITRATE;
     
     MPEG_mode mode;
     if (nbInChannels == 1)
@@ -870,11 +888,11 @@ NSArray* encode_flush(std::vector<float>& buffer, int nbInChannels, int nbFrames
     // LAME
     lame_global_flags* lameFlags;
     lameFlags = lame_init();
-    lame_set_in_samplerate(lameFlags, samplerate);
+    lame_set_in_samplerate(lameFlags, MP3_DECODE_SAMPLERATE);
     lame_set_num_channels(lameFlags, nbInChannels);
     lame_set_mode(lameFlags, mode);
     lame_set_scale(lameFlags, 1.0f);
-    lame_set_out_samplerate(lameFlags, samplerate);
+    lame_set_out_samplerate(lameFlags, MP3_ENCODE_SAMPLERATE);
     lame_set_bWriteVbrTag(lameFlags, 0);
     lame_set_quality(lameFlags, 0);
     lame_set_errorf(lameFlags, OnLameError);
@@ -900,7 +918,7 @@ NSArray* encode_flush(std::vector<float>& buffer, int nbInChannels, int nbFrames
     
     int inNbSampleFrames = buffer.size() / nbInChannels;
     
-    int mp3buf_size = 1.25 * 1152 + 7200;
+    int mp3buf_size = 1.25 * gNbSampleFramesPerMPEGFrame + 7200;
     unsigned char mp3buf[mp3buf_size];
     
     int toFeed = inNbSampleFrames;
@@ -909,7 +927,7 @@ NSArray* encode_flush(std::vector<float>& buffer, int nbInChannels, int nbFrames
     int framesDone = 0;
     while (toFeed > 0 || res > 0)
     {
-        int nbInputSampleFrames = MIN(1152, toFeed);
+        int nbInputSampleFrames = MIN(gNbSampleFramesPerMPEGFrame, toFeed);
         const float* input = &buffer[inputOffset * nbInChannels];
         
         if (nbInChannels == 1)
@@ -951,8 +969,7 @@ NSArray* encode_flush(std::vector<float>& buffer, int nbInChannels, int nbFrames
 
 NSData* encode(std::vector<float>& buffer, int nbInChannels, EncoderType encoderType)
 {
-    float samplerate = 44100;
-    float bitrate = 192;
+    float bitrate = MP3_BITRATE;
     
     
     if (encoderType == eLameEncoder)
@@ -968,11 +985,11 @@ NSData* encode(std::vector<float>& buffer, int nbInChannels, EncoderType encoder
         // LAME
         lame_global_flags* lameFlags;
         lameFlags = lame_init();
-        lame_set_in_samplerate(lameFlags, samplerate);
+        lame_set_in_samplerate(lameFlags, MP3_DECODE_SAMPLERATE);
         lame_set_num_channels(lameFlags, nbInChannels);
         lame_set_mode(lameFlags, mode);
         lame_set_scale(lameFlags, 1.0f);
-        lame_set_out_samplerate(lameFlags, samplerate);
+        lame_set_out_samplerate(lameFlags, MP3_ENCODE_SAMPLERATE);
         lame_set_bWriteVbrTag(lameFlags, 0);
         lame_set_quality(lameFlags, 0);
         lame_set_errorf(lameFlags, OnLameError);
@@ -999,10 +1016,10 @@ NSData* encode(std::vector<float>& buffer, int nbInChannels, EncoderType encoder
         int res = 1;
         while (toFeed > 0 || res > 0) 
         {
-            int nbInputSampleFrames = MIN(1152, toFeed);
+            int nbInputSampleFrames = MIN(gNbSampleFramesPerMPEGFrame, toFeed);
             const float* input = &buffer[inputOffset * nbInChannels];
             
-            int mp3buf_size = 1.25 * 1152 + 7200;
+            int mp3buf_size = 1.25 * gNbSampleFramesPerMPEGFrame + 7200;
             unsigned char mp3buf[mp3buf_size];
             if (nbInChannels == 1)
                 res = lame_encode_buffer_ieee_float(lameFlags, input, input, nbInputSampleFrames, mp3buf, mp3buf_size);
@@ -1027,7 +1044,7 @@ NSData* encode(std::vector<float>& buffer, int nbInChannels, EncoderType encoder
     else if (encoderType == eBladeEncoder)
     {
         CodecInitIn codecInitIn;
-        codecInitIn.frequency = samplerate;
+        codecInitIn.frequency = MP3_ENCODE_SAMPLERATE;
         codecInitIn.bitrate = bitrate;
         codecInitIn.mode = (nbInChannels == 1) ? 3/*mono*/ : 0/*stereo*/;
         codecInitIn.fCopyright = 0;
@@ -1045,13 +1062,13 @@ NSData* encode(std::vector<float>& buffer, int nbInChannels, EncoderType encoder
         int toFeed = inNbSampleFrames;
         int inputOffset = 0;
         unsigned int res = 1;
-        int16* pInt16Samples = new int16[1152 * nbInChannels];
+        int16* pInt16Samples = new int16[gNbSampleFramesPerMPEGFrame * nbInChannels];
         while (toFeed > 0) 
         {
-            int nbInputSampleFrames = MIN(1152, toFeed);
+            int nbInputSampleFrames = MIN(gNbSampleFramesPerMPEGFrame, toFeed);
             float* input = &buffer[inputOffset * nbInChannels];
             
-            int mp3buf_size = 1.25 * 1152 + 7200;
+            int mp3buf_size = 1.25 * gNbSampleFramesPerMPEGFrame + 7200;
             char mp3buf[mp3buf_size];
             
 //            fixStatic_reservoir();
@@ -1179,7 +1196,7 @@ void copyFramesAndWriteToFile(NSString* srcPath, int nbFrames, int nbSkipFrames,
 
 NSData* decode(NSData* inData, int nbInFrames, int nbSkipInFrames, bool skipDecoderDelay, int channels)
 {
-    double samplerate = 44100;
+    double samplerate = MP3_DECODE_SAMPLERATE;
     int err = mpg123_init();
     mpg123_handle* handle = NULL;
     handle = mpg123_new(NULL, &err);    
@@ -1220,7 +1237,7 @@ NSData* decode(NSData* inData, int nbInFrames, int nbSkipInFrames, bool skipDeco
     } while (f < nbInFrames && nextFrameOK && readOK);
     
     NSMutableData* outData = [NSMutableData data];
-    size_t outSize = 1152 * channels * sizeof(float);
+    size_t outSize = gNbSampleFramesPerMPEGFrame * channels * sizeof(float);
     unsigned char outBuffer[outSize];
     size_t outDone = 0;
     do {
