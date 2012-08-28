@@ -24,6 +24,7 @@ HTTPHandler::HTTPHandler(nuiSocket::SocketType s)
 
 HTTPHandler::~HTTPHandler()
 {
+  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::~HTTPHandler() %p", this);
   if (mpTemplate)
     delete mpTemplate;
 
