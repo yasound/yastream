@@ -228,6 +228,7 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
   ClientList& rClients            = previewMode ? mClientsPreview : mClients;
   std::deque<Mp3Chunk*>& rChunks  = previewMode ? mChunksPreview : mChunks;
   double& rBufferDuration         = previewMode ? mBufferDurationPreview : mBufferDuration;
+  std::vector<HTTPHandler*> ClientsToKill;
 
   rChunks.push_back(pChunk);
   rBufferDuration += pChunk->GetDuration();
@@ -244,8 +245,18 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
     for (ClientList::const_iterator it = rClients.begin(); it != rClients.end(); ++it)
     {
       HTTPHandler* pClient = *it;
-      pClient->AddChunk(pChunk);
+      if (pClient->IsConnected())
+        pClient->AddChunk(pChunk);
+      else
+        ClientsToKill.push_back(pClient);
     }
+  }
+
+  for (int i = 0; i < ClientsToKill.size(); i++)
+  {
+    HTTPHandler* pClient = ClientsToKill[i];
+    NGL_LOG("radio", NGL_LOG_ERROR, "Radio::AddChunk Kill client %p\n", pClient);
+    delete pClient;
   }
 
   while (rBufferDuration > MAX_BUFFER_SIZE)

@@ -106,7 +106,8 @@ int main (int argc, const char * argv[])
   {            
 //      test_nogap(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3");
       
-      test_minimal_preflush(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3", 995, 1000, 2);
+      test_minimal_preflush(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3", 1000, 1000, 2);
+
   }
   return 0;
 }
@@ -148,7 +149,14 @@ void test_double_joint(NSString* mp3Path, int A_nbFrames, int B_nbFrames, int C_
     {
         writeToFile(@"A_copy+B_flush.mp3", A_copy_plus_B_flush);
     }
-    
+
+  NSData* B_copy_SRC = copyFrames(mp3Path, B_nbFrames, A_nbFrames);
+
+  {
+    writeToFile(@"B_copy.mp3", B_copy_SRC);
+  }
+
+
     NSData* C_copy = copyFrames(mp3Path, C_nbFrames, A_nbFrames + B_nbFrames);
     
     {
@@ -925,7 +933,7 @@ NSArray* encode_flush(std::vector<float>& buffer, int nbInChannels, int nbFrames
             res = lame_encode_buffer_interleaved_ieee_float(lameFlags, input, nbInputSampleFrames, mp3buf, mp3buf_size);
         if (res >= 0)
         {
-            NSLog(@"%d bytes encoded", res);
+            //NSLog(@"%d bytes encoded", res);
             [encoded_current appendBytes:mp3buf length:res];
         }
         else
@@ -1016,7 +1024,7 @@ NSData* encode(std::vector<float>& buffer, int nbInChannels, EncoderType encoder
                 res = lame_encode_buffer_interleaved_ieee_float(lameFlags, input, nbInputSampleFrames, mp3buf, mp3buf_size);
             if (res >= 0)
             {
-                NSLog(@"%d bytes encoded", res);
+                //NSLog(@"%d bytes encoded", res);
                 [outData appendBytes:mp3buf length:res];
             }
             else
@@ -1064,7 +1072,7 @@ NSData* encode(std::vector<float>& buffer, int nbInChannels, EncoderType encoder
             nuiAudioConvert_FloatBufferTo16bits(input, pInt16Samples, nbInputSampleFrames * nbInChannels);
             res = codecEncodeChunk(nbInputSampleFrames, pInt16Samples, mp3buf);
 
-            NSLog(@"%d bytes encoded", res);
+            //NSLog(@"%d bytes encoded", res);
             [outData appendBytes:mp3buf length:res];
             
             inputOffset += nbInputSampleFrames;
@@ -1217,7 +1225,7 @@ NSData* decode(NSData* inData, int nbInFrames, int nbSkipInFrames, bool skipDeco
                 frameData.resize(byteLength);
                 readOK = parser.ReadFrameBytes(frameData);
                 err = mpg123_feed(handle, &frameData[0], byteLength);
-                NSLog(@"feed (%d bytes)  res = %s", byteLength, mpg123_plain_strerror(err));
+                //NSLog(@"feed (%d bytes)  res = %s", byteLength, mpg123_plain_strerror(err));
                 f++;
             }
             
@@ -1232,7 +1240,7 @@ NSData* decode(NSData* inData, int nbInFrames, int nbSkipInFrames, bool skipDeco
     do {
         err = mpg123_read(handle, outBuffer, outSize, &outDone);
         [outData appendBytes:outBuffer length:outDone];
-        NSLog(@"read (ask = %d  done = %d)  res = %s", (int)outSize, (int)outDone, mpg123_plain_strerror(err));
+        //NSLog(@"read (ask = %d  done = %d)  res = %s", (int)outSize, (int)outDone, mpg123_plain_strerror(err));
     } while (err == MPG123_OK || err == MPG123_NEW_FORMAT);
     
     
