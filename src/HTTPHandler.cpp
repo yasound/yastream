@@ -251,8 +251,8 @@ bool HTTPHandler::OnBodyStart()
   if (!mLive)
   {
     ReplyHeader("Content-Type", "audio/mpeg");
-    //ReplyHeader("icy-name", "no name");
-    //ReplyHeader("icy-pub", "1");
+    ReplyHeader("icy-name", "no name");
+    ReplyHeader("icy-pub", "1");
   }
   else
   {
@@ -309,7 +309,7 @@ bool HTTPHandler::OnBodyStart()
 */
 
   NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart DoneOK");
-  return false;
+  return true;
 }
 
 bool HTTPHandler::OnBodyData(const std::vector<uint8>& rData)

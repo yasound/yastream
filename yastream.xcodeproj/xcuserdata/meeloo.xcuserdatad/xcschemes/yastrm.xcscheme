@@ -62,6 +62,10 @@
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
+            argument = "--test"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "-host 0.0.0.0"
             isEnabled = "YES">
          </CommandLineArgument>

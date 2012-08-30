@@ -424,8 +424,9 @@ int main(int argc, const char** argv)
     else if (strcmp(argv[i], "--test") == 0)
     {
       Radio* pRadio = new Radio("matid");
-      nglPath current(ePathCurrent);
-      nglPath p = current + nglPath("/data");
+      //nglPath current(ePathCurrent);
+      nglPath current("/Users/meeloo/work/yastream");
+      nglPath p = current + nglPath("data");
       pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
       pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
       pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));

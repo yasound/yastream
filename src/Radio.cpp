@@ -85,7 +85,7 @@ void Radio::Start()
 
   if (mpPreviewSource)
   {
-    mOnline = mpPreviewSource->IsConnected();
+    mOnline = mpPreviewSource->IsReadConnected();
 
     if (mOnline)
       mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStartProxy), nglThread::Normal, stacksize);
@@ -245,7 +245,7 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
     for (ClientList::const_iterator it = rClients.begin(); it != rClients.end(); ++it)
     {
       HTTPHandler* pClient = *it;
-      if (pClient->IsConnected())
+      if (pClient->IsReadConnected())
         pClient->AddChunk(pChunk);
       else
         ClientsToKill.push_back(pClient);
@@ -303,7 +303,7 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
   offset += 4;
   data.resize(len);
 
-  while (done != len && pClient->IsConnected())
+  while (done != len && pClient->IsReadConnected())
   {
     int32 res = pClient->Receive(&data[len - todo], todo);
 
@@ -395,7 +395,7 @@ double Radio::ReadSetProxy(int64& chunk_count_preview, int64& chunk_count)
     bool nextFramePreviewOK = true;
     bool skip = i == 12;
     Mp3Chunk* pChunk = NULL;
-    if (!skip && mpSource && mpSource->IsConnected())
+    if (!skip && mpSource && mpSource->IsReadConnected())
     {
       pChunk = GetChunk(mpSource);
     }
@@ -454,7 +454,7 @@ if (0)
 //      nextFrameOK = mpParser->GoToNextFrame();
 //    nextFramePreviewOK = mpParserPreview->GoToNextFrame();
 
-    //if ((!skip && !pChunk) || !nextFramePreviewOK || !mpPreviewSource->IsConnected() || !mpSource->IsConnected())
+    //if ((!skip && !pChunk) || !nextFramePreviewOK || !mpPreviewSource->IsReadConnected() || !mpSource->IsReadConnected())
     if (!nextFramePreviewOK || !pChunkPreview) // #FIXME Handle high quality stream (see commented line above)
     {
       //NGL_LOG("radio", NGL_LOG_INFO, "PROXY [skip: %c][pChunk: %p][nextFrameOK: %c / %c]\n", skip?'y':'n', pChunk, nextFramePreviewOK?'y':'n', nextFrameOK?'y':'n');
@@ -512,7 +512,7 @@ void Radio::OnStart()
             else
             {
               NGL_LOG("radio", NGL_LOG_INFO, "Radio broken AND offline");
-              mOnline = false; //#FIXME Handle HQ Stream: && mpSource->IsConnected();
+              mOnline = false; //#FIXME Handle HQ Stream: && mpSource->IsReadConnected();
             }
           }
           //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
@@ -631,7 +631,7 @@ bool Radio::LoadNextTrack()
   if (mGoOffline) // We were asked to kill this radio once the current song was finished.
     return false;
 
-  while (1)
+  //while (1)
   {
     // Try to get the new track from the app server:
     nglString url;
@@ -674,7 +674,9 @@ bool Radio::LoadNextTrack()
       NGL_LOG("radio", NGL_LOG_ERROR, "Server error (%s): %d\n", url.GetChars(), pResponse->GetStatusCode());
       NGL_LOG("radio", NGL_LOG_ERROR, "response data:\n%s\n", pResponse->GetBodyStr().GetChars());
       delete pResponse;
-      return false;
+
+      if (mTracks.empty())
+        return false;
     }
   }
 
