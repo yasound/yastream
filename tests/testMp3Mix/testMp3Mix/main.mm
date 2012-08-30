@@ -30,7 +30,7 @@ extern "C"
 
 #include "nuiAudioConvert.h"
 
-#define LOW_QUALITY 0
+#define LOW_QUALITY 1
 
 #if LOW_QUALITY
 
@@ -106,11 +106,8 @@ int main (int argc, const char * argv[])
   {            
 //      test_nogap(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3");
       
-//      test_minimal_preflush(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3", 995, 1000, 2);
-      
-    //test_double_jonsction(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/please.mp3", 995, 1000, 1000, 2);
-    //test_double_jonsction(@"/Users/meeloo/work/yastream/tests/testMp3Mix/testMp3Mix/resources/please.mp3", 995, 1000, 1000, 2);
-      test_double_joint(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3", 1000, 1000, 1000, 2);
+      test_minimal_preflush(@"/Users/mat/work/dev/yastream/tests/testMp3Mix/testMp3Mix/resources/mercy.mp3", 1000, 1000, 2);
+
   }
   return 0;
 }
