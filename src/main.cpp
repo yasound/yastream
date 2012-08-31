@@ -269,7 +269,8 @@ public:
     if (pClient)
     {
       pClient->SetNonBlocking(true);
-      MainPool.Add(pClient, nuiSocketPool::eContinuous);
+      //MainPool.Add(pClient, nuiSocketPool::eStateChange);
+      pClient->SetAutoPool(&MainPool);
     }
   }
 };
@@ -484,6 +485,8 @@ int main(int argc, const char** argv)
   Radio::SetParams(appurl, hostname, port, datapath, redishost, redisport, redisdb);
   Radio::FlushRedis(flushall);
 
+  HTTPHandler::SetPool(&MainPool);
+
   NGL_OUT("Starting http streaming server %s:%d\n", bindhost.GetChars(), port);
   nuiHTTPServer* pServer = new HTTPServer();
   //pServer->SetClientStackSize(1024 * 1024 * 4);
@@ -492,9 +495,11 @@ int main(int argc, const char** argv)
   
   if (pServer->Bind(bindhost, port) && pServer->Listen())
   {
-    MainPool.Add(pServer, nuiSocketPool::eContinuous);
-    while (MainPool.DispatchEvents(1000000) >= 0)
-      ;
+    MainPool.Add(pServer, nuiSocketPool::eStateChange);
+    while (MainPool.DispatchEvents(10000) >= 0)
+    {
+      //NGL_LOG("radio", NGL_LOG_INFO, "beep");
+    }
     //pServer->AcceptConnections();
   }
   else

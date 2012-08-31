@@ -10,6 +10,13 @@
 
 #define TEMPLATE_TEST 1
 
+void HTTPHandler::SetPool(nuiSocketPool* pPool)
+{
+  gmpPool = pPool;
+}
+
+nuiSocketPool* HTTPHandler::gmpPool = NULL;
+
 ///////////////////////////////////////////////////
 //class HTTPHandler : public nuiHTTPHandler
 HTTPHandler::HTTPHandler(nuiSocket::SocketType s)
@@ -218,7 +225,14 @@ bool HTTPHandler::OnBodyStart()
   if (!hq)
     NGL_LOG("radio", NGL_LOG_WARNING, "Requesting low quality stream\n");
 
-  // Find the Radio:
+
+  if (GetMethod() == "POST")
+  {
+    NGL_OUT("radio", NGL_LOG_INFO, "This is a live stream %s", GetURL().GetChars());
+    mLive = true;
+  }
+
+// Find the Radio:
   mpRadio = Radio::GetRadio(mRadioID, this, hq);
   if (!mpRadio || !mpRadio->IsOnline())
   {
@@ -230,86 +244,15 @@ bool HTTPHandler::OnBodyStart()
     return ReplyAndClose();
   }
 
-  Log(200);
 
-  NGL_LOG("radio", NGL_LOG_INFO, "HTTP Method: %s", mMethod.GetChars());
-
-  if (mMethod == "POST")
-  {
-    NGL_OUT("radio", NGL_LOG_INFO, "Starting to get data from client for radio %s", mURL.GetChars());
-    mpRadio->SetNetworkSource(NULL, this);
-    mLive = true;
-  }
-
-  SendListenStatus(eStartListen);
-
-  // Reply + Headers:
-  ReplyLine("HTTP/1.0 200 OK");
-  ReplyHeader("Cache-Control", "no-cache");
-  ReplyHeader("Server", "Yastream 1.0.0");
-
-  if (!mLive)
-  {
-    ReplyHeader("Content-Type", "audio/mpeg");
-    ReplyHeader("icy-name", "no name");
-    ReplyHeader("icy-pub", "1");
-  }
-  else
-  {
-    ReplyHeader("Content-Type", "text/plain");
-  }
-
-  ReplyLine("");
-
-  // Do the streaming:
-  NGL_LOG("radio", NGL_LOG_ERROR, "Do the streaming\n");
-
-/*
-  while (mOnline && IsWriteConnected())
-  {
-    // GetNext chunk:
-    Mp3Chunk* pChunk = NULL;
-
-    pChunk = GetNextChunk();
-    int cnt = 0;
-    while (!pChunk && mOnline && IsWriteConnected())
-    {
-      cnt++;
-      //NGL_LOG("radio", NGL_LOG_ERROR, "no chuck, wait 100ms (%d rounds)\n", cnt);
-      nglThread::MsSleep(100);
-      pChunk = GetNextChunk();
-    }
-//    if (cnt)
-//      NGL_LOG("radio", NGL_LOG_INFO, "%d", cnt);
-    //NGL_LOG("radio", NGL_LOG_INFO, "^");
-    //NGL_LOG("radio", NGL_LOG_INFO, "%d", cnt);
-    if (pChunk)
-    {
-      if (mLive)
-      {
-        // As this client is the origin of the audio stream we just drop the data coming from the radio:
-      }
-      else
-      {
-        //NGL_LOG("radio", NGL_LOG_INFO, "Send chunk %d", cnt);
-        BufferedSend(&pChunk->GetData()[0], pChunk->GetData().size());
-      }
-
-      pChunk->Release();
-    }
-  }
-
-  SendListenStatus(eStopListen);
-
-//   if (mLive)
-//     mpRadio->SetNetworkSource(NULL, NULL);
-
-  NGL_LOG("radio", NGL_LOG_INFO, "Client disconnecting from %s\n", mRadioID.GetChars());
-  mpRadio->UnregisterClient(this);
-*/
 
   NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart DoneOK");
   return true;
+}
+
+bool HTTPHandler::IsLive() const
+{
+  return mLive;
 }
 
 bool HTTPHandler::OnBodyData(const std::vector<uint8>& rData)
@@ -326,7 +269,7 @@ void HTTPHandler::AddChunk(Mp3Chunk* pChunk)
   nglCriticalSectionGuard guard(mCS);
   //NGL_LOG("radio", NGL_LOG_INFO, "handle id = %d\n", pChunk->GetId());
   //pChunk->Acquire();
-  BufferedSend(&pChunk->GetData()[0], pChunk->GetData().size());
+  BufferedSend(&pChunk->GetData()[0], pChunk->GetData().size(), false);
   //mChunks.push_back(pChunk);
 }
 

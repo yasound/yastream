@@ -25,19 +25,25 @@ public:
   void OnWriteClosed();
 
   void GoOffline();
-private:
-  nglCriticalSection mCS;
-  std::deque<Mp3Chunk*> mChunks;
 
-  Mp3Chunk* GetNextChunk();
+  bool IsLive() const;
 
   enum ListenStatus
   {
     eStartListen = 0,
     eStopListen
   };
-
   void SendListenStatus(ListenStatus status);
+
+  static void SetPool(nuiSocketPool* pPool);
+private:
+  nglCriticalSection mCS;
+  std::deque<Mp3Chunk*> mChunks;
+  static nuiSocketPool* gmpPool;
+
+  Mp3Chunk* GetNextChunk();
+
+
 
   bool SendFromTemplate(const nglString& rString, nuiObject* pObject);
 

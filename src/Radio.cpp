@@ -127,6 +127,40 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
     mOnline = true;
     mGoOffline = false;
     rClients.push_back(pClient);
+
+    pClient->Log(200);
+
+    NGL_LOG("radio", NGL_LOG_INFO, "HTTP Method: %s", pClient->GetMethod().GetChars());
+
+    if (pClient->IsLive())
+    {
+      NGL_OUT("radio", NGL_LOG_INFO, "Starting to get data from client for radio %s", pClient->GetURL().GetChars());
+      SetNetworkSource(NULL, pClient);
+    }
+
+    pClient->SendListenStatus(HTTPHandler::eStartListen);
+
+    // Reply + Headers:
+    pClient->ReplyLine("HTTP/1.0 200 OK");
+    pClient->ReplyHeader("Cache-Control", "no-cache");
+    pClient->ReplyHeader("Server", "Yastream 1.0.0");
+
+    if (!pClient->IsLive())
+    {
+      pClient->ReplyHeader("Content-Type", "audio/mpeg");
+      pClient->ReplyHeader("icy-name", "no name");
+      pClient->ReplyHeader("icy-pub", "1");
+    }
+    else
+    {
+      pClient->ReplyHeader("Content-Type", "text/plain");
+    }
+
+    pClient->ReplyLine("");
+
+    // Do the streaming:
+    NGL_LOG("radio", NGL_LOG_ERROR, "Do the streaming\n");
+
   }
 
   //NGL_LOG("radio", NGL_LOG_INFO, "Prepare the new client:\n");
@@ -685,7 +719,7 @@ bool Radio::LoadNextTrack()
   {
     nglPath p = mTracks.front();
     mTracks.pop_front();
-    while (!SetTrack(p) && mOnline)
+    while (!SetTrack(p) && mOnline && !mTracks.empty())
     {
       NGL_LOG("radio", NGL_LOG_INFO, "Skipping unreadable static file '%s'\n", p.GetChars());
       p = mTracks.front();
