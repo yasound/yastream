@@ -64,7 +64,7 @@ nuiHTTPHandler* HandlerDelegate(nuiSocket::SocketType sock)
 void SigPipeSink(int signal)
 {
   // Ignore...
-  //NGL_LOG("radio", NGL_LOG_INFO, "SigPipe!\n");
+  NGL_LOG("radio", NGL_LOG_INFO, "SigPipe!\n");
 }
 
 
@@ -284,10 +284,8 @@ int main(int argc, const char** argv)
 
   nuiInit(NULL);
 
-#if defined _MINUI3_
   App->CatchSignal(SIGPIPE, SigPipeSink);
   App->CatchSignal(SIGSEGV, sig_handler);
-#endif
 
   //nglOStream* pLogOutput = nglPath("/home/customer/yastreamlog.txt").OpenWrite(false);
   App->GetLog().SetLevel("yastream", 1000);

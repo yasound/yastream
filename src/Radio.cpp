@@ -114,6 +114,8 @@ void Radio::Start()
 
 void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 {
+  pClient->SetAutoPool(NULL);
+  
   //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p)", pClient);
   ClientList& rClients            = highQuality ? mClients : mClientsPreview;
   std::deque<Mp3Chunk*>& rChunks  = highQuality ? mChunks : mChunksPreview;
@@ -171,6 +173,10 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
     {
       Mp3Chunk* pChunk = *it;
       pClient->AddChunk(pChunk);
+      if (!pClient->IsWriteConnected() || !pClient->IsReadConnected())
+      {
+        return;
+      }
       //NGL_LOG("radio", NGL_LOG_INFO, "Chunk %f\n", pChunk->GetTime());
     }
   }
@@ -279,7 +285,7 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
     for (ClientList::const_iterator it = rClients.begin(); it != rClients.end(); ++it)
     {
       HTTPHandler* pClient = *it;
-      if (pClient->IsReadConnected())
+      if (pClient->IsReadConnected() && pClient->IsWriteConnected())
         pClient->AddChunk(pChunk);
       else
         ClientsToKill.push_back(pClient);
@@ -290,6 +296,7 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
   {
     HTTPHandler* pClient = ClientsToKill[i];
     NGL_LOG("radio", NGL_LOG_ERROR, "Radio::AddChunk Kill client %p\n", pClient);
+    //pClient->SetAutoPool(NULL);
     delete pClient;
   }
 
