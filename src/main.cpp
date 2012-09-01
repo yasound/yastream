@@ -427,13 +427,13 @@ int main(int argc, const char** argv)
       nglPath current("/Users/meeloo/work/yastream");
       nglPath p = current + nglPath("data");
       pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
-      pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
-      pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
-      pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
+//      pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
+//      pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
+//      pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
 
 //      pRadio->AddTrack(p + nglPath("/Money Talks.mp3"));
 //      pRadio->AddTrack(p + nglPath("/04 The Vagabound.mp3"));
-      pRadio->AddTrack(p + nglPath("/Radian.mp3"));
+//      pRadio->AddTrack(p + nglPath("/Radian.mp3"));
       pRadio->Start();
 
       NGL_LOG("yastream", NGL_LOG_INFO, "test mode ENABLED\n");

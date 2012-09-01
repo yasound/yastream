@@ -654,13 +654,16 @@ void Radio::KillClients()
 {
   NGL_LOG("radio", NGL_LOG_INFO, "Make '%d' clients to stop relaying our data\n", mClientsPreview.size() + mClients.size());
   nglCriticalSectionGuard guard(mClientListCS);
-  for (ClientList::const_iterator it = mClientsPreview.begin(); it != mClientsPreview.end(); ++it)
+  ClientList l = mClientsPreview;
+
+  for (ClientList::const_iterator it = l.begin(); it != l.end(); ++it)
   {
     HTTPHandler* pClient = *it;
     pClient->GoOffline();
   }
 
-  for (ClientList::const_iterator it = mClients.begin(); it != mClients.end(); ++it)
+  l = mClients;
+  for (ClientList::const_iterator it = l.begin(); it != l.end(); ++it)
   {
     HTTPHandler* pClient = *it;
     pClient->GoOffline();
