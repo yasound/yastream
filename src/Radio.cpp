@@ -115,7 +115,7 @@ void Radio::Start()
 void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 {
   pClient->SetAutoPool(NULL);
-  
+
   //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p)", pClient);
   ClientList& rClients            = highQuality ? mClients : mClientsPreview;
   std::deque<Mp3Chunk*>& rChunks  = highQuality ? mChunks : mChunksPreview;
@@ -410,7 +410,7 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 
     if ((!skip && !pChunk) || !nextFramePreviewOK || !nextFrameOK)
     {
-      NGL_LOG("radio", NGL_LOG_INFO, "[skip: %c][pChunk: %p][nextFrameOK: %c / %c]\n", skip?'y':'n', pChunk, nextFramePreviewOK?'y':'n', nextFrameOK?'y':'n');
+      //NGL_LOG("radio", NGL_LOG_INFO, "[skip: %c][pChunk: %p][nextFrameOK: %c / %c]\n", skip?'y':'n', pChunk, nextFramePreviewOK?'y':'n', nextFrameOK?'y':'n');
       mOnline = LoadNextTrack();
 
       if (!mOnline)
@@ -699,7 +699,7 @@ bool Radio::LoadNextTrack()
       nglPath path = mDataPath;//"/data/glusterfs-storage/replica2all/song/";
       path += p;
 
-      NGL_LOG("radio", NGL_LOG_INFO, "new song from server: %s\n", path.GetChars());
+      //NGL_LOG("radio", NGL_LOG_INFO, "new song from server: %s\n", path.GetChars());
       if (SetTrack(path))
       {
         delete pResponse;
@@ -741,7 +741,7 @@ bool Radio::LoadNextTrack()
         return false;
       }
     }
-    NGL_LOG("radio", NGL_LOG_INFO, "Started '%s' from static track list\n", p.GetChars());
+    //NGL_LOG("radio", NGL_LOG_INFO, "Started '%s' from static track list\n", p.GetChars());
     return true;
   }
 
