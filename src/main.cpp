@@ -33,10 +33,12 @@ bool flushall = false;
 
 nuiSocketPool MainPool;
 
+int accept_count = 0;
 
 nuiHTTPHandler* HandlerDelegate(nuiSocket::SocketType sock);
 nuiHTTPHandler* HandlerDelegate(nuiSocket::SocketType sock)
 {
+  NGL_LOG("radio", NGL_LOG_INFO, "http accept #%d s=%d", accept_count++, sock);
   HTTPHandler* pClient = new HTTPHandler(sock);
   nuiNetworkHost source(0, 0, nuiNetworkHost::eTCP);
   nuiNetworkHost dest(0, 0, nuiNetworkHost::eTCP);
