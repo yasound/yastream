@@ -251,7 +251,7 @@ RedisReplyType RedisClient::PrintSendCommand(RedisRequest& rRequest)
       printf("status: %s\n", rRequest.GetStatus().GetChars());
       break;
     case eRedisInteger:
-      printf("integer: %ld\n", rRequest.GetInteger());
+      printf("integer: %lld\n", rRequest.GetInteger());
       break;
     case eRedisBulk:
       for (int i = 0; i < rRequest.GetCount(); i++)

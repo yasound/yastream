@@ -83,13 +83,13 @@ void print_trace(FILE *out, const char *file, int line)
   stack_depth = backtrace(stack_addrs, max_depth);
   stack_strings = backtrace_symbols(stack_addrs, stack_depth);
 
-  printf("Call stack from %s:%d (%d frames):\n", file, line, stack_depth);
+  printf("Call stack from %s:%d (%ld frames):\n", file, line, stack_depth);
   if (out)
-    fprintf(out, "Call stack from %s:%d (%d frames):\n", file, line, stack_depth);
+    fprintf(out, "Call stack from %s:%d (%ld frames):\n", file, line, stack_depth);
 
   for (size_t i = 1; i < stack_depth; i++)
   {
-    printf("%d: %s\n", i, stack_strings[i]);
+    printf("%ld: %s\n", i, stack_strings[i]);
     size_t sz = 200; // just a guess, template names will go much wider
     char *function = static_cast<char*>(malloc(sz));
     char *begin = 0, *end = 0;
@@ -250,7 +250,7 @@ public:
 
   virtual void OnOutput (const nglString& rText)
   {
-    syslog(LOG_ALERT, rText.GetChars());
+    syslog(LOG_ALERT, "%s", rText.GetChars());
   }
 
   virtual void OnInput  (const nglString& rLine)
