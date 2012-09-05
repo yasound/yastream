@@ -21,6 +21,9 @@
 #include <string>
 #include <fstream>
 
+// #undef NGL_OUT
+// #define NGL_OUT printf
+
 int port = 8000;
 nglString hostname = "0.0.0.0";
 nglString appurl = "https://api.yasound.com";
@@ -40,7 +43,7 @@ nuiHTTPHandler* HandlerDelegate(nuiSocket::SocketType sock);
 nuiHTTPHandler* HandlerDelegate(nuiSocket::SocketType sock)
 {
   merde++;
-  NGL_LOG("radio", NGL_LOG_INFO, "http accept count: %d   s: %d", merde, sock);
+  //NGL_LOG("radio", NGL_LOG_INFO, "http accept count: %d   s: %d", merde, sock);
   HTTPHandler* pClient = new HTTPHandler(sock);
   nuiNetworkHost source(0, 0, nuiNetworkHost::eTCP);
   nuiNetworkHost dest(0, 0, nuiNetworkHost::eTCP);
@@ -251,6 +254,7 @@ public:
   virtual void OnOutput (const nglString& rText)
   {
     syslog(LOG_ALERT, "%s", rText.GetChars());
+    //printf("%s", rText.GetChars());
   }
 
   virtual void OnInput  (const nglString& rLine)
@@ -288,15 +292,19 @@ int main(int argc, const char** argv)
 
   nuiInit(NULL);
 
+  NGL_OUT("Socket Pool Creation");
+  pMainPool = new nuiSocketPool();
+  NGL_OUT("Socket Pool OK");
+
   App->CatchSignal(SIGPIPE, SigPipeSink);
   App->CatchSignal(SIGSEGV, sig_handler);
 
-  //nglOStream* pLogOutput = nglPath("/home/customer/yastreamlog.txt").OpenWrite(false);
-  App->GetLog().SetLevel("yastream", 1000);
-  App->GetLog().SetLevel("kernel", 1000);
-  App->GetLog().SetLevel("radio", 1000);
-  //App->GetLog().AddOutput(pLogOutput);
-  App->GetLog().Dump();
+  // //nglOStream* pLogOutput = nglPath("/home/customer/yastreamlog.txt").OpenWrite(false);
+  // App->GetLog().SetLevel("yastream", 1000);
+  // App->GetLog().SetLevel("kernel", 1000);
+  // App->GetLog().SetLevel("radio", 1000);
+  // //App->GetLog().AddOutput(pLogOutput);
+  // App->GetLog().Dump();
   NGL_LOG("yastream", NGL_LOG_INFO, "yasound streamer\n");
 
   for (int i = 1; i < argc; i++)
@@ -484,20 +492,19 @@ int main(int argc, const char** argv)
 
   NGL_OUT("Radio BEGIN");
 
-  Radio::SetParams(appurl, hostname, port, datapath, redishost, redisport, redisdb);
-  Radio::FlushRedis(flushall);
-  NGL_OUT("Flush OK");
-
-  pMainPool = new nuiSocketPool();
-  NGL_OUT("Socket Pool OK");
-  HTTPHandler::SetPool(pMainPool);
-  NGL_OUT("Pool Set OK");
-
   NGL_OUT("Starting http streaming server %s:%d\n", bindhost.GetChars(), port);
   nuiHTTPServer* pServer = new HTTPServer();
   //pServer->SetClientStackSize(1024 * 1024 * 4);
   pServer->SetHandlerDelegate(HandlerDelegate);
   pServer->SetNonBlocking(true);
+
+  Radio::SetParams(appurl, hostname, port, datapath, redishost, redisport, redisdb);
+  Radio::FlushRedis(flushall);
+  NGL_OUT("Flush OK");
+
+  HTTPHandler::SetPool(pMainPool);
+  NGL_OUT("Pool Set OK");
+
 
   NGL_OUT("Ready to bind");
   if (pServer->Bind(bindhost, port) && pServer->Listen())

@@ -8,7 +8,7 @@
 #define SUBSCRIPTION_NONE "none"
 #define SUBSCRIPTION_PREMIUM "premium"
 
-#define TEMPLATE_TEST 1
+#define TEMPLATE_TEST 0
 
 void HTTPHandler::SetPool(nuiSocketPool* pPool)
 {
