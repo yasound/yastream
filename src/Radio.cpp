@@ -116,11 +116,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 {
   pClient->SetAutoPool(NULL);
 
-<<<<<<< HEAD
   //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p)", pClient);
-=======
-  NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p)", pClient);
->>>>>>> eisenbug
   ClientList& rClients            = highQuality ? mClients : mClientsPreview;
   std::deque<Mp3Chunk*>& rChunks  = highQuality ? mChunks : mChunksPreview;
 
