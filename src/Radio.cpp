@@ -116,7 +116,11 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 {
   pClient->SetAutoPool(NULL);
 
+<<<<<<< HEAD
   //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p)", pClient);
+=======
+  NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p)", pClient);
+>>>>>>> eisenbug
   ClientList& rClients            = highQuality ? mClients : mClientsPreview;
   std::deque<Mp3Chunk*>& rChunks  = highQuality ? mChunks : mChunksPreview;
 
@@ -185,7 +189,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 
 void Radio::UnregisterClient(HTTPHandler* pClient)
 {
-  //NGL_LOG("radio", NGL_LOG_INFO, "client is gone for radio %p %s\n", this, mID.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "client is gone for radio %p %s\n", this, mID.GetChars());
   nglCriticalSectionGuard guard(mClientListCS);
   mClients.remove(pClient);
   mClientsPreview.remove(pClient);
@@ -296,7 +300,6 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
   {
     HTTPHandler* pClient = ClientsToKill[i];
     NGL_LOG("radio", NGL_LOG_ERROR, "Radio::AddChunk Kill client %p\n", pClient);
-    //pClient->SetAutoPool(NULL);
     delete pClient;
   }
 
@@ -570,7 +573,7 @@ void Radio::OnStart()
         }
       }
     }
-    nglThread::MsSleep(100);
+    nglThread::MsSleep(10);
   }
 
   // tell clients to stop:
@@ -652,7 +655,7 @@ void Radio::OnStartProxy()
 
 void Radio::KillClients()
 {
-  NGL_LOG("radio", NGL_LOG_INFO, "Make '%d' clients to stop relaying our data\n", mClientsPreview.size() + mClients.size());
+  NGL_LOG("radio", NGL_LOG_INFO, "Force '%d' clients to stop relaying our data\n", mClientsPreview.size() + mClients.size());
   nglCriticalSectionGuard guard(mClientListCS);
   ClientList l = mClientsPreview;
 
@@ -921,12 +924,12 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
       }
 
       // The radio was not on the server. we need to create it:
-      NGL_LOG("radio", NGL_LOG_INFO, "Tell Redis we are creating radio %s\n", rURL.GetChars());
+      //NGL_LOG("radio", NGL_LOG_INFO, "Tell Redis we are creating radio %s\n", rURL.GetChars());
       req.SET(r, mHostname);
       reply = gRedis.SendCommand(req);
       if (reply == eRedisError)
       {
-        NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while SET: %s\n", req.GetError().GetChars());
+        //NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while SET: %s\n", req.GetError().GetChars());
       }
 
       nglString server;
@@ -964,7 +967,7 @@ void Radio::RegisterRadio(const nglString& rURL, Radio* pRadio)
   if (it != gRadios.end())
     NGL_LOG("radio", NGL_LOG_ERROR, "the radio '%s' is already registered\n", rURL.GetChars());
 
-  NGL_LOG("radio", NGL_LOG_INFO, "Registering radio '%s'\n", rURL.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "Registering radio '%s' with redis\n", rURL.GetChars());
   gRadios[rURL] = pRadio;
 }
 
@@ -1015,7 +1018,6 @@ Radio* Radio::CreateRadio(const nglString& rURL, const nglString& rHost)
 
   NGL_LOG("radio", NGL_LOG_ERROR, "Radio::CreateRadio unable to create radio\n");
   delete pRadio;
-  NGL_LOG("radio", NGL_LOG_INFO, "Radio::CreateRadio return NULL\n");
   return NULL;
 }
 

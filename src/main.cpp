@@ -21,6 +21,9 @@
 #include <string>
 #include <fstream>
 
+// #undef NGL_OUT
+// #define NGL_OUT printf
+
 int port = 8000;
 nglString hostname = "0.0.0.0";
 nglString appurl = "https://api.yasound.com";
@@ -71,104 +74,6 @@ void SigPipeSink(int signal)
   //NGL_LOG("radio", NGL_LOG_INFO, "SigPipe!\n");
 }
 
-
-
-void print_trace(FILE *out, const char *file, int line)
-{
-  const size_t max_depth = 100;
-  size_t stack_depth;
-  void *stack_addrs[max_depth];
-  char **stack_strings;
-
-  stack_depth = backtrace(stack_addrs, max_depth);
-  stack_strings = backtrace_symbols(stack_addrs, stack_depth);
-
-  printf("Call stack from %s:%d (%ld frames):\n", file, line, stack_depth);
-  if (out)
-    fprintf(out, "Call stack from %s:%d (%ld frames):\n", file, line, stack_depth);
-
-  for (size_t i = 1; i < stack_depth; i++)
-  {
-    printf("%ld: %s\n", i, stack_strings[i]);
-    size_t sz = 200; // just a guess, template names will go much wider
-    char *function = static_cast<char*>(malloc(sz));
-    char *begin = 0, *end = 0;
-
-    // find the parentheses and address offset surrounding the mangled name
-    for (char *j = stack_strings[i]; *j; ++j)
-    {
-      if (*j == '(')
-      {
-        begin = j;
-      }
-      else if (*j == '+')
-      {
-        end = j;
-      }
-    }
-
-    if (begin && end)
-    {
-      *begin++ = '\0';
-      *end = '\0';
-      // found our mangled name, now in [begin, end)
-
-      int status;
-      char *ret = abi::__cxa_demangle(begin, function, &sz, &status);
-      if (ret)
-      {
-        // return value may be a realloc() of the input
-        function = ret;
-      }
-      else
-      {
-        // demangling failed, just pretend it's a C function with no args
-        std::strncpy(function, begin, sz);
-        std::strncat(function, "()", sz);
-        function[sz-1] = '\0';
-      }
-      if (out)
-        fprintf(out, "    %s:%s\n", stack_strings[i], function);
-      printf("    %s:%s\n", stack_strings[i], function);
-    }
-    else
-    {
-      // didn't find the mangled name, just print the whole line
-      if (out)
-        fprintf(out, "    %s\n", stack_strings[i]);
-      printf("    %s\n", stack_strings[i]);
-    }
-    free(function);
-  }
-
-  free(stack_strings); // malloc()ed by backtrace_symbols
-  fflush(out);
-}
-
-
-void old_sig_handler(int sig)
-{
-  char file[1024];
-  time_t t = time(NULL);
-  struct tm* lt = localtime(&t);
-  char* tt = asctime(lt);
-  tt[strlen(tt) - 1] = '\0';
-  snprintf(file, 1024, "/data/logs/yastream/crash-%s-%s.log", hostname.GetChars(), tt);
-  for (int32 i = 0; i < strlen(file); i++)
-  {
-    if (file[i] <= ' ')
-      file[i] = '-';
-  }
-
-  printf("Dumping crashlog to file '%s'\n", file);
-  FILE* out = fopen(file, "w");
-  print_trace(out, __FILE__, __LINE__);
-  free(lt);
-  free(tt);
-  fclose(out);
-  signal(sig, &old_sig_handler);
-}
-
 void cpp_sig_handler(int sig)
 {
   std::stringstream stream;
@@ -204,7 +109,8 @@ void cpp_sig_handler(int sig)
       file << stream.str();
     file.close();
   }
-  signal(sig, &cpp_sig_handler);
+
+  exit(-1);
 }
 
 void DumpStackTrace()
@@ -251,6 +157,7 @@ public:
   virtual void OnOutput (const nglString& rText)
   {
     syslog(LOG_ALERT, "%s", rText.GetChars());
+    //printf("%s", rText.GetChars());
   }
 
   virtual void OnInput  (const nglString& rLine)
@@ -282,14 +189,18 @@ public:
 int main(int argc, const char** argv)
 {
   openlog("yastream", LOG_PID, LOG_DAEMON);
-  signal(SIGSEGV, &sig_handler);
+  signal(SIGSEGV, &cpp_sig_handler);
 
   bool daemon = false;
 
   nuiInit(NULL);
 
+  NGL_OUT("Socket Pool Creation");
+  pMainPool = new nuiSocketPool();
+  NGL_OUT("Socket Pool OK");
+
   App->CatchSignal(SIGPIPE, SigPipeSink);
-  App->CatchSignal(SIGSEGV, sig_handler);
+  App->CatchSignal(SIGSEGV, cpp_sig_handler);
 
   //nglOStream* pLogOutput = nglPath("/home/customer/yastreamlog.txt").OpenWrite(false);
   App->GetLog().SetLevel("yastream", 1000);
@@ -484,26 +395,25 @@ int main(int argc, const char** argv)
 
   NGL_OUT("Radio BEGIN");
 
-  Radio::SetParams(appurl, hostname, port, datapath, redishost, redisport, redisdb);
-  Radio::FlushRedis(flushall);
-  NGL_OUT("Flush OK");
-
-  pMainPool = new nuiSocketPool();
-  NGL_OUT("Socket Pool OK");
-  HTTPHandler::SetPool(pMainPool);
-  NGL_OUT("Pool Set OK");
-
   NGL_OUT("Starting http streaming server %s:%d\n", bindhost.GetChars(), port);
   nuiHTTPServer* pServer = new HTTPServer();
   //pServer->SetClientStackSize(1024 * 1024 * 4);
   pServer->SetHandlerDelegate(HandlerDelegate);
   pServer->SetNonBlocking(true);
 
+  Radio::SetParams(appurl, hostname, port, datapath, redishost, redisport, redisdb);
+  Radio::FlushRedis(flushall);
+  NGL_OUT("Flush OK");
+
+  HTTPHandler::SetPool(pMainPool);
+  NGL_OUT("Pool Set OK");
+
+
   NGL_OUT("Ready to bind");
   if (pServer->Bind(bindhost, port) && pServer->Listen())
   {
     NGL_OUT("Bind OK");
-    pMainPool->Add(pServer, nuiSocketPool::eStateChange);
+    pMainPool->Add(pServer, nuiSocketPool::eContinuous);
     while (pMainPool->DispatchEvents(10000) >= 0)
     {
       //NGL_LOG("radio", NGL_LOG_INFO, "beep");

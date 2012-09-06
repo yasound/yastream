@@ -8,7 +8,7 @@
 #define SUBSCRIPTION_NONE "none"
 #define SUBSCRIPTION_PREMIUM "premium"
 
-#define TEMPLATE_TEST 1
+#define TEMPLATE_TEST 0
 
 void HTTPHandler::SetPool(nuiSocketPool* pPool)
 {
@@ -165,7 +165,7 @@ uint32 FakeRange(uint32 i)
 
 bool HTTPHandler::OnBodyStart()
 {
-  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart(%s)", mURL.GetChars());
+  //NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart(%s)", mURL.GetChars());
 
 #if TEMPLATE_TEST
   if (mURL == "/")
@@ -222,8 +222,8 @@ bool HTTPHandler::OnBodyStart()
       }
     }
   }
-  if (!hq)
-    NGL_LOG("radio", NGL_LOG_WARNING, "Requesting low quality stream\n");
+//   if (!hq)
+//     NGL_LOG("radio", NGL_LOG_WARNING, "Requesting low quality stream\n");
 
 
   if (GetMethod() == "POST")
@@ -246,7 +246,7 @@ bool HTTPHandler::OnBodyStart()
 
 
 
-  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart DoneOK");
+//  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart DoneOK");
   return true;
 }
 
@@ -270,6 +270,12 @@ void HTTPHandler::AddChunk(Mp3Chunk* pChunk)
   //NGL_LOG("radio", NGL_LOG_INFO, "handle id = %d\n", pChunk->GetId());
   //pChunk->Acquire();
   BufferedSend(&pChunk->GetData()[0], pChunk->GetData().size(), false);
+  if (mOut.GetSize() > 3600 * pChunk->GetData().size())
+  {
+    // more than 30 frames? Kill!!!
+    NGL_LOG("radio", NGL_LOG_ERROR, "Killing client %p (%d bytes stalled)", this, pChunk->GetData().size());
+    Close();
+  }
   //mChunks.push_back(pChunk);
 }
 
