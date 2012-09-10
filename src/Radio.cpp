@@ -891,6 +891,7 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
   RadioMap::const_iterator it = gRadios.find(rURL);
   if (it == gRadios.end())
   {
+#if 0 // Cancel Redis check, which has the effect of removing proxy support for now
     // Ask Redis if he knows a server that handles this radio:
     nglString r;
     r.Add("radio:").Add(rURL);
@@ -940,6 +941,7 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
     {
       NGL_LOG("radio", NGL_LOG_ERROR, "redis not connected");
     }
+#endif
 
     // Create the radio!
     //NGL_LOG("radio", NGL_LOG_INFO, "Trying to create the radio '%s'\n", rURL.GetChars());
