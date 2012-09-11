@@ -64,7 +64,10 @@ bool HTTPHandler::OnURL(const nglString& rValue)
   }
   else if (mURL == "/ping")
   {
-    ReplyLine("HTTP/1.1 200 OK\n");
+    ReplyLine("HTTP/1.1 200 OK");
+    ReplyHeader("Content-Type", "text/plain");
+    ReplyLine("");
+
     nglString str;
     nglString listeners = "none yet";
     nglString anonlisteners = "none yet";
@@ -90,7 +93,12 @@ bool HTTPHandler::OnURL(const nglString& rValue)
         anonlisteners = req.GetReply(0);
     }
 
-    str.CFormat("All systems nominal (listeners: %s - anonymous: %s)", listeners.GetChars(), anonlisteners.GetChars());
+
+    nglString report;
+    nuiSocket::GetStatusReport(report);
+    
+    str.CFormat("All systems nominal (listeners: %s - anonymous: %s)\n\n", listeners.GetChars(), anonlisteners.GetChars());
+    str.Add(report.GetChars());
     ReplyLine(str);
 
     return ReplyAndClose();
