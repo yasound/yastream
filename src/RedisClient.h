@@ -116,10 +116,12 @@ public:
   //void PEXPIREAT(const nglString& key, int64 milliseconds_timestamp); ///< Set the expiration for a key as a UNIX timestamp specified in milliseconds
   void PING(); ///< Ping the server
   //void PSETEX(const nglString& key, int64 milliseconds, const nglString& value); ///< Set the value and expiration in milliseconds of a key
-  //void PSUBSCRIBE(const nglString& pattern, [const nglString& pattern ...]); ///< Listen for messages published to channels matching the given patterns
+  void PSUBSCRIBE(const nglString& pattern); ///< Listen for messages published to channels matching the given patterns
+  void PSUBSCRIBE(const std::vector<nglString>& rPatterns); ///< Listen for messages published to channels matching the given patterns
   //void PTTL(const nglString& key); ///< Get the time to live for a key in milliseconds
-  //void PUBLISH(const nglString& channel, const nglString& message); ///< Post a message to a channel
-  //void PUNSUBSCRIBE([const nglString& pattern [const nglString& pattern ...]]); ///< Stop listening for messages posted to channels matching the given patterns
+  void PUBLISH(const nglString& channel, const nglString& message); ///< Post a message to a channel
+  void PUNSUBSCRIBE(const nglString& pattern); ///< Stop listening for messages posted to channels matching the given patterns
+  void PUNSUBSCRIBE(const std::vector<nglString>& rPatterns); ///< Stop listening for messages posted to channels matching the given patterns
   void QUIT(); ///< Close the connection
   //void RANDOMKEY(); ///< Return a random key from the keyspace
   //void RENAME(const nglString& key, const nglString& newkey); ///< Rename a key
@@ -159,14 +161,16 @@ public:
   void SREM(const nglString& key, const nglString& member); ///< Remove one or more members from a set
   void SREM(const std::map<nglString, nglString>& pairs); ///< Remove one or more members from a set
   //void STRLEN(const nglString& key); ///< Get the length of the value stored in a key
-  //void SUBSCRIBE(const nglString& channel, [const nglString& channel ...]); ///< Listen for messages published to the given channels
+  void SUBSCRIBE(const nglString& channel); ///< Listen for messages published to the given channels
+  void SUBSCRIBE(const std::vector<nglString>& rChannels); ///< Listen for messages published to the given channels
   //void SUNION(const nglString& key, [const nglString& key ...]); ///< Add multiple sets
   //void SUNIONSTORE(const nglString& destination, const nglString& key, [const nglString& key ...]); ///< Add multiple sets and store the resulting set in a key
   //void SYNC(); ///< Internal command used for replication
   //void TIME(); ///< Return the current server time
   //void TTL(const nglString& key); ///< Get the time to live for a key
   //void TYPE(const nglString& key); ///< Determine the type stored at key
-  //void UNSUBSCRIBE([const nglString& channel, [const nglString& channel ...]]); ///< Stop listening for messages posted to the given channels
+  void UNSUBSCRIBE(const nglString& channel); ///< Stop listening for messages posted to the given channels
+  void UNSUBSCRIBE(const std::vector<nglString>& rChannels); ///< Stop listening for messages posted to the given channels
   //void UNWATCH(); ///< Forget about all watched keys
   //void WATCH(const nglString& key, [const nglString& key ...]); ///< Watch the given keys to determine execution of the MULTI/EXEC block
   //void ZADD(const nglString& key, int64 score, const nglString& member, [int64 score], [const nglString& member]); ///< Add one or more members to a sorted set, or update its score if it already exists

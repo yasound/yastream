@@ -421,3 +421,75 @@ void RedisRequest::SREM(const std::map<nglString, nglString>& pairs)
   }
 }
 
+
+void RedisRequest::PSUBSCRIBE(const nglString& pattern)
+{
+  StartCommand("PSUBSCRIBE");
+
+  AddArg(pattern);
+}
+
+void RedisRequest::PSUBSCRIBE(const std::vector<nglString>& rPatterns)
+{
+  StartCommand("PSUBSCRIBE");
+
+  for (int i = 0; i < rPatterns.size(); i++)
+    AddArg(rPatterns[i]);
+}
+
+void RedisRequest::PUBLISH(const nglString& channel, const nglString& message)
+{
+  StartCommand("PUBLISH");
+
+  AddArg(channel);
+  AddArg(message);
+}
+
+void RedisRequest::PUNSUBSCRIBE(const nglString& pattern)
+{
+  StartCommand("PUNSUBSCRIBE");
+
+  AddArg(pattern);
+}
+
+void RedisRequest::PUNSUBSCRIBE(const std::vector<nglString>& rPatterns)
+{
+  StartCommand("PUNSUBSCRIBE");
+
+  for (int i = 0; i < rPatterns.size(); i++)
+    AddArg(rPatterns[i]);
+}
+
+
+void RedisRequest::SUBSCRIBE(const nglString& channel)
+{
+  StartCommand("SUBSCRIBE");
+
+  AddArg(channel);
+}
+
+void RedisRequest::SUBSCRIBE(const std::vector<nglString>& rChannels)
+{
+  StartCommand("SUBSCRIBE");
+
+  for (int i = 0; i < rChannels.size(); i++)
+    AddArg(rChannels[i]);
+}
+
+void RedisRequest::UNSUBSCRIBE(const nglString& channel)
+{
+  StartCommand("UNSUBSCRIBE");
+
+  AddArg(channel);
+}
+
+void RedisRequest::UNSUBSCRIBE(const std::vector<nglString>& rChannels)
+{
+  StartCommand("UNSUBSCRIBE");
+
+  for (int i = 0; i < rChannels.size(); i++)
+    AddArg(rChannels[i]);
+    }
+
+
+
