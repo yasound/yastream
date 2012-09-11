@@ -54,6 +54,7 @@ bool HTTPHandler::OnMethod(const nglString& rValue)
 
 bool HTTPHandler::OnURL(const nglString& rValue)
 {
+  SetName(rValue);
   NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnURL(%s)", rValue.GetChars());
   if (mURL == "/favicon.ico")
   {
