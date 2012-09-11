@@ -171,7 +171,7 @@ class HTTPServer : public nuiHTTPServer
 public:
   HTTPServer()
   {
-
+    SetName("HTTP Streaming server");
   }
 
   void OnCanRead()
