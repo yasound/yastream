@@ -43,6 +43,12 @@ Radio::~Radio()
   NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() [%s]", mID.GetChars());
   delete mpSource;
   delete mpPreviewSource;
+
+  delete mpParser;
+  delete mpStream;
+  delete mpParserPreview;
+  delete mpStreamPreview;
+
   UnregisterRadio(mID);
   NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() OK");
 }
