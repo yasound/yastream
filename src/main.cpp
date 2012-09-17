@@ -186,6 +186,13 @@ public:
   }
 };
 
+class RedisThread
+{
+public:
+  RedisThread();
+
+};
+
 int main(int argc, const char** argv)
 {
   openlog("yastream", LOG_PID, LOG_DAEMON);

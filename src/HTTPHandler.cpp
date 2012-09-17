@@ -60,8 +60,7 @@ bool HTTPHandler::OnURL(const nglString& rValue)
   {
     nglString str;
     str.Format("Unable to find %s on this server", mURL.GetChars());
-    ReplyError(404, str);
-    return false; // We don't have a favicon right now...
+    return ReplyError(404, str); // We don't have a favicon right now...
   }
   else if (mURL == "/ping")
   {

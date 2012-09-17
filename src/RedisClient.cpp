@@ -9,6 +9,50 @@
 #include "nui.h"
 #include "RedisClient.h"
 
+//class RedisReply:
+RedisReply::RedisReply()
+{
+}
+
+RedisReply::~RedisReply()
+{
+}
+
+
+RedisReplyType RedisReply::GetReply() const
+{
+  return mReplyType;
+}
+
+const nglString& RedisReply::GetError() const
+{
+  return mError;
+}
+
+const nglString& RedisReply::GetStatus() const
+{
+  return mStatus;
+}
+
+int64 RedisReply::GetInteger() const
+{
+  return mInteger;
+}
+
+int64 RedisReply::GetCount() const
+{
+  return mReply.size();
+}
+
+const nglString& RedisReply::GetReply(size_t index) const
+{
+  if (mReply.size() <= index)
+    return nglString::Null;
+  return mReply[index];
+}
+
+
+
 //class RedisRequest:
 RedisRequest::RedisRequest()
 {
@@ -16,39 +60,6 @@ RedisRequest::RedisRequest()
 
 RedisRequest::~RedisRequest()
 {
-}
-
-
-RedisReplyType RedisRequest::GetReply() const
-{
-  return mReplyType;
-}
-
-const nglString& RedisRequest::GetError() const
-{
-  return mError;
-}
-
-const nglString& RedisRequest::GetStatus() const
-{
-  return mStatus;
-}
-
-int64 RedisRequest::GetInteger() const
-{
-  return mInteger;
-}
-
-int64 RedisRequest::GetCount() const
-{
-  return mReply.size();
-}
-
-const nglString& RedisRequest::GetReply(size_t index) const
-{
-  if (mReply.size() <= index)
-    return nglString::Null;
-  return mReply[index];
 }
 
 void RedisRequest::StartCommand(const nglString& rCommand)
@@ -139,6 +150,11 @@ RedisReplyType RedisClient::SendCommand(RedisRequest& rRequest)
   //printf("Redis Command:\n%s\n", str.GetChars());
   mpClient->Send(rRequest.GetCommandString());
 
+  return GetReply(rRequest);
+}
+
+RedisReplyType RedisClient::GetReply(RedisRequest& rRequest)
+{
   std::vector<uint8> data;
   nglChar cur = 0;
   data.resize(1);
@@ -161,36 +177,36 @@ RedisReplyType RedisClient::SendCommand(RedisRequest& rRequest)
       }
       else if (eolfound && cur == 10)
       {
-  //printf("redis line\n");
+        //printf("redis line\n");
         eolfound = false;
         // found a line:
         switch (line[0])
         {
-        case '+':
+          case '+':
           {
             rRequest.mStatus = line.Extract(1, line.GetLength() - 1);
-  //printf("status\n");
+            //printf("status\n");
             return rRequest.mReplyType = eRedisStatus;
           }
-          break;
-        case '-':
+            break;
+          case '-':
           {
             rRequest.mError = line.Extract(1, line.GetLength() - 1);
-  //printf("error\n");
+            //printf("error\n");
             NGL_LOG("radio", NGL_LOG_ERROR, "Redis error '%s'", rRequest.mError.GetChars());
             return rRequest.mReplyType = eRedisError;
           }
-          break;
-        case ':':
+            break;
+          case ':':
           {
-  //printf("int\n");
+            //printf("int\n");
             rRequest.mInteger = line.Extract(1, line.GetLength() - 1).GetCInt64();
             return rRequest.mReplyType = eRedisInteger;
           }
-          break;
-        case '$':
+            break;
+          case '$':
           {
-  //printf("bulk\n");
+            //printf("bulk\n");
             int64 s = line.Extract(1, line.GetLength() - 1).GetCInt64();
             if (s < 0)
             {
@@ -215,16 +231,16 @@ RedisReplyType RedisClient::SendCommand(RedisRequest& rRequest)
             if (!replycount)
               return rRequest.mReplyType = eRedisBulk;
           }
-          break;
-        case '*':
+            break;
+          case '*':
           {
             int64 s = line.Extract(1, line.GetLength() - 3).GetCInt64();
             replycount = s;
-  //printf("realbulk %lld\n", s);
+            //printf("realbulk %lld\n", s);
             if (replycount == 0)
               return rRequest.mReplyType = eRedisBulk;
           }
-          break;
+            break;
         }
         line.Wipe();
       }
@@ -234,9 +250,10 @@ RedisReplyType RedisClient::SendCommand(RedisRequest& rRequest)
       }
     }
   }
-
   return rRequest.mReplyType;
 }
+
+
 
 RedisReplyType RedisClient::PrintSendCommand(RedisRequest& rRequest)
 {
@@ -490,7 +507,7 @@ void RedisRequest::UNSUBSCRIBE(const std::vector<nglString>& rChannels)
 
   for (int i = 0; i < rChannels.size(); i++)
     AddArg(rChannels[i]);
-    }
+}
 
 
 

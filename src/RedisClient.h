@@ -20,7 +20,31 @@ enum RedisReplyType
 };
 
 
-class RedisRequest
+class RedisReply
+{
+public:
+  RedisReply();
+  virtual ~RedisReply();
+
+  // Get Replies:
+  RedisReplyType GetReply() const;
+  const nglString& GetError() const;
+  const nglString& GetStatus() const;
+  int64 GetInteger() const;
+  int64 GetCount() const;
+  const nglString& GetReply(size_t index) const;
+
+private:
+  std::vector<nglString> mReply;
+  RedisReplyType mReplyType;
+  nglString mError;
+  nglString mStatus;
+  int64 mInteger;
+
+  friend class RedisClient;
+};
+
+class RedisRequest : public RedisReply
 {
 public:
   RedisRequest();
@@ -31,14 +55,6 @@ public:
   void AddArg(const nglString& rArg);
   void AddArg(int64 arg);
   void AddArg(float arg);
-
-  // Get Replies:
-  RedisReplyType GetReply() const;
-  const nglString& GetError() const;
-  const nglString& GetStatus() const;
-  int64 GetInteger() const;
-  int64 GetCount() const;
-  const nglString& GetReply(size_t index) const;
 
   nglString GetCommandString() const;
 
@@ -190,15 +206,8 @@ public:
   //void ZSCORE(const nglString& key, const nglString& member); ///< Get the score associated with the given member in a sorted set
   //void ZUNIONSTORE(const nglString& destination, int64 numkeys, const nglString& key, [const nglString& key ...] [WEIGHTS int64 weight [int64 weight ...]] [AGGREGATE SUM|MIN|MAX]); ///< Add multiple sorted sets and store the resulting sorted set in a new key
 
-
 private:
   std::vector<nglString> mRequest;
-  std::vector<nglString> mReply;
-  RedisReplyType mReplyType;
-  nglString mError;
-  nglString mStatus;
-  int64 mInteger;
-
   friend class RedisClient;
 };
 
@@ -217,6 +226,8 @@ public:
   // Send commands:
   RedisReplyType SendCommand(RedisRequest& rRequest);
   RedisReplyType PrintSendCommand(RedisRequest& rRequest);
+
+  RedisReplyType GetReply(RedisRequest& rRequest);
 
 private:
   nuiTCPClient* mpClient;
