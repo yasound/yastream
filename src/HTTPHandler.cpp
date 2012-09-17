@@ -194,6 +194,10 @@ bool HTTPHandler::OnBodyStart()
   }
 #endif
 
+  int pos = mURL.Find('/', 1);
+  if (pos > 0)
+    mURL.Delete(pos);
+
   if (mURL.GetLength() > 40)
   {
     nglString str;
