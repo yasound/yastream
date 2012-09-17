@@ -196,7 +196,10 @@ bool HTTPHandler::OnBodyStart()
 
   int pos = mURL.Find('/', 1);
   if (pos > 0)
+  {
+    //NGL_LOG("radio", NGL_LOG_INFO, "found / at %d\n", pos);
     mURL.Delete(pos);
+  }
 
   if (mURL.GetLength() > 40)
   {
