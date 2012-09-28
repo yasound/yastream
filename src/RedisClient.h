@@ -227,7 +227,7 @@ public:
   RedisReplyType SendCommand(RedisRequest& rRequest);
   RedisReplyType PrintSendCommand(RedisRequest& rRequest);
 
-  RedisReplyType GetReply(RedisRequest& rRequest);
+  RedisReplyType GetReply(RedisReply& rReply);
 
 private:
   nuiTCPClient* mpClient;

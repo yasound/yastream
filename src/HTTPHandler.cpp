@@ -4,6 +4,7 @@
 #include "Radio.h"
 #include "nuiHTTP.h"
 #include "nuiNetworkHost.h"
+#include "nuiJson.h"
 
 #define SUBSCRIPTION_NONE "none"
 #define SUBSCRIPTION_PREMIUM "premium"
@@ -194,14 +195,7 @@ bool HTTPHandler::OnBodyStart()
   }
 #endif
 
-  int pos = mURL.Find('/', 1);
-  if (pos > 0)
-  {
-    //NGL_LOG("radio", NGL_LOG_INFO, "found / at %d\n", pos);
-    mURL.Delete(pos);
-  }
-
-  if (mURL.GetLength() > 40)
+  if (mURL.GetLength() > 100)
   {
     nglString str;
     str.Format("Unable to find %s on this server", mURL.GetChars());
@@ -216,24 +210,109 @@ bool HTTPHandler::OnBodyStart()
     return false;
 
   mRadioID = tokens[0];
+
+  // Parse parameters:
+  std::map<nglString, nglString> params;
+  if (tokens.size() >= 2)
+  {
+    nglString args = tokens[1];
+
+    NGL_LOG("radio", NGL_LOG_INFO, "url = %s, args: %s\n", mURL.GetChars(), args.GetChars());
+
+    if (args[0] == '?')
+    {
+      // Parse arguments:
+      args.DeleteLeft(1); //  remove '?'
+
+      int pos = 0;
+      while (pos < args.GetLength())
+      {
+        int next = args.Find('=', pos, args.GetLength());
+        if (next > pos)
+        {
+          nglString name = args.Extract(pos, next - pos);
+          next++;
+
+          int separator = args.Find('&', next, args.GetLength());
+
+          if (separator < 0)
+            separator = args.GetLength();
+
+          nglString value = args.Extract(next, separator - 1);
+
+          pos = separator + 1;
+
+          name.ToLower();
+          params[name] = value;
+
+          NGL_LOG("radio", NGL_LOG_INFO, "\turl param: %s = %s\n", name.GetChars(), value.GetChars());
+        }
+      }
+    }
+  }
+
   bool hq = false;
+
   if (tokens.size() > 1)
   {
-    if (tokens[1] == "hq")
+    std::map<nglString, nglString>::const_iterator it = params.find("hd");
+
+    if (it != params.end() && it->second == "1")
     {
-      // check if the user is allowed to play high quality stream
-      nglString url;
-      url.CFormat("%s/api/v1/subscription/?username=%s&api_key=%s", Radio::GetAppUrl().GetChars(), mUsername.GetChars(), mApiKey.GetChars());
-      nuiHTTPRequest request(url);
-      nuiHTTPResponse* pResponse = request.SendRequest();
-
-      if (pResponse->GetStatusCode() == 200)
+      // Check with new method (temp token):
+      it = params.find("token");
+      if (it != params.end())
       {
-        nglString subscription = pResponse->GetBodyStr();
-        hq = (subscription == SUBSCRIPTION_PREMIUM);
+        nglString token = it->second;
+        // check if the user is allowed to play high quality stream
+        nglString url;
+        url.CFormat("%s/api/v1/check_streamer_auth_token/%s", Radio::GetAppUrl().GetChars(), token.GetChars());
+        nuiHTTPRequest request(url);
+        nuiHTTPResponse* pResponse = request.SendRequest();
 
-        if (!hq)
-          NGL_LOG("radio", NGL_LOG_WARNING, "user '%s' requested high quality but did not subscribe!\n", mUsername.GetChars());
+        if (pResponse->GetStatusCode() == 200)
+        {
+          nglString body = pResponse->GetBodyStr();
+
+          nuiJson::Reader reader;
+          nuiJson::Value msg;
+
+          bool res = reader.parse(body.GetStdString(), msg);
+
+          if (!res)
+          {
+            NGL_LOG("radio", NGL_LOG_ERROR, "unable to parse token auth reply json message from django");
+            nglString str;
+            str.Format("Unable to find %s on this server", mURL.GetChars());
+            ReplyError(404, str);
+            return ReplyAndClose();
+          }
+
+          bool user_id = msg.get("user_id", nuiJson::Value()).asBool();
+          bool hd_enabled = msg.get("hd_enabled", nuiJson::Value()).asBool();
+
+          hq = hd_enabled;
+
+          if (!hq)
+            NGL_LOG("radio", NGL_LOG_WARNING, "user '%s' requested high quality but did not subscribe!\n", mUsername.GetChars());
+        }
+      }
+      else
+      {
+        // check with old method if the user is allowed to play high quality stream
+        nglString url;
+        url.CFormat("%s/api/v1/subscription/?username=%s&api_key=%s", Radio::GetAppUrl().GetChars(), mUsername.GetChars(), mApiKey.GetChars());
+        nuiHTTPRequest request(url);
+        nuiHTTPResponse* pResponse = request.SendRequest();
+
+        if (pResponse->GetStatusCode() == 200)
+        {
+          nglString subscription = pResponse->GetBodyStr();
+          hq = (subscription == SUBSCRIPTION_PREMIUM);
+
+          if (!hq)
+            NGL_LOG("radio", NGL_LOG_WARNING, "user '%s' requested high quality but did not subscribe!\n", mUsername.GetChars());
+        }
       }
     }
   }

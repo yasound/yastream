@@ -135,7 +135,7 @@ void RedisClient::Disconnect()
 
 bool RedisClient::IsConnected()
 {
-  return mpClient && mpClient->IsWriteConnected();
+  return mpClient && mpClient->IsReadConnected() && mpClient->IsWriteConnected();
 }
 
 // Send commands:
@@ -153,7 +153,7 @@ RedisReplyType RedisClient::SendCommand(RedisRequest& rRequest)
   return GetReply(rRequest);
 }
 
-RedisReplyType RedisClient::GetReply(RedisRequest& rRequest)
+RedisReplyType RedisClient::GetReply(RedisReply& rReply)
 {
   std::vector<uint8> data;
   nglChar cur = 0;
@@ -184,24 +184,24 @@ RedisReplyType RedisClient::GetReply(RedisRequest& rRequest)
         {
           case '+':
           {
-            rRequest.mStatus = line.Extract(1, line.GetLength() - 1);
+            rReply.mStatus = line.Extract(1, line.GetLength() - 1);
             //printf("status\n");
-            return rRequest.mReplyType = eRedisStatus;
+            return rReply.mReplyType = eRedisStatus;
           }
             break;
           case '-':
           {
-            rRequest.mError = line.Extract(1, line.GetLength() - 1);
+            rReply.mError = line.Extract(1, line.GetLength() - 1);
             //printf("error\n");
-            NGL_LOG("radio", NGL_LOG_ERROR, "Redis error '%s'", rRequest.mError.GetChars());
-            return rRequest.mReplyType = eRedisError;
+            NGL_LOG("radio", NGL_LOG_ERROR, "Redis error '%s'", rReply.mError.GetChars());
+            return rReply.mReplyType = eRedisError;
           }
             break;
           case ':':
           {
             //printf("int\n");
-            rRequest.mInteger = line.Extract(1, line.GetLength() - 1).GetCInt64();
-            return rRequest.mReplyType = eRedisInteger;
+            rReply.mInteger = line.Extract(1, line.GetLength() - 1).GetCInt64();
+            return rReply.mReplyType = eRedisInteger;
           }
             break;
           case '$':
@@ -210,8 +210,8 @@ RedisReplyType RedisClient::GetReply(RedisRequest& rRequest)
             int64 s = line.Extract(1, line.GetLength() - 1).GetCInt64();
             if (s < 0)
             {
-              rRequest.mReply.push_back(nglString::Null);
-              return rRequest.mReplyType = eRedisBulk;
+              rReply.mReply.push_back(nglString::Null);
+              return rReply.mReplyType = eRedisBulk;
             }
 
             std::vector<uint8> d;
@@ -222,14 +222,14 @@ RedisReplyType RedisClient::GetReply(RedisRequest& rRequest)
             nglString res((const nglChar*)&d[0], d.size(), eEncodingInternal);
             if (res == "$-1")
               res.Nullify();
-            rRequest.mReply.push_back(res);
+            rReply.mReply.push_back(res);
             d.resize(2);
             res = mpClient->Receive(d);
             NGL_ASSERT(d[0] == 13 && d[1] == 10);
 
             replycount--;
             if (!replycount)
-              return rRequest.mReplyType = eRedisBulk;
+              return rReply.mReplyType = eRedisBulk;
           }
             break;
           case '*':
@@ -238,7 +238,7 @@ RedisReplyType RedisClient::GetReply(RedisRequest& rRequest)
             replycount = s;
             //printf("realbulk %lld\n", s);
             if (replycount == 0)
-              return rRequest.mReplyType = eRedisBulk;
+              return rReply.mReplyType = eRedisBulk;
           }
             break;
         }
@@ -250,7 +250,7 @@ RedisReplyType RedisClient::GetReply(RedisRequest& rRequest)
       }
     }
   }
-  return rRequest.mReplyType;
+  return rReply.mReplyType;
 }
 
 
