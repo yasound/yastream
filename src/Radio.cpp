@@ -259,10 +259,18 @@ nglPath Radio::GetPreviewPath(const nglPath& rOriginalPath)
 {
   nglString ext = rOriginalPath.GetExtension();
   nglString base = rOriginalPath.GetRemovedExtension();
-  base += "_preview64";
+  base += "_lq";
   base += ".";
   base += ext;
   nglPath previewPath(base);
+  if (!previewPath.Exists())
+  {
+    // Try old file:
+    base = rOriginalPath.GetRemovedExtension();
+    base += "_preview64";
+    base += ".";
+    base += ext;
+  }
   //NGL_LOG("radio", NGL_LOG_INFO, "preview path %s\n", previewPath.GetPathName().GetChars());
   return previewPath;
 }
@@ -377,52 +385,45 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
 double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 {
   double duration = 0;
-  for (int32 i = 0; i < 13 && mOnline; i++)
+  bool nextFrameOK = true;
+  bool nextFramePreviewOK = true;
+
+  Mp3Chunk* pChunk = mpParser->GetChunk();
+  Mp3Chunk* pChunkPreview = mpParserPreview->GetChunk();
+
+  if (pChunk)
   {
-    bool nextFrameOK = true;
-    bool nextFramePreviewOK = true;
-    bool skip = i == 12;
-    Mp3Chunk* pChunk = NULL;
-    if (!skip)
-      pChunk = mpParser->GetChunk();
+    chunk_count++;
+    //if (!(chunk_count % 100))
+      //NGL_LOG("radio", NGL_LOG_INFO, "%ld chunks\n", chunk_count);
 
-    Mp3Chunk* pChunkPreview = mpParserPreview->GetChunk();
+    // Store this chunk locally for incomming connections and push it to current clients:
+    AddChunk(pChunk, false);
+  }
 
-    if (pChunk)
+  if (pChunkPreview)
+  {
+    chunk_count_preview++;
+    //if (!(chunk_count_preview % 100))
+    //NGL_LOG("radio", NGL_LOG_INFO, "%ld chunks preview\n", chunk_count_preview);
+
+    // Store this chunk locally for incomming connections and push it to current clients:
+    AddChunk(pChunkPreview, true);
+    duration += pChunkPreview->GetDuration();
+  }
+
+  nextFrameOK = mpParser->GoToNextFrame();
+  nextFramePreviewOK = mpParserPreview->GoToNextFrame();
+
+  if (!pChunk || !nextFramePreviewOK || !nextFrameOK)
+  {
+    //NGL_LOG("radio", NGL_LOG_INFO, "[skip: %c][pChunk: %p][nextFrameOK: %c / %c]\n", skip?'y':'n', pChunk, nextFramePreviewOK?'y':'n', nextFrameOK?'y':'n');
+    mOnline = LoadNextTrack();
+
+    if (!mOnline)
     {
-      chunk_count++;
-      //if (!(chunk_count % 100))
-        //NGL_LOG("radio", NGL_LOG_INFO, "%ld chunks\n", chunk_count);
-
-      // Store this chunk locally for incomming connections and push it to current clients:
-      AddChunk(pChunk, false);
-    }
-
-    if (pChunkPreview)
-    {
-      chunk_count_preview++;
-      //if (!(chunk_count_preview % 100))
-      //NGL_LOG("radio", NGL_LOG_INFO, "%ld chunks preview\n", chunk_count_preview);
-
-      // Store this chunk locally for incomming connections and push it to current clients:
-      AddChunk(pChunkPreview, true);
-      duration += pChunkPreview->GetDuration();
-    }
-
-    if (!skip)
-      nextFrameOK = mpParser->GoToNextFrame();
-    nextFramePreviewOK = mpParserPreview->GoToNextFrame();
-
-    if ((!skip && !pChunk) || !nextFramePreviewOK || !nextFrameOK)
-    {
-      //NGL_LOG("radio", NGL_LOG_INFO, "[skip: %c][pChunk: %p][nextFrameOK: %c / %c]\n", skip?'y':'n', pChunk, nextFramePreviewOK?'y':'n', nextFrameOK?'y':'n');
-      mOnline = LoadNextTrack();
-
-      if (!mOnline)
-      {
-        NGL_LOG("radio", NGL_LOG_ERROR, "Error while getting next song for radio '%s'. Shutting down...\n", mID.GetChars());
-        return 0;
-      }
+      NGL_LOG("radio", NGL_LOG_ERROR, "Error while getting next song for radio '%s'. Shutting down...\n", mID.GetChars());
+      return 0;
     }
   }
 
