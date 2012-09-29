@@ -79,13 +79,13 @@ void SigPipeSink(int signal)
   //NGL_LOG("radio", NGL_LOG_INFO, "SigPipe!\n");
 }
 
-void cpp_sig_handler(int sig)
+void DumpStackTrace()
 {
-  std::stringstream stream;
   void * array[25];
   int nSize = backtrace(array, 25);
   char ** symbols = backtrace_symbols(array, nSize);
-  for (unsigned int i = 0; i < nSize; i++)
+
+  for (int i = 0; i < nSize; i++)
   {
     int status;
     char *realname;
@@ -99,34 +99,10 @@ void cpp_sig_handler(int sig)
       realname = abi::__cxa_demangle(symbol.c_str(), 0, 0, &status);
     }
     if (realname != NULL)
-      stream << realname << std::endl;
+      syslog(LOG_ERR, "[%d] %s (%p)\n", i, realname, array[i]);
     else
-      stream << symbols[i] << std::endl;
+      syslog(LOG_ERR, "[%d] %s (%p)\n", i, symbols[i], array[i]);
     free(realname);
-  }
-  free(symbols);
-  std::cerr << stream.str();
-  std::cout << stream.str();
-  std::ofstream file("/tmp/error.log");
-  if (file.is_open())
-  {
-    if (file.good())
-      file << stream.str();
-    file.close();
-  }
-
-  exit(-1);
-}
-
-void DumpStackTrace()
-{
-  void * array[25];
-  int nSize = backtrace(array, 25);
-  char ** symbols = backtrace_symbols(array, nSize);
-
-  for (int i = 0; i < nSize; i++)
-  {
-    syslog(LOG_ERR, "[%d] %s (%p)\n", i, symbols[i], array[i]);
   }
 
   free(symbols);
@@ -420,7 +396,7 @@ private:
 int main(int argc, const char** argv)
 {
   openlog("yastream", LOG_PID, LOG_DAEMON);
-  signal(SIGSEGV, &cpp_sig_handler);
+  signal(SIGSEGV, &sig_handler);
 
   bool daemon = false;
 
@@ -431,7 +407,7 @@ int main(int argc, const char** argv)
   NGL_OUT("Socket Pool OK");
 
   App->CatchSignal(SIGPIPE, SigPipeSink);
-  App->CatchSignal(SIGSEGV, cpp_sig_handler);
+  App->CatchSignal(SIGSEGV, sig_handler);
 
   //nglOStream* pLogOutput = nglPath("/home/customer/yastreamlog.txt").OpenWrite(false);
   App->GetLog().SetLevel("yastream", 1000);
