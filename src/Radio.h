@@ -4,7 +4,8 @@
 #include "nui.h"
 #include "Mp3Parser/Mp3Parser.h"
 #include "nglReaderWriterLock.h"
-#include "RedisClient.h"
+#include "nuiTCPClient.h"
+#include "nuiNetworkHost.h"
 
 class HTTPHandler;
 
@@ -22,7 +23,7 @@ public:
   void OnStartProxy();
 
   static Radio* GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ);
-  static void SetParams(const nglString& appurl, const nglString& hostname, int port, const nglPath& rDataPath, const nglString& rRedisHost, int RedisPort, int RedisDB);
+  static void SetParams(const nglString& appurl, const nglString& hostname, int port, const nglPath& rDataPath);
 
   void AddTrack(const nglPath& rPath);
 
@@ -32,8 +33,6 @@ public:
   static void AddRadioSource(const nglString& rID, const nglString& rURL);
   static void DelRadioSource(const nglString& rID, const nglString& rURL);
 
-  static void FlushRedis(bool FlushAll);
-
   static const nglString& GetHostName()
   {
     return mHostname;
@@ -42,12 +41,6 @@ public:
   static const nglString& GetAppUrl()
   {
     return mAppUrl;
-  }
-
-  static RedisReplyType SendRedisCommand(RedisRequest& rRequest)
-  {
-    InitRedis();
-    return gRedis.SendCommand(rRequest);
   }
 
   void SetNetworkSource(nuiTCPClient* pHQSource, nuiTCPClient* pLQSource);
@@ -97,16 +90,10 @@ private:
   static nglCriticalSection gCS;
   typedef std::map<nglString, Radio*> RadioMap;
   static RadioMap gRadios;
-  static RedisClient gRedis;
   static nglString mHostname;
   static nglString mAppUrl;
   static int mPort;
   static nglPath mDataPath;
-  static nglString mRedisHost;
-  static int mRedisPort;
-  static int mRedisDB;
-
-  static void InitRedis();
 
 
   static Radio* CreateRadio(const nglString& rURL, const nglString& rHost);

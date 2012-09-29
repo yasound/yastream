@@ -70,35 +70,11 @@ bool HTTPHandler::OnURL(const nglString& rValue)
     ReplyLine("");
 
     nglString str;
-    nglString listeners = "none yet";
-    nglString anonlisteners = "none yet";
-
-    {
-      nglString id("listeners:");
-      id += Radio::GetHostName();
-      RedisRequest req;
-      req.GET(id);
-      Radio::SendRedisCommand(req);
-      if (req.GetCount() > 0)
-        listeners = req.GetReply(0);
-    }
-
-    {
-      nglString id("anonymouslisteners:");
-      id += Radio::GetHostName();
-      RedisRequest req;
-      req.GET(id);
-      Radio::SendRedisCommand(req);
-
-      if (req.GetCount() > 0)
-        anonlisteners = req.GetReply(0);
-    }
-
 
     nglString report;
     nuiSocket::GetStatusReport(report);
     
-    str.CFormat("All systems nominal (listeners: %s - anonymous: %s)\n\n", listeners.GetChars(), anonlisteners.GetChars());
+    str.CFormat("All systems nominal (listeners: ? - anonymous: ?)\n\n");
     str.Add(report.GetChars());
     ReplyLine(str);
 
@@ -414,33 +390,11 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
 
   if (status == eStartListen)
   {
-    { // Store the stats in redis:
-      nglString id("listeners:");
-      if (mApiKey.IsEmpty())
-        id = "anonymouslisteners:";
-      id += Radio::GetHostName();
-
-      RedisRequest req;
-      req.INCR(id);
-      Radio::SendRedisCommand(req);
-    }
-
     //NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus Start Listen");
     mStartTime = nglTime();
   }
   else if (status == eStopListen)
   {
-    { // Store the stats in redis:
-      nglString id("listeners:");
-      if (mApiKey.IsEmpty())
-        id = "anonymouslisteners:";
-      id += Radio::GetHostName();
-
-      RedisRequest req;
-      req.DECR(id);
-      Radio::SendRedisCommand(req);
-    }
-
     //NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus Stop Listen");
     nglTime now;
     nglTime duration = now - mStartTime;

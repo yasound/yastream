@@ -26,6 +26,9 @@
 // #undef NGL_OUT
 // #define NGL_OUT printf
 
+#define ENABLE_REDIS_THREADS 0
+
+
 int port = 8000;
 nglString hostname = "0.0.0.0";
 nglString appurl = "https://api.yasound.com";
@@ -182,6 +185,7 @@ public:
     if (pClient)
     {
       pClient->SetNonBlocking(true);
+      pClient->SetMaxIdleTime(10);
       //pMainPool->Add(pClient, nuiSocketPool::eStateChange);
       pClient->SetAutoPool(pMainPool);
     }
@@ -628,13 +632,13 @@ int main(int argc, const char** argv)
   pServer->SetHandlerDelegate(HandlerDelegate);
   pServer->SetNonBlocking(true);
 
-  Radio::SetParams(appurl, hostname, port, datapath, redishost, redisport, redisdb);
-  Radio::FlushRedis(flushall);
+  Radio::SetParams(appurl, hostname, port, datapath);
   NGL_OUT("Flush OK");
 
   HTTPHandler::SetPool(pMainPool);
   NGL_OUT("Pool Set OK");
 
+#if ENABLE_REDIS_THREADS
   RedisThread* pRedisThreadIn = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::MessagePump);
   pRedisThreadIn->Start();
   //pRedisThread->PumpMessages();
@@ -643,6 +647,7 @@ int main(int argc, const char** argv)
   pRedisThreadOut->Start();
 
   pRedisThreadOut->RegisterStreamer();
+#endif
 
   NGL_OUT("Ready to bind");
   if (pServer->Bind(bindhost, port) && pServer->Listen())
@@ -660,8 +665,10 @@ int main(int argc, const char** argv)
   }
 
   NGL_OUT("DONE OK");
+#if ENABLE_REDIS_THREADS
   delete pRedisThreadIn;
   delete pRedisThreadOut;
+#endif
 
   delete pServer;
   delete pMainPool;
