@@ -200,23 +200,19 @@ bool HTTPHandler::OnBodyStart()
       // Parse arguments:
       args.DeleteLeft(1); //  remove '?'
 
-      int pos = 0;
-      while (pos < args.GetLength())
+      std::vector<nglString> arguments;
+      args.Tokenize(arguments, '&');
+      for (int i = 0; i < arguments.size(); i++)
       {
-        int next = args.Find('=', pos, args.GetLength());
-        if (next > pos)
+        nglString arg = arguments[i];
+
+        int next = arg.Find('=');
+        if (next > 0)
         {
-          nglString name = args.Extract(pos, next - pos);
+          nglString name = arg.Extract(0, next);
           next++;
 
-          int separator = args.Find('&', next, args.GetLength());
-
-          if (separator < 0)
-            separator = args.GetLength();
-
-          nglString value = args.Extract(next, separator - 1);
-
-          pos = separator + 1;
+          nglString value = arg.Extract(next);
 
           name.ToLower();
           params[name] = value;
