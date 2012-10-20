@@ -6,6 +6,7 @@
 #include "nglReaderWriterLock.h"
 #include "nuiTCPClient.h"
 #include "nuiNetworkHost.h"
+#include "RedisThread.h"
 
 class HTTPHandler;
 
@@ -44,6 +45,8 @@ public:
   }
 
   void SetNetworkSource(nuiTCPClient* pHQSource, nuiTCPClient* pLQSource);
+
+  static void HandleRedisMessage(const RedisReply& rReply);
 private:
   void RegisterClient(HTTPHandler* pClient, bool highQuality);
   bool SetTrack(const nglPath& rPath);
@@ -99,5 +102,13 @@ private:
   static Radio* CreateRadio(const nglString& rURL, const nglString& rHost);
   static void RegisterRadio(const nglString& rURL, Radio* pRadio);
   static void UnregisterRadio(const nglString& rURL);
+
+
+  static RedisThread* mpRedisThreadIn;
+  static RedisThread* mpRedisThreadOut;
+
+  static void StartRedis();
+  static void StopRedis();
+
 };
 

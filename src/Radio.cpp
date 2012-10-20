@@ -4,9 +4,13 @@
 #include "Radio.h"
 #include "HTTPHandler.h"
 #include "nuiHTTP.h"
+#include "nuiJson.h"
 
 #define IDEAL_BUFFER_SIZE 3.0
 #define MAX_BUFFER_SIZE 4.0
+
+#define ENABLE_REDIS_THREADS 0
+
 
 ///////////////////////////////////////////////////
 //class Radio
@@ -897,4 +901,80 @@ bool Radio::IsOnline() const
   nglCriticalSectionGuard guard(gCS);
   return mOnline;
 }
+
+void Radio::HandleRedisMessage(const RedisReply& rReply)
+{
+  nglString str = rReply.GetReply(1);
+  nuiJson::Reader reader;
+  nuiJson::Value msg;
+
+  bool res = reader.parse(str.GetStdString(), msg);
+
+  if (!res)
+  {
+    NGL_LOG("radio", NGL_LOG_ERROR, "unable to parse json message from scheduler");
+    return;
+  }
+
+  nglString type = msg.get("type", nuiJson::Value()).asString();
+  if (type == "radio_started")
+  {
+    nglString uuid = msg.get("radio_uuid", nuiJson::Value()).asString();
+  }
+  else if (type == "radio_exists")
+  {
+    nglString uuid = msg.get("radio_uuid", nuiJson::Value()).asString();
+    nglString master_streamer = msg.get("master_streamer", nuiJson::Value()).asString();
+  }
+  else if (type == "radio_stopped")
+  {
+    nglString uuid = msg.get("radio_uuid", nuiJson::Value()).asString();
+  }
+  else if (type == "play")
+  {
+    nglString uuid = msg.get("radio_uuid", nuiJson::Value()).asString();
+    nglString filename = msg.get("filename", nuiJson::Value()).asString();
+    double delay = msg.get("delay", nuiJson::Value()).asDouble();
+    double offset = msg.get("offset", nuiJson::Value()).asDouble();
+    double crossfade = msg.get("crossfade_duration", nuiJson::Value()).asDouble();
+  }
+  else if (type == "user_authentication")
+  {
+    nglString uuid = msg.get("user_id", nuiJson::Value()).asString();
+    bool hd = msg.get("hd", nuiJson::Value()).asBool();
+    nglString auth_token = msg.get("auth_token", nuiJson::Value()).asString();
+    nglString username = msg.get("username", nuiJson::Value()).asString();
+    nglString api_key = msg.get("api_key", nuiJson::Value()).asString();
+  }
+  else if (type == "ping")
+  {
+
+  }
+
+}
+
+
+RedisThread* Radio::mpRedisThreadIn = NULL;
+RedisThread* Radio::mpRedisThreadOut = NULL;
+
+void Radio::StartRedis()
+{
+#if ENABLE_REDIS_THREADS
+  mpRedisThreadIn = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::MessagePump);
+  pRedisThreadIn->Start();
+  //pRedisThread->PumpMessages();
+
+  mpRedisThreadOut = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::Broadcaster);
+  pRedisThreadOut->Start();
+
+  pRedisThreadOut->RegisterStreamer();
+#endif
+}
+
+void Radio::StopRedis()
+{
+  delete mpRedisThreadIn;
+  delete mpRedisThreadOut;
+}
+
 

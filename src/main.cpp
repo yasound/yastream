@@ -26,8 +26,6 @@
 // #undef NGL_OUT
 // #define NGL_OUT printf
 
-#define ENABLE_REDIS_THREADS 0
-
 
 int port = 8000;
 nglString hostname = "0.0.0.0";
@@ -48,7 +46,7 @@ nuiHTTPHandler* HandlerDelegate(nuiSocket::SocketType sock);
 nuiHTTPHandler* HandlerDelegate(nuiSocket::SocketType sock)
 {
   merde++;
-  NGL_LOG("radio", NGL_LOG_INFO, "http accept count: %d   s: %d", merde, sock);
+  //NGL_LOG("radio", NGL_LOG_INFO, "http accept count: %d   s: %d", merde, sock);
   HTTPHandler* pClient = new HTTPHandler(sock);
   nuiNetworkHost source(0, 0, nuiNetworkHost::eTCP);
   nuiNetworkHost dest(0, 0, nuiNetworkHost::eTCP);
@@ -168,230 +166,6 @@ public:
   }
 };
 
-class RedisThread : public nglThread
-{
-public:
-  enum Mode
-  {
-    MessagePump,
-    Broadcaster
-  };
-
-  RedisThread(const nuiNetworkHost& rHost, Mode mode)
-  : mHost(rHost), mMode(mode)
-  {
-    mpClient = new RedisClient();
-    mOnline = true;
-  }
-
-  virtual ~RedisThread()
-  {
-    delete mpClient;
-  }
-
-  void Stop()
-  {
-    mOnline = false;
-    mpClient->Disconnect();
-  }
-
-  void OnStart()
-  {
-    switch (mMode)
-    {
-      case MessagePump:
-        PumpMessages();
-        break;
-      case Broadcaster:
-        Broadcast();
-        break;
-    }
-  }
-
-  void Broadcast()
-  {
-    while (mOnline)
-    {
-      nuiNotification* pNotif = mMessageQueue.Get(1);
-      if (pNotif)
-      {
-        if (pNotif->GetName() == "RedisRequest")
-        {
-          nuiToken<RedisRequest>* pToken = dynamic_cast<nuiToken<RedisRequest>*>(pNotif->GetToken());
-          if (pToken)
-          {
-            RedisRequest Request = pToken->Token;
-
-            int t = 1;
-            // Make sure we're connected to redis:
-            while  (mOnline && !mpClient->IsConnected())
-            {
-              NGL_LOG("radio", NGL_LOG_INFO, "Redis message pump connection\n");
-              if (mpClient->Connect(mHost) && mpClient->IsConnected())
-              {
-                NGL_LOG("radio", NGL_LOG_INFO, "Redis message broadcaster connected\n");
-              }
-              else
-              {
-                nglThread::MsSleep(t);
-                t = MIN(10000, t * 2);
-              }
-            }
-
-            // Send request:
-            mpClient->SendCommand(Request);
-          }
-        }
-        pNotif->Release();
-      }
-    }
-  }
-
-  void PumpMessages()
-  {
-    while (mOnline)
-    {
-      int t = 1;
-      while  (mOnline && !mpClient->IsConnected())
-      {
-        NGL_LOG("radio", NGL_LOG_INFO, "Redis message pump connection\n");
-        if (mpClient->Connect(mHost) && mpClient->IsConnected())
-        {
-          NGL_LOG("radio", NGL_LOG_INFO, "Redis message pump connected\n");
-          RedisRequest request;
-          request.SUBSCRIBE("yascheduler");
-          RedisReplyType res = mpClient->SendCommand(request);
-          if (res == eRedisError)
-          {
-            NGL_LOG("radio", NGL_LOG_INFO, "Redis message unable to subscribe to yascheduler channel\n");
-            mpClient->Disconnect();
-          }
-          else
-          {
-            NGL_LOG("radio", NGL_LOG_INFO, "Redis message subscribed to yascheduler channel\n");
-          }
-        }
-        else
-        {
-          nglThread::MsSleep(t);
-          t = MIN(10000, t * 2);
-        }
-      }
-
-      if (mOnline && mpClient->IsConnected())
-      {
-        RedisReply reply;
-        RedisReplyType res = mpClient->GetReply(reply);
-
-        if (res == eRedisBulk)
-        {
-//          nglString str;
-//          for (int i = 0; i < reply.GetCount(); i++)
-//            str.Add("'").Add(reply.GetReply(i)).Add("'  ");
-//
-//          NGL_LOG("radio", NGL_LOG_INFO, "Redis message: %s\n", str.GetChars());
-          HandleMessage(reply);
-        }
-        else
-        {
-          NGL_LOG("radio", NGL_LOG_INFO, "Redis reply\n");
-        }
-      }
-    }
-    NGL_LOG("radio", NGL_LOG_INFO, "Redis message offline\n");
- }
-
-
-  void HandleMessage(const RedisReply& rReply)
-  {
-    nglString str = rReply.GetReply(1);
-    nuiJson::Reader reader;
-    nuiJson::Value msg;
-
-    bool res = reader.parse(str.GetStdString(), msg);
-
-    if (!res)
-    {
-      NGL_LOG("radio", NGL_LOG_ERROR, "unable to parse json message from scheduler");
-      return;
-    }
-
-    nglString type = msg.get("type", nuiJson::Value()).asString();
-    if (type == "radio_started")
-    {
-      nglString uuid = msg.get("radio_uuid", nuiJson::Value()).asString();
-    }
-    else if (type == "radio_exists")
-    {
-      nglString uuid = msg.get("radio_uuid", nuiJson::Value()).asString();
-      nglString master_streamer = msg.get("master_streamer", nuiJson::Value()).asString();
-    }
-    else if (type == "radio_stopped")
-    {
-      nglString uuid = msg.get("radio_uuid", nuiJson::Value()).asString();
-    }
-    else if (type == "play")
-    {
-      nglString uuid = msg.get("radio_uuid", nuiJson::Value()).asString();
-      nglString filename = msg.get("filename", nuiJson::Value()).asString();
-      double delay = msg.get("delay", nuiJson::Value()).asDouble();
-      double offset = msg.get("offset", nuiJson::Value()).asDouble();
-      double crossfade = msg.get("crossfade_duration", nuiJson::Value()).asDouble();
-    }
-    else if (type == "user_authentication")
-    {
-      nglString uuid = msg.get("user_id", nuiJson::Value()).asString();
-      bool hd = msg.get("hd", nuiJson::Value()).asBool();
-      nglString auth_token = msg.get("auth_token", nuiJson::Value()).asString();
-      nglString username = msg.get("username", nuiJson::Value()).asString();
-      nglString api_key = msg.get("api_key", nuiJson::Value()).asString();
-    }
-    else if (type == "ping")
-    {
-
-    }
-
-  }
-
-  bool Post(const RedisRequest& request)
-  {
-    nuiToken<RedisRequest>* pToken = new nuiToken<RedisRequest>(request);
-    nuiNotification* notif = new nuiNotification("RedisRequest");
-    notif->Acquire();
-    notif->SetToken(pToken);
-    return mMessageQueue.Post(notif);
-  }
-
-  bool Post(nuiNotification* notif)
-  {
-    return mMessageQueue.Post(notif);
-  }
-
-  void Post(const nuiJson::Value& val)
-  {
-    RedisRequest request;
-    nuiJson::FastWriter writer;
-    nglString json = writer.write(val);
-    request.PUBLISH("yascheduler", json);
-
-    Post(request);
-  }
-
-  // API
-  void RegisterStreamer()
-  {
-    nuiJson::Value val;
-    val["type"] = "register_streamer";
-    Post(val);
-  }
-
-private:
-  RedisClient* mpClient;
-  bool mOnline;
-  nuiNetworkHost mHost;
-  Mode mMode;
-  nuiMessageQueue mMessageQueue;
-};
 
 int main(int argc, const char** argv)
 {
@@ -614,16 +388,6 @@ int main(int argc, const char** argv)
   HTTPHandler::SetPool(pMainPool);
   NGL_OUT("Pool Set OK");
 
-#if ENABLE_REDIS_THREADS
-  RedisThread* pRedisThreadIn = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::MessagePump);
-  pRedisThreadIn->Start();
-  //pRedisThread->PumpMessages();
-
-  RedisThread* pRedisThreadOut = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::Broadcaster);
-  pRedisThreadOut->Start();
-
-  pRedisThreadOut->RegisterStreamer();
-#endif
 
   NGL_OUT("Ready to bind");
   if (pServer->Bind(bindhost, port) && pServer->Listen())
@@ -641,10 +405,6 @@ int main(int argc, const char** argv)
   }
 
   NGL_OUT("DONE OK");
-#if ENABLE_REDIS_THREADS
-  delete pRedisThreadIn;
-  delete pRedisThreadOut;
-#endif
 
   delete pServer;
   delete pMainPool;

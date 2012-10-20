@@ -15,6 +15,7 @@
 		E5C3FA2D14BDA7EA00F4FB96 /* Mp3Frame.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E5C3FA2714BDA7EA00F4FB96 /* Mp3Frame.cpp */; };
 		E5C3FA2E14BDA7EA00F4FB96 /* Mp3Header.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E5C3FA2914BDA7EA00F4FB96 /* Mp3Header.cpp */; };
 		E5C3FA2F14BDA7EA00F4FB96 /* Mp3Parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E5C3FA2B14BDA7EA00F4FB96 /* Mp3Parser.cpp */; };
+		E5C970BD16330FA500C4F352 /* RedisThread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E5C970BB16330FA500C4F352 /* RedisThread.cpp */; };
 		E5D2CF22142A2A3100139E27 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E5D2CF21142A2A3100139E27 /* main.cpp */; };
 		E5D2CF26142A2B1200139E27 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E5D2CF25142A2B1200139E27 /* CoreFoundation.framework */; };
 		E5D2CF34142A2B6E00139E27 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E5D2CF29142A2B6E00139E27 /* Cocoa.framework */; };
@@ -140,6 +141,8 @@
 		E5C3FA2A14BDA7EA00F4FB96 /* Mp3Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp3Header.h; sourceTree = "<group>"; };
 		E5C3FA2B14BDA7EA00F4FB96 /* Mp3Parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Mp3Parser.cpp; sourceTree = "<group>"; };
 		E5C3FA2C14BDA7EA00F4FB96 /* Mp3Parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mp3Parser.h; sourceTree = "<group>"; };
+		E5C970BB16330FA500C4F352 /* RedisThread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = RedisThread.cpp; path = src/RedisThread.cpp; sourceTree = "<group>"; };
+		E5C970BC16330FA500C4F352 /* RedisThread.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = RedisThread.h; path = src/RedisThread.h; sourceTree = "<group>"; };
 		E5D2CF21142A2A3100139E27 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = src/main.cpp; sourceTree = "<group>"; };
 		E5D2CF25142A2B1200139E27 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		E5D2CF29142A2B6E00139E27 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -240,6 +243,8 @@
 				E5D2CF21142A2A3100139E27 /* main.cpp */,
 				E5429808150E47A2005A8CB3 /* RedisClient.h */,
 				E5429809150E47BC005A8CB3 /* RedisClient.cpp */,
+				E5C970BB16330FA500C4F352 /* RedisThread.cpp */,
+				E5C970BC16330FA500C4F352 /* RedisThread.h */,
 			);
 			name = src;
 			sourceTree = "<group>";
@@ -389,6 +394,7 @@
 				E573203D14BDE0E0008D488E /* Radio.cpp in Sources */,
 				E573204014BDE591008D488E /* HTTPHandler.cpp in Sources */,
 				E542980A150E47BC005A8CB3 /* RedisClient.cpp in Sources */,
+				E5C970BD16330FA500C4F352 /* RedisThread.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
