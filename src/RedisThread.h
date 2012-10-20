@@ -10,7 +10,7 @@
 
 #include "nui.h"
 #include "RedisClient.h"
-#include "nuiJSON.h"
+#include "nuiJson.h"
 
 class RedisThread : public nglThread
 {

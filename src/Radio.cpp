@@ -967,12 +967,16 @@ void Radio::StartRedis()
   mpRedisThreadOut = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::Broadcaster);
   mpRedisThreadOut->Start();
 
-  mpRedisThreadOut->RegisterStreamer();
+  mpRedisThreadOut->RegisterStreamer(mHostname);
 #endif
 }
 
 void Radio::StopRedis()
 {
+#if ENABLE_REDIS_THREADS
+  mpRedisThreadOut->UnregisterStreamer(mHostname);
+#endif
+
   delete mpRedisThreadIn;
   delete mpRedisThreadOut;
   mpRedisThreadIn = NULL;

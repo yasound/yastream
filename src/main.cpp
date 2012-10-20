@@ -385,6 +385,8 @@ int main(int argc, const char** argv)
   Radio::SetParams(appurl, hostname, port, datapath);
   NGL_OUT("Flush OK");
 
+  Radio::StartRedis();
+
   HTTPHandler::SetPool(pMainPool);
   NGL_OUT("Pool Set OK");
 
@@ -405,6 +407,8 @@ int main(int argc, const char** argv)
   }
 
   NGL_OUT("DONE OK");
+
+  Radio::StopRedis();
 
   delete pServer;
   delete pMainPool;
