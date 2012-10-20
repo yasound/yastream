@@ -9,7 +9,7 @@
 #define IDEAL_BUFFER_SIZE 3.0
 #define MAX_BUFFER_SIZE 4.0
 
-#define ENABLE_REDIS_THREADS 0
+#define ENABLE_REDIS_THREADS 1
 
 
 ///////////////////////////////////////////////////
@@ -961,13 +961,13 @@ void Radio::StartRedis()
 {
 #if ENABLE_REDIS_THREADS
   mpRedisThreadIn = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::MessagePump);
-  pRedisThreadIn->Start();
+  mpRedisThreadIn->Start();
   //pRedisThread->PumpMessages();
 
   mpRedisThreadOut = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::Broadcaster);
-  pRedisThreadOut->Start();
+  mpRedisThreadOut->Start();
 
-  pRedisThreadOut->RegisterStreamer();
+  mpRedisThreadOut->RegisterStreamer();
 #endif
 }
 
@@ -975,6 +975,8 @@ void Radio::StopRedis()
 {
   delete mpRedisThreadIn;
   delete mpRedisThreadOut;
+  mpRedisThreadIn = NULL;
+  mpRedisThreadOut = NULL;
 }
 
 
