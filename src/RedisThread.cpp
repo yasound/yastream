@@ -166,12 +166,98 @@ void RedisThread::Post(const nuiJson::Value& val)
 }
 
 // API
-void RedisThread::RegisterStreamer()
+void RedisThread::RegisterStreamer(const nglString& rStreamerID)
 {
   nuiJson::Value val;
   val["type"] = "register_streamer";
+  val["streamer"] = rStreamerID.GetChars();
   Post(val);
 }
+
+void RedisThread::UnregisterStreamer(const nglString& rStreamerID)
+{
+  nuiJson::Value val;
+  val["type"] = "unregister_streamer";
+  val["streamer"] = rStreamerID.GetChars();
+  Post(val);
+}
+
+void RedisThread::Pong(const nglString& rStreamerID)
+{
+  nuiJson::Value val;
+  val["type"] = "pong";
+  val["streamer"] = rStreamerID.GetChars();
+  Post(val);
+}
+
+void RedisThread::Test(const nglString& rStreamerID, const nglString& rInfo)
+{
+  nuiJson::Value val;
+  val["type"] = "test";
+  val["streamer"] = rStreamerID.GetChars();
+  val["info"] = rInfo.GetChars();
+  Post(val);
+}
+
+void RedisThread::UserAuthentication(const nglString& rStreamerID, const nglString& rAuthToken)
+{
+  nuiJson::Value val;
+  val["type"] = "user_authentication";
+  val["streamer"] = rStreamerID.GetChars();
+  val["auth_token"] = rAuthToken.GetChars();
+  Post(val);
+}
+
+void RedisThread::UserAuthentication(const nglString& rStreamerID, const nglString& rUserName, const nglString& rAPIKey)
+{
+  nuiJson::Value val;
+  val["type"] = "user_authentication";
+  val["streamer"] = rStreamerID.GetChars();
+  val["username"] = rUserName.GetChars();
+  val["api_key"] = rAPIKey.GetChars();
+  Post(val);
+}
+
+void RedisThread::PlayRadio(const nglString& rStreamerID, const nglString& rRadioID)
+{
+  nuiJson::Value val;
+  val["type"] = "play_radio";
+  val["streamer"] = rStreamerID.GetChars();
+  val["radio_uuid"] = rRadioID.GetChars();
+  Post(val);
+}
+
+void RedisThread::StopRadio(const nglString& rStreamerID, const nglString& rRadioID)
+{
+  nuiJson::Value val;
+  val["type"] = "stop_radio";
+  val["streamer"] = rStreamerID.GetChars();
+  val["radio_uuid"] = rRadioID.GetChars();
+  Post(val);
+}
+
+void RedisThread::RegisterListener(const nglString& rStreamerID, const nglString& rRadioID, const nglString& rSessionID, const nglString& rUserID)
+{
+  nuiJson::Value val;
+  val["type"] = "stop_radio";
+  val["streamer"] = rStreamerID.GetChars();
+  val["radio_uuid"] = rRadioID.GetChars();
+  val["session_id"] = rSessionID.GetChars();
+  val["user_id"] = rUserID.GetChars();
+  Post(val);
+}
+
+void RedisThread::UnregisterListener(const nglString& rStreamerID, const nglString& rRadioID, const nglString& rSessionID, const nglString& rUserID)
+{
+  nuiJson::Value val;
+  val["type"] = "stop_radio";
+  val["streamer"] = rStreamerID.GetChars();
+  val["radio_uuid"] = rRadioID.GetChars();
+  val["session_id"] = rSessionID.GetChars();
+  val["user_id"] = rUserID.GetChars();
+  Post(val);
+}
+
 
 void RedisThread::SetMessageHandler(nuiFastDelegate1<const RedisReply&> rDelegate)
 {
