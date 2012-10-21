@@ -926,12 +926,12 @@ void Radio::StartRedis()
 {
 #if ENABLE_REDIS_THREADS
   mpRedisThreadIn = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::MessagePump, mHostname);
+  mpRedisThreadIn->SetMessageHandler(Radio::HandleRedisMessage);
   mpRedisThreadIn->Start();
 
   mpRedisThreadOut = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::Broadcaster, mHostname);
   mpRedisThreadOut->Start();
 
-  mpRedisThreadIn->SetMessageHandler(Radio::HandleRedisMessage);
   mpRedisThreadOut->RegisterStreamer(mHostname);
   mpRedisThreadOut->Test("POUET!");
 #endif
