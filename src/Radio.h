@@ -11,6 +11,20 @@
 
 class HTTPHandler;
 
+class Track
+{
+public:
+  Track(const nglString& fileid, double delay, double offset, double fade)
+  : mFileID(fileid), mDelay(delay), mOffset(offset), mFade(fade)
+  {
+  }
+
+  nglString mFileID;
+  double mDelay;
+  double mOffset;
+  double mFade;
+};
+
 #define YASCHEDULER_WAIT_TIME 1000
 
 class Radio
@@ -27,8 +41,6 @@ public:
 
   static Radio* GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ);
   static void SetParams(const nglString& appurl, const nglString& hostname, int port, const nglPath& rDataPath);
-
-  void AddTrack(const nglPath& rPath);
 
   bool IsLive() const;
   bool IsOnline() const;
@@ -95,7 +107,7 @@ private:
   void AddChunk(Mp3Chunk* pChunk, bool previewMode);
   nglPath GetPreviewPath(const nglPath& rOriginalPath);
 
-  std::deque<nglPath> mTracks;
+  std::list<Track> mTracks;
 
   nglThreadDelegate* mpThread;
 

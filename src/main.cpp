@@ -322,8 +322,8 @@ int main(int argc, const char** argv)
       //nglPath current(ePathCurrent);
       nglPath current("/Users/meeloo/work/yastream");
       nglPath p = current + nglPath("data");
-      for (int i = 0; i < 100; i++)
-        pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
+//      for (int i = 0; i < 100; i++)
+//        pRadio->AddTrack(p + nglPath("/Thunderstruck.mp3"));
 
 //      pRadio->AddTrack(p + nglPath("/Money Talks.mp3"));
 //      pRadio->AddTrack(p + nglPath("/04 The Vagabound.mp3"));

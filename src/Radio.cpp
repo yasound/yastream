@@ -102,7 +102,8 @@ void Radio::Start()
   }
   else
   {
-    mOnline = LoadNextTrack();
+    //mOnline = LoadNextTrack();
+    LoadNextTrack();
 
     if (mOnline)
       mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), nglThread::Normal, stacksize);
@@ -396,6 +397,12 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
 
 double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 {
+  if (!mpParser)
+  {
+    if (!LoadNextTrack())
+      return 0;
+  }
+
   double duration = 0;
   bool nextFrameOK = true;
   bool nextFramePreviewOK = true;
@@ -430,7 +437,8 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
   if (!pChunk || !nextFramePreviewOK || !nextFrameOK)
   {
     //NGL_LOG("radio", NGL_LOG_INFO, "[skip: %c][pChunk: %p][nextFrameOK: %c / %c]\n", skip?'y':'n', pChunk, nextFramePreviewOK?'y':'n', nextFrameOK?'y':'n');
-    mOnline = LoadNextTrack();
+    LoadNextTrack();
+    //mOnline = LoadNextTrack();
 
     if (!mOnline)
     {
@@ -745,19 +753,32 @@ bool Radio::LoadNextTrack()
   // Otherwise load a track from mTracks
   if (!mTracks.empty())
   {
-    nglPath p = mTracks.front();
+    Track track = mTracks.front();
     mTracks.pop_front();
+
+    nglString p = track.mFileID;
+    //p.Insert("_preview64", 9);
+    p.Insert('/', 6);
+    p.Insert('/', 3);
+
+    //nglPath path = "/space/new/medias/song";
+    nglPath path = mDataPath;//"/data/glusterfs-storage/replica2all/song/";
+    path += p;
+
     while (!SetTrack(p) && mOnline && !mTracks.empty())
     {
       NGL_LOG("radio", NGL_LOG_INFO, "Skipping unreadable static file '%s'\n", p.GetChars());
-      p = mTracks.front();
+      track = mTracks.front();
       mTracks.pop_front();
 
-      if (mTracks.empty())
-      {
-        NGL_LOG("radio", NGL_LOG_INFO, "No more track in the static list. Bailout...\n");
-        return false;
-      }
+      p = track.mFileID;
+      //p.Insert("_preview64", 9);
+      p.Insert('/', 6);
+      p.Insert('/', 3);
+
+      //nglPath path = "/space/new/medias/song";
+      path = mDataPath;//"/data/glusterfs-storage/replica2all/song/";
+      path += p;
     }
     //NGL_LOG("radio", NGL_LOG_INFO, "Started '%s' from static track list\n", p.GetChars());
     return true;
@@ -766,12 +787,6 @@ bool Radio::LoadNextTrack()
   NGL_LOG("radio", NGL_LOG_INFO, "No more track in the list. Bailout...\n");
   return false;
 }
-
-void Radio::AddTrack(const nglPath& rPath)
-{
-  mTracks.push_back(rPath);
-}
-
 
 nglCriticalSection Radio::gCS;
 std::map<nglString, Radio*> Radio::gRadios;
@@ -1118,5 +1133,8 @@ void Radio::SignallEvent(const nglString& rName)
 void Radio::PlayTrack(const nglString& rFilename, double delay, double offet, double fade)
 {
   // #TODO
+  nglCriticalSectionGuard g(mCS);
+  Track track(rFilename, delay, offset, fade);
+  mTracks.push_back(track);
 }
 
