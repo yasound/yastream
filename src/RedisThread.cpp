@@ -45,7 +45,7 @@ void RedisThread::Broadcast()
 {
   while (mOnline)
   {
-    nuiNotification* pNotif = mMessageQueue.Get(1);
+    nuiNotification* pNotif = mMessageQueue.Get(2);
     if (pNotif)
     {
       if (pNotif->GetName() == "RedisRequest")
@@ -92,9 +92,10 @@ void RedisThread::PumpMessages()
       {
         NGL_LOG("radio", NGL_LOG_INFO, "Redis message pump connected\n");
         RedisRequest request;
-        nglString channel("yascheduler.");
+        nglString channel("yastream.");
         channel += mID;
-        request.SUBSCRIBE(channel);
+          NGL_LOG("radio", NGL_LOG_INFO, "Redis yascheduler channel: %s\n", channel.GetChars());
+        request.PSUBSCRIBE(channel);
         RedisReplyType res = mpClient->SendCommand(request);
         if (res == eRedisError)
         {
