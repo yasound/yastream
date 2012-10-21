@@ -904,7 +904,7 @@ bool Radio::IsOnline() const
 
 void Radio::HandleRedisMessage(const RedisReply& rReply)
 {
-  nglString str = rReply.GetReply(1);
+  nglString str = rReply.GetReply(2);
   nuiJson::Reader reader;
   nuiJson::Value msg;
 
@@ -912,11 +912,13 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
 
   if (!res)
   {
-    NGL_LOG("radio", NGL_LOG_ERROR, "unable to parse json message from scheduler:\n%s\n", str.GetChars());
+    NGL_LOG("radio", NGL_LOG_ERROR, "unable to parse json message from scheduler:\n'%s'\n", str.GetChars());
     return;
   }
 
   nglString type = msg.get("type", nuiJson::Value()).asString();
+
+  NGL_LOG("radio", NGL_LOG_INFO, "Got messages from yascheduler: %s", type.GetChars());
   if (type == "radio_started")
   {
     nglString uuid = msg.get("radio_uuid", nuiJson::Value()).asString();
