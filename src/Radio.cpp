@@ -996,9 +996,11 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
       NGL_ASSERT(it != gRadios.end());
       Radio* pRadio = it->second;
       NGL_ASSERT(pRadio);
+      nglString id(uuid);
+      id.Add(pRadio);
+      SignallEvent(id);
 
       pRadio->PlayTrack(filename, delay, offset, crossfade);
-      SignallEvent(uuid);
     }
   }
   else if (type == "user_authentication")

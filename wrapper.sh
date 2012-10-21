@@ -15,9 +15,9 @@ CMD="./yastream \
 -syslog \
 -port 8000 \
 -flushall \
--host dev.yasound.com \
+-host yas-dev-01.ig-1.net \
 -datapath /home/customer/data/song \
--appurl http://dev.yasound.com \
+-appurl http://yas-dev-01.ig-1.net \
 -redishost 127.0.0.1 \
 -redisport 6379 >>$LOGS"
 
