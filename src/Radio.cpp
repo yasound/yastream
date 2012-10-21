@@ -920,15 +920,18 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
   if (type == "radio_started")
   {
     nglString uuid = msg.get("radio_uuid", nuiJson::Value()).asString();
+    NGL_LOG("radio", NGL_LOG_INFO, "Redis: radio_started %s\n", uuid.GetChars());
   }
   else if (type == "radio_exists")
   {
     nglString uuid = msg.get("radio_uuid", nuiJson::Value()).asString();
     nglString master_streamer = msg.get("master_streamer", nuiJson::Value()).asString();
+    NGL_LOG("radio", NGL_LOG_INFO, "Redis: radio_exists %s %s\n", uuid.GetChars(), master_streamer.GetChars());
   }
   else if (type == "radio_stopped")
   {
     nglString uuid = msg.get("radio_uuid", nuiJson::Value()).asString();
+    NGL_LOG("radio", NGL_LOG_INFO, "Redis: radio_stopped %s\n", uuid.GetChars());
   }
   else if (type == "play")
   {
@@ -937,6 +940,8 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
     double delay = msg.get("delay", nuiJson::Value()).asDouble();
     double offset = msg.get("offset", nuiJson::Value()).asDouble();
     double crossfade = msg.get("crossfade_duration", nuiJson::Value()).asDouble();
+
+    NGL_LOG("radio", NGL_LOG_INFO, "Redis: play %s %s d:%f o:%f f:%f\n", uuid.GetChars(), filename.GetChars(), delay, offset, crossfade);
   }
   else if (type == "user_authentication")
   {
@@ -948,7 +953,8 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
   }
   else if (type == "ping")
   {
-
+    mpRedisThreadOut->Pong(mHostname);
+    NGL_LOG("radio", NGL_LOG_INFO, "Redis: ping\n");
   }
 
 }
@@ -967,6 +973,7 @@ void Radio::StartRedis()
   mpRedisThreadOut = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::Broadcaster);
   mpRedisThreadOut->Start();
 
+  mpRedisThreadIn->SetMessageHandler(Radio::HandleRedisMessage);
   mpRedisThreadOut->RegisterStreamer(mHostname);
 #endif
 }

@@ -46,12 +46,12 @@ public:
 
   void SetNetworkSource(nuiTCPClient* pHQSource, nuiTCPClient* pLQSource);
 
-  static void HandleRedisMessage(const RedisReply& rReply);
 
   static void StartRedis();
   static void StopRedis();
 
 private:
+  static void HandleRedisMessage(const RedisReply& rReply);
   void RegisterClient(HTTPHandler* pClient, bool highQuality);
   bool SetTrack(const nglPath& rPath);
   bool LoadNextTrack();
