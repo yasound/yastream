@@ -38,8 +38,6 @@ HTTPHandler::~HTTPHandler()
 
   if (mpRadio)
   {
-    SendListenStatus(eStopListen);
-
 //   if (mLive)
 //     pRadio->SetNetworkSource(NULL, NULL);
 
@@ -233,59 +231,20 @@ bool HTTPHandler::OnBodyStart()
     {
       // Check with new method (temp token):
       it = params.find("token");
+      
       if (it != params.end())
       {
         nglString token = it->second;
         // check if the user is allowed to play high quality stream
-        nglString url;
-        url.CFormat("%s/api/v1/check_streamer_auth_token/%s", Radio::GetAppUrl().GetChars(), token.GetChars());
-        nuiHTTPRequest request(url);
-        nuiHTTPResponse* pResponse = request.SendRequest();
-
-        if (pResponse->GetStatusCode() == 200)
-        {
-          nglString body = pResponse->GetBodyStr();
-
-          nuiJson::Reader reader;
-          nuiJson::Value msg;
-
-          bool res = reader.parse(body.GetStdString(), msg);
-
-          if (!res)
-          {
-            NGL_LOG("radio", NGL_LOG_ERROR, "unable to parse token auth reply json message from django");
-            nglString str;
-            str.Format("Unable to find %s on this server", mURL.GetChars());
-            ReplyError(404, str);
-            return ReplyAndClose();
-          }
-
-          bool user_id = msg.get("user_id", nuiJson::Value()).asBool();
-          bool hd_enabled = msg.get("hd_enabled", nuiJson::Value()).asBool();
-
-          hq = hd_enabled;
-
-          if (!hq)
-            NGL_LOG("radio", NGL_LOG_WARNING, "user '%s' requested high quality but did not subscribe!\n", mUsername.GetChars());
-        }
+        Radio::GetUser(token, mUser);
       }
       else
       {
         // check with old method if the user is allowed to play high quality stream
-        nglString url;
-        url.CFormat("%s/api/v1/subscription/?username=%s&api_key=%s", Radio::GetAppUrl().GetChars(), mUsername.GetChars(), mApiKey.GetChars());
-        nuiHTTPRequest request(url);
-        nuiHTTPResponse* pResponse = request.SendRequest();
-
-        if (pResponse->GetStatusCode() == 200)
-        {
-          nglString subscription = pResponse->GetBodyStr();
-          hq = (subscription == SUBSCRIPTION_PREMIUM);
-
-          if (!hq)
-            NGL_LOG("radio", NGL_LOG_WARNING, "user '%s' requested high quality but did not subscribe!\n", mUsername.GetChars());
-        }
+        Radio::GetUser(mUsername, mApiKey, mUser);
       }
+
+      hq = mUser.hd;
     }
   }
 //   if (!hq)
@@ -358,78 +317,6 @@ Mp3Chunk* HTTPHandler::GetNextChunk()
   return pChunk;
 }
 
-void HTTPHandler::SendListenStatus(ListenStatus status)
-{
-  //NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus");
-  nglString statusStr;
-  if (status == eStartListen)
-    statusStr = "start_listening";
-  else if (status == eStopListen)
-    statusStr = "stop_listening";
-
-  nglString params;
-  if (!mUsername.IsEmpty() && !mApiKey.IsEmpty())
-    params.CFormat("?username=%s&api_key=%s", mUsername.GetChars(), mApiKey.GetChars());
-  else
-  {
-    nglString address;
-    nuiNetworkHost client(0, 0, nuiNetworkHost::eTCP);
-    bool res = GetDistantHost(client);
-    if (res)
-    {
-      uint32 ip = client.GetIP();
-      int port = client.GetPort();
-      address.CFormat("%d:%d", ip, port);
-    }
-    params.CFormat("?address=%s", address.GetChars());
-  }
-
-  if (status == eStartListen)
-  {
-    //NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus Start Listen");
-    mStartTime = nglTime();
-  }
-  else if (status == eStopListen)
-  {
-    //NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus Stop Listen");
-    nglTime now;
-    nglTime duration = now - mStartTime;
-    int32 seconds = ToBelow(duration.GetValue());
-    nglString durationParam;
-    durationParam.CFormat("&listening_duration=%d", seconds);
-    params += durationParam;
-  }
-
-  nglString url;
-  url.CFormat("%s/api/v1/radio/%s/%s/%s", Radio::GetAppUrl().GetChars(), mRadioID.GetChars(), statusStr.GetChars(), params.GetChars());
-  nuiHTTPRequest request(url, "POST");
-
-  //NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus SendRequest");
-
-  nuiHTTPResponse* pResponse = request.SendRequest();
-
-/*
-  nglString log;
-  log = "\n(url:";
-  log += url;
-  log += ") response = ";
-  log += pResponse->GetStatusCode();
-  log += " - ";
-  log += pResponse->GetBodyStr();
-  log += " ###END###";
-
-  NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus log length : %d\n", log.GetLength());
-
-  nglPath logPath = nglPath(ePathCurrent);
-  logPath += "/log/ListenStatus.log";
-  nglIOFile* pFile = new nglIOFile(logPath, eOFileAppend);
-  pFile->WriteText(log);
-  delete pFile;
-  */
-
-  //NGL_LOG("radio", NGL_LOG_INFO, "SendListenStatus DoneOK");
-}
-
 void HTTPHandler::GoOffline()
 {
   NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline");
@@ -444,5 +331,10 @@ void HTTPHandler::OnWriteClosed()
 {
   nuiTCPClient::OnWriteClosed();
   delete this;
+}
+
+const RadioUser& HTTPHandler::GetUser() const
+{
+  return mUser;
 }
 

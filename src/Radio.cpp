@@ -11,7 +11,6 @@
 
 #define ENABLE_REDIS_THREADS 1
 
-
 ///////////////////////////////////////////////////
 //class Radio
 Radio::Radio(const nglString& rID, const nglString& rHost)
@@ -151,7 +150,10 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
       SetNetworkSource(NULL, pClient);
     }
 
-    pClient->SendListenStatus(HTTPHandler::eStartListen);
+    const RadioUser& rUser = pClient->GetUser();
+    nglString sessionid;
+    sessionid.Add(pClient);
+    mpRedisThreadOut->RegisterListener(mID, sessionid, rUser.uuid);
 
     // Reply + Headers:
     pClient->ReplyLine("HTTP/1.0 200 OK");
@@ -209,6 +211,11 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
     //mOnline = false;
     mGoOffline = true;
   }
+
+  const RadioUser& rUser = pClient->GetUser();
+  nglString sessionid;
+  sessionid.Add(pClient);
+  mpRedisThreadOut->RegisterListener(mID, sessionid, rUser.uuid);
 }
 
 bool Radio::SetTrack(const nglPath& rPath)
@@ -781,6 +788,65 @@ void Radio::SetParams(const nglString& appurl, const nglString& hostname, int po
   mDataPath = rDataPath;
 }
 
+bool Radio::GetUser(const nglString& rToken, RadioUser& rUser)
+{
+  nglString id("auth_");
+  id.Add(rToken);
+  nglSyncEvent* pEvent = AddEvent(id);
+  mpRedisThreadOut->UserAuthentication(rToken);
+  if (!pEvent->Wait(YASCHEDULER_WAIT_TIME))
+  {
+    // Timeout... no reply from the scheduler
+    NGL_LOG("radio", NGL_LOG_ERROR, "Time out from the scheduler for user auth token %s\n", rToken.GetChars());
+
+    DelEvent(id);
+    return false;
+  }
+  DelEvent(id);
+
+  {
+    nglCriticalSectionGuard guard(gCS);
+    std::map<nglString, RadioUser>::iterator it = gUsers.find(id);
+    if (it != gUsers.end())
+    {
+      rUser = it->second;
+      gUsers.erase(it);
+    }
+  }
+
+  return true;
+}
+
+bool Radio::GetUser(const nglString& rUsername, const nglString& rApiKey, RadioUser& rUser)
+{
+  nglString id("auth_");
+  id.Add(rUsername).Add(rApiKey);
+  nglSyncEvent* pEvent = AddEvent(id);
+  mpRedisThreadOut->UserAuthentication(rUsername, rApiKey);
+  if (!pEvent->Wait(YASCHEDULER_WAIT_TIME))
+  {
+    // Timeout... no reply from the scheduler
+    NGL_LOG("radio", NGL_LOG_ERROR, "Time out from the scheduler for username/apikey %s / %s\n", rUsername.GetChars(), rApiKey.GetChars());
+
+    DelEvent(id);
+    return false;
+  }
+  DelEvent(id);
+
+  {
+    nglCriticalSectionGuard guard(gCS);
+    std::map<nglString, RadioUser>::iterator it = gUsers.find(id);
+    if (it != gUsers.end())
+    {
+      rUser = it->second;
+      gUsers.erase(it);
+    }
+  }
+
+  return true;
+}
+
+
 Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
 {
   //NGL_LOG("radio", NGL_LOG_INFO, "Getting radio %s\n", rURL.GetChars());
@@ -791,7 +857,7 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
   {
     nglSyncEvent* pEvent = AddEvent(rURL);
     mpRedisThreadOut->PlayRadio(rURL);
-    if (!pEvent->Wait(60000))
+    if (!pEvent->Wait(YASCHEDULER_WAIT_TIME))
     {
       // Timeout... no reply from the scheduler
       NGL_LOG("radio", NGL_LOG_ERROR, "Time out from the scheduler for radio %s\n", rURL.GetChars());
@@ -943,16 +1009,19 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
     nglString username = msg.get("username", nuiJson::Value()).asString();
     nglString api_key = msg.get("api_key", nuiJson::Value()).asString();
 
-    NGL_LOG("radio", NGL_LOG_INFO, "Redis: user_authentication %s %s %s %s %s\n", uuid.GetChars(), hd?"HD":"SD", auth_token.GetChars(), username.GetChars(), api_key.GetChars());
+    NGL_LOG("radio", NGL_LOG_INFO, "Redis: user_authentication '%s' (%s) (%s) (%s) (%s)\n", uuid.GetChars(), hd?"HD":"SD", auth_token.GetChars(), username.GetChars(), api_key.GetChars());
 
-    nglString id(uuid);
+    nglString id("auth_");
     id.Add(auth_token).Add(username).Add(api_key);
 
     {
       nglCriticalSectionGuard g(gCS);
-      gUserHD[id] = hd;
-      SignallEvent(id);
+      RadioUser u;
+      u.hd = hd;
+      u.uuid = uuid;
+      gUsers[id] = u;
     }
+    SignallEvent(id);
   }
   else if (type == "ping")
   {
@@ -1003,7 +1072,7 @@ void Radio::StopRedis()
 }
 
 Radio::EventMap Radio::gEvents;
-std::map<nglString, bool> Radio::gUserHD;
+std::map<nglString, RadioUser> Radio::gUsers;
 nglCriticalSection Radio::gEventCS;
 
 nglSyncEvent* Radio::AddEvent(const nglString& rName)

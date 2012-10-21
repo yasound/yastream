@@ -7,9 +7,11 @@
 #include "nuiTCPClient.h"
 #include "nuiNetworkHost.h"
 #include "RedisThread.h"
+#include "RadioUser.h"
 
 class HTTPHandler;
 
+#define YASCHEDULER_WAIT_TIME 1000
 
 class Radio
 {
@@ -51,6 +53,9 @@ public:
 
   static void StartRedis();
   static void StopRedis();
+
+  static bool GetUser(const nglString& rToken, RadioUser& rUser);
+  static bool GetUser(const nglString& rUsername, const nglString& rApiKey, RadioUser& rUser);
 
 private:
   static void HandleRedisMessage(const RedisReply& rReply);
@@ -114,12 +119,13 @@ private:
 
   typedef std::map<nglString, nglSyncEvent*> EventMap;
   static EventMap gEvents;
-  static std::map<nglString, bool> gUserHD;
+  static std::map<nglString, RadioUser> gUsers;
   static nglCriticalSection gEventCS;
 
   static nglSyncEvent* AddEvent(const nglString& rName);
   static void DelEvent(const nglString& rName);
   static void SignallEvent(const nglString& rName);
+
 
 };
 

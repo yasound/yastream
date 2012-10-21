@@ -4,6 +4,7 @@
 #include "nui.h"
 #include "nuiHTTPServer.h"
 #include "nuiStringTemplate.h"
+#include "RadioUser.h"
 
 class Radio;
 class Mp3Chunk;
@@ -28,12 +29,7 @@ public:
 
   bool IsLive() const;
 
-  enum ListenStatus
-  {
-    eStartListen = 0,
-    eStopListen
-  };
-  void SendListenStatus(ListenStatus status);
+  const RadioUser& GetUser() const;
 
   static void SetPool(nuiSocketPool* pPool);
 private:
@@ -43,6 +39,7 @@ private:
 
   Mp3Chunk* GetNextChunk();
 
+  RadioUser mUser;
 
 
   bool SendFromTemplate(const nglString& rString, nuiObject* pObject);
