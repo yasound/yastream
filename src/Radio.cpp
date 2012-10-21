@@ -791,7 +791,7 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
   {
     nglSyncEvent* pEvent = AddEvent(rURL);
     mpRedisThreadOut->PlayRadio(rURL);
-    if (!pEvent->Wait(1000))
+    if (!pEvent->Wait(60000))
     {
       // Timeout... no reply from the scheduler
       NGL_LOG("radio", NGL_LOG_ERROR, "Time out from the scheduler for radio %s\n", rURL.GetChars());
@@ -1012,8 +1012,9 @@ nglSyncEvent* Radio::AddEvent(const nglString& rName)
   NGL_ASSERT(gEvents.find(rName) == gEvents.end());
 
   nglSyncEvent* pEvent = new nglSyncEvent();
-  pEvent->Reset();
+  //pEvent->Reset();
   gEvents[rName] = pEvent;
+  NGL_LOG("radio", NGL_LOG_INFO, "add event: %s - %p", rName.GetChars(), pEvent);
   return pEvent;
 }
 
@@ -1025,6 +1026,7 @@ void Radio::DelEvent(const nglString& rName)
   NGL_ASSERT(it != gEvents.end());
 
   nglSyncEvent* pEvent = gEvents[rName];
+  NGL_LOG("radio", NGL_LOG_INFO, "del event: %s - %p", rName.GetChars(), pEvent);
   delete pEvent;
   gEvents.erase(it);
 }
@@ -1037,6 +1039,7 @@ void Radio::SignallEvent(const nglString& rName)
   NGL_ASSERT(it != gEvents.end());
 
   nglSyncEvent* pEvent = gEvents[rName];
+  NGL_LOG("radio", NGL_LOG_INFO, "signal event: %s - %p", rName.GetChars(), pEvent);
   pEvent->Set();
 }
 
