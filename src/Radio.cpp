@@ -958,6 +958,16 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
     mpRedisThreadOut->Pong(mHostname);
     NGL_LOG("radio", NGL_LOG_INFO, "Redis: ping\n");
   }
+  else if (type == "test")
+  {
+    mpRedisThreadOut->Pong(mHostname);
+    nglString info = msg.get("info", nuiJson::Value()).asString();
+    NGL_LOG("radio", NGL_LOG_INFO, "Redis: test '%s'\n", info.GetChars());
+  }
+  else
+  {
+    NGL_LOG("radio", NGL_LOG_INFO, "Redis: unknown message '%s'\n", type.GetChars());
+  }
 
 }
 
@@ -970,13 +980,13 @@ void Radio::StartRedis()
 #if ENABLE_REDIS_THREADS
   mpRedisThreadIn = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::MessagePump);
   mpRedisThreadIn->Start();
-  //pRedisThread->PumpMessages();
 
   mpRedisThreadOut = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::Broadcaster);
   mpRedisThreadOut->Start();
 
   mpRedisThreadIn->SetMessageHandler(Radio::HandleRedisMessage);
   mpRedisThreadOut->RegisterStreamer(mHostname);
+  mpRedisThreadOut->Test(mHostname, "POUET!");
 #endif
 }
 
