@@ -219,15 +219,24 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   mpRedisThreadOut->RegisterListener(mID, sessionid, rUser.uuid);
 }
 
-bool Radio::SetTrack(const nglPath& rPath)
+bool Radio::SetTrack(const Track& rTrack)
 {
-  nglIStream* pStream = rPath.OpenRead();
+  nglString p = rTrack.mFileID;
+  //p.Insert("_preview64", 9);
+  p.Insert('/', 6);
+  p.Insert('/', 3);
+
+  //nglPath path = "/space/new/medias/song";
+  nglPath path = mDataPath;//"/data/glusterfs-storage/replica2all/song/";
+  path += p;
+
+  nglIStream* pStream = path.OpenRead();
   if (!pStream)
   {
     return false;
   }
 
-  nglPath previewPath = GetPreviewPath(rPath);
+  nglPath previewPath = GetPreviewPath(p);
   nglIStream* pStreamPreview = previewPath.OpenRead();
   if (!pStreamPreview)
   {
@@ -265,6 +274,8 @@ bool Radio::SetTrack(const nglPath& rPath)
   mpParserPreview = pParserPreview;
   mpStreamPreview = pStreamPreview;
 
+  mpParser->Seek(rTrack.mDelay);
+  mpParserPreview->Seek(rTrack.mDelay);
   return true;
 }
 
@@ -707,29 +718,11 @@ bool Radio::LoadNextTrack()
     Track track = mTracks.front();
     mTracks.pop_front();
 
-    nglString p = track.mFileID;
-    //p.Insert("_preview64", 9);
-    p.Insert('/', 6);
-    p.Insert('/', 3);
-
-    //nglPath path = "/space/new/medias/song";
-    nglPath path = mDataPath;//"/data/glusterfs-storage/replica2all/song/";
-    path += p;
-
-    while (!SetTrack(p) && mOnline && !mTracks.empty())
+    while (!SetTrack(track) && mOnline && !mTracks.empty())
     {
-      NGL_LOG("radio", NGL_LOG_INFO, "Skipping unreadable static file '%s'\n", p.GetChars());
+      NGL_LOG("radio", NGL_LOG_INFO, "Skipping unreadable file '%s'\n", track.mFileID.GetChars());
       track = mTracks.front();
       mTracks.pop_front();
-
-      p = track.mFileID;
-      //p.Insert("_preview64", 9);
-      p.Insert('/', 6);
-      p.Insert('/', 3);
-
-      //nglPath path = "/space/new/medias/song";
-      path = mDataPath;//"/data/glusterfs-storage/replica2all/song/";
-      path += p;
     }
     //NGL_LOG("radio", NGL_LOG_INFO, "Started '%s' from static track list\n", p.GetChars());
     return true;

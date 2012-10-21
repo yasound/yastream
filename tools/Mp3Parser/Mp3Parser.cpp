@@ -50,6 +50,22 @@ bool Mp3Parser::GoToNextFrame()
   return true;
 }
 
+double Mp3Parser::Seek(double seconds)
+{
+  double t = 0;
+
+  while (t < seconds)
+  {
+    const Mp3Frame& rFrame(GetCurrentFrame());
+    t += rFrame.GetDuration();
+    if (!GoToNextFrame())
+      return t;
+  }
+
+  return t;
+}
+
+
 TimeMs Mp3Parser::GetDuration()
 {
   if (mDuration == 0)

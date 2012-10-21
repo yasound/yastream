@@ -21,6 +21,8 @@ public:
   const Mp3Frame& GetCurrentFrame();
   bool GoToNextFrame();
 
+  double Seek(double seconds);
+
   TimeMs GetDuration();
 
   // for test purpose

@@ -72,7 +72,7 @@ public:
 private:
   static void HandleRedisMessage(const RedisReply& rReply);
   void RegisterClient(HTTPHandler* pClient, bool highQuality);
-  bool SetTrack(const nglPath& rPath);
+  bool SetTrack(const Track& rTrack);
   bool LoadNextTrack();
   double ReadSet(int64& chunk_count_preview, int64& chunk_count);
   double ReadSetProxy(int64& chunk_count_preview, int64& chunk_count);
