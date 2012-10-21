@@ -239,7 +239,7 @@ bool Radio::SetTrack(const Track& rTrack)
     return false;
   }
 
-  nglPath previewPath = GetPreviewPath(p);
+  nglPath previewPath = GetPreviewPath(path);
   nglIStream* pStreamPreview = previewPath.OpenRead();
   if (!pStreamPreview)
   {
