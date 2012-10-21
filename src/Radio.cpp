@@ -912,7 +912,7 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
 
   if (!res)
   {
-    NGL_LOG("radio", NGL_LOG_ERROR, "unable to parse json message from scheduler");
+    NGL_LOG("radio", NGL_LOG_ERROR, "unable to parse json message from scheduler:\n%s\n", str.GetChars());
     return;
   }
 
