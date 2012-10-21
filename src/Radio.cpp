@@ -303,7 +303,7 @@ nglPath Radio::GetPreviewPath(const nglPath& rOriginalPath)
     base += ".";
     base += ext;
   }
-  //NGL_LOG("radio", NGL_LOG_INFO, "preview path %s\n", previewPath.GetPathName().GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "preview path %s\n", previewPath.GetPathName().GetChars());
   return previewPath;
 }
 
