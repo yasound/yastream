@@ -852,7 +852,7 @@ bool Radio::IsOnline() const
 
 void Radio::HandleRedisMessage(const RedisReply& rReply)
 {
-  nglString str = rReply.GetReply(2);
+  nglString str = rReply.GetReply(3);
   nuiJson::Reader reader;
   nuiJson::Value msg;
 
