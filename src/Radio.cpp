@@ -905,7 +905,8 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
     nglString master_streamer = msg.get("master_streamer", nuiJson::Value()).asString();
     NGL_LOG("radio", NGL_LOG_INFO, "Redis: radio_exists %s %s\n", uuid.GetChars(), master_streamer.GetChars());
 
-    CreateRadio(uuid, master_streamer);
+    // #FIXME, disabled proxy radio creation for now, the scheduler doesn't handle the dying streamer properly:
+    //CreateRadio(uuid, master_streamer);
     SignallEvent(uuid);
   }
   else if (type == "radio_stopped")
