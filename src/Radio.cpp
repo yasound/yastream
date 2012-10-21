@@ -274,8 +274,8 @@ bool Radio::SetTrack(const Track& rTrack)
   mpParserPreview = pParserPreview;
   mpStreamPreview = pStreamPreview;
 
-  mpParser->Seek(rTrack.mDelay);
-  mpParserPreview->Seek(rTrack.mDelay);
+  mpParser->Seek(rTrack.mOffset);
+  mpParserPreview->Seek(rTrack.mOffset);
   return true;
 }
 
