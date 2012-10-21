@@ -1080,17 +1080,18 @@ void Radio::SignallEvent(const nglString& rName)
   nglCriticalSectionGuard g(gEventCS);
 
   EventMap::iterator it = gEvents.find(rName);
-  NGL_ASSERT(it != gEvents.end());
-
-  nglSyncEvent* pEvent = gEvents[rName];
-  NGL_LOG("radio", NGL_LOG_INFO, "signal event: %s - %p", rName.GetChars(), pEvent);
-  pEvent->Set();
+  if (it != gEvents.end())
+  {
+    nglSyncEvent* pEvent = gEvents[rName];
+    NGL_LOG("radio", NGL_LOG_INFO, "signal event: %s - %p", rName.GetChars(), pEvent);
+    pEvent->Set();
+  }
 }
 
 void Radio::PlayTrack(const nglString& rFilename, double delay, double offet, double fade)
 {
-  // #TODO
   nglCriticalSectionGuard g(mCS);
+  NGL_LOG("radio", NGL_LOG_INFO, "Add track %s to radio %s", rFilename.GetChars(), mID.GetChars());
   Track track(rFilename, delay, offset, fade);
   mTracks.push_back(track);
 }
