@@ -21,7 +21,7 @@ public:
     Broadcaster
   };
 
-  RedisThread(const nuiNetworkHost& rHost, Mode mode);
+  RedisThread(const nuiNetworkHost& rHost, Mode mode, const nglString rID);
   virtual ~RedisThread();
   void Stop();
   void OnStart();
@@ -36,14 +36,14 @@ public:
   // API
   void RegisterStreamer(const nglString& rStreamerID);
   void UnregisterStreamer(const nglString& rStreamerID);
-  void Pong(const nglString& rStreamerID);
-  void Test(const nglString& rStreamerID, const nglString& rInfo);
-  void UserAuthentication(const nglString& rStreamerID, const nglString& rAuthToken);
-  void UserAuthentication(const nglString& rStreamerID, const nglString& rUserName, const nglString& rAPIKey);
-  void PlayRadio(const nglString& rStreamerID, const nglString& rRadioID);
-  void StopRadio(const nglString& rStreamerID, const nglString& rRadioID);
-  void RegisterListener(const nglString& rStreamerID, const nglString& rRadioID, const nglString& rSessionID, const nglString& rUserID);
-  void UnregisterListener(const nglString& rStreamerID, const nglString& rRadioID, const nglString& rSessionID, const nglString& rUserID);
+  void Pong();
+  void Test(const nglString& rInfo);
+  void UserAuthentication(const nglString& rAuthToken);
+  void UserAuthentication(const nglString& rUserName, const nglString& rAPIKey);
+  void PlayRadio(const nglString& rRadioID);
+  void StopRadio(const nglString& rRadioID);
+  void RegisterListener(const nglString& rRadioID, const nglString& rSessionID, const nglString& rUserID);
+  void UnregisterListener(const nglString& rRadioID, const nglString& rSessionID, const nglString& rUserID);
 
 private:
   RedisClient* mpClient;
@@ -52,5 +52,6 @@ private:
   Mode mMode;
   nuiMessageQueue mMessageQueue;
   nuiFastDelegate1<const RedisReply&> mMessageHandlerDelegate;
+  nglString mID;
 };
 

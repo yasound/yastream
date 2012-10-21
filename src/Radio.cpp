@@ -788,58 +788,6 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
   RadioMap::const_iterator it = gRadios.find(rURL);
   if (it == gRadios.end())
   {
-#if 0 // Cancel Redis check, which has the effect of removing proxy support for now
-    // Ask Redis if he knows a server that handles this radio:
-    nglString r;
-    r.Add("radio:").Add(rURL);
-
-    InitRedis();
-    if (gRedis.IsConnected())
-    {
-      RedisRequest req;
-      req.GET(r);
-      RedisReplyType reply = gRedis.SendCommand(req);
-      if (reply == eRedisError)
-      {
-        NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while GET: %s\n", req.GetError().GetChars());
-      }
-
-      NGL_ASSERT(reply != eRedisError);
-      nglString host = req.GetReply(0);
-      if (!host.IsNull())
-      {
-        // Create this radio from the actual server!
-        NGL_LOG("radio", NGL_LOG_INFO, "Radio found on %s\n", host.GetChars());
-
-        Radio* pRadio = CreateRadio(rURL, host);
-        if (pRadio)
-          pRadio->RegisterClient(pClient, HQ);
-        return pRadio;
-      }
-
-      // The radio was not on the server. we need to create it:
-      //NGL_LOG("radio", NGL_LOG_INFO, "Tell Redis we are creating radio %s\n", rURL.GetChars());
-      req.SET(r, mHostname);
-      reply = gRedis.SendCommand(req);
-      if (reply == eRedisError)
-      {
-        //NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while SET: %s\n", req.GetError().GetChars());
-      }
-
-      nglString server;
-      server.Add("server:").Add(mHostname);
-      req.SADD(server, rURL);
-      if (gRedis.SendCommand(req) == eRedisError)
-      {
-        NGL_LOG("radio", NGL_LOG_ERROR, "Redis error while SADD: %s\n", req.GetError().GetChars());
-      }
-    }
-    else
-    {
-      NGL_LOG("radio", NGL_LOG_ERROR, "redis not connected");
-    }
-#endif
-
     // Create the radio!
     //NGL_LOG("radio", NGL_LOG_INFO, "Trying to create the radio '%s'\n", rURL.GetChars());
     Radio* pRadio = CreateRadio(rURL, nglString::Null);
@@ -955,12 +903,11 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
   }
   else if (type == "ping")
   {
-    mpRedisThreadOut->Pong(mHostname);
+    mpRedisThreadOut->Pong();
     NGL_LOG("radio", NGL_LOG_INFO, "Redis: ping\n");
   }
   else if (type == "test")
   {
-    mpRedisThreadOut->Pong(mHostname);
     nglString info = msg.get("info", nuiJson::Value()).asString();
     NGL_LOG("radio", NGL_LOG_INFO, "Redis: test '%s'\n", info.GetChars());
   }
@@ -978,15 +925,15 @@ RedisThread* Radio::mpRedisThreadOut = NULL;
 void Radio::StartRedis()
 {
 #if ENABLE_REDIS_THREADS
-  mpRedisThreadIn = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::MessagePump);
+  mpRedisThreadIn = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::MessagePump, mHostname);
   mpRedisThreadIn->Start();
 
-  mpRedisThreadOut = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::Broadcaster);
+  mpRedisThreadOut = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::Broadcaster, mHostname);
   mpRedisThreadOut->Start();
 
   mpRedisThreadIn->SetMessageHandler(Radio::HandleRedisMessage);
   mpRedisThreadOut->RegisterStreamer(mHostname);
-  mpRedisThreadOut->Test(mHostname, "POUET!");
+  mpRedisThreadOut->Test("POUET!");
 #endif
 }
 
