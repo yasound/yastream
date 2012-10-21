@@ -34,6 +34,7 @@ Radio::Radio(const nglString& rID, const nglString& rHost)
     // Proxy mode
     NGL_LOG("radio", NGL_LOG_INFO, "Radio::Radio Proxy for radio '%s' (source url: http://%s:%d/%s )\n", mID.GetChars(), rHost.GetChars(), mPort, mID.GetChars());
     mpSource = new nuiTCPClient(); // Don't connect the non preview source for now
+    mpSource->Connect(nuiNetworkHost(rHost, mPort, nuiNetworkHost::eTCP));
     mpPreviewSource = new nuiTCPClient();
     mpPreviewSource->Connect(nuiNetworkHost(rHost, mPort, nuiNetworkHost::eTCP));
   }
@@ -788,13 +789,30 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
   RadioMap::const_iterator it = gRadios.find(rURL);
   if (it == gRadios.end())
   {
-    // Create the radio!
-    //NGL_LOG("radio", NGL_LOG_INFO, "Trying to create the radio '%s'\n", rURL.GetChars());
-    Radio* pRadio = CreateRadio(rURL, nglString::Null);
-    if (pRadio)
-      pRadio->RegisterClient(pClient, HQ);
-    return pRadio;
-    //return NULL;
+    nglSyncEvent* pEvent = AddEvent(rURL);
+    mpRedisThreadOut->PlayRadio(rURL);
+    if (!pEvent->Wait(1000))
+    {
+      // Timeout... no reply from the scheduler
+      NGL_LOG("radio", NGL_LOG_ERROR, "Time out from the scheduler for radio %s\n", rURL.GetChars());
+
+      DelEvent(rURL);
+      return NULL;
+    }
+    DelEvent(rURL);
+
+    it = gRadios.find(rURL);
+    if (it == gRadios.end())
+    {
+      // No proxy radio has been created... so it should be ok
+      // Create the radio!
+      //NGL_LOG("radio", NGL_LOG_INFO, "Trying to create the radio '%s'\n", rURL.GetChars());
+      Radio* pRadio = CreateRadio(rURL, nglString::Null);
+      if (pRadio)
+        pRadio->RegisterClient(pClient, HQ);
+      return pRadio;
+    }
+
   }
   //NGL_LOG("radio", NGL_LOG_INFO, "Getting existing radio %s\n", rURL.GetChars());
   Radio* pRadio = it->second;
@@ -824,6 +842,8 @@ void Radio::UnregisterRadio(const nglString& rURL)
     //NGL_LOG("radio", NGL_LOG_ERROR, "Error, radio '%s' was never registered\n", rURL.GetChars());
   }
   gRadios.erase(rURL);
+
+  mpRedisThreadOut->StopRadio(rURL);
 }
 
 Radio* Radio::CreateRadio(const nglString& rURL, const nglString& rHost)
@@ -856,10 +876,10 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
   nuiJson::Reader reader;
   nuiJson::Value msg;
 
-  for (int i = 0; i < rReply.GetCount(); i++)
-  {
-    NGL_LOG("radio", NGL_LOG_INFO, "   Redis arg[%d] = '%s'", i, rReply.GetReply(i).GetChars());
-  }
+//  for (int i = 0; i < rReply.GetCount(); i++)
+//  {
+//    NGL_LOG("radio", NGL_LOG_INFO, "   Redis arg[%d] = '%s'", i, rReply.GetReply(i).GetChars());
+//  }
 
   bool res = reader.parse(str.GetStdString(), msg);
 
@@ -871,17 +891,22 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
 
   nglString type = msg.get("type", nuiJson::Value()).asString();
 
-  NGL_LOG("radio", NGL_LOG_INFO, "Got messages from yascheduler: %s", type.GetChars());
+  //NGL_LOG("radio", NGL_LOG_INFO, "Got messages from yascheduler: %s", type.GetChars());
   if (type == "radio_started")
   {
     nglString uuid = msg.get("radio_uuid", nuiJson::Value()).asString();
     NGL_LOG("radio", NGL_LOG_INFO, "Redis: radio_started %s\n", uuid.GetChars());
+
+    SignallEvent(uuid);
   }
   else if (type == "radio_exists")
   {
     nglString uuid = msg.get("radio_uuid", nuiJson::Value()).asString();
     nglString master_streamer = msg.get("master_streamer", nuiJson::Value()).asString();
     NGL_LOG("radio", NGL_LOG_INFO, "Redis: radio_exists %s %s\n", uuid.GetChars(), master_streamer.GetChars());
+
+    CreateRadio(uuid, master_streamer);
+    SignallEvent(uuid);
   }
   else if (type == "radio_stopped")
   {
@@ -897,6 +922,16 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
     double crossfade = msg.get("crossfade_duration", nuiJson::Value()).asDouble();
 
     NGL_LOG("radio", NGL_LOG_INFO, "Redis: play %s %s d:%f o:%f f:%f\n", uuid.GetChars(), filename.GetChars(), delay, offset, crossfade);
+    {
+      nglCriticalSectionGuard g(gCS);
+      RadioMap::const_iterator it = gRadios.find(uuid);
+
+      NGL_ASSERT(it != gRadios.end());
+      Radio* pRadio = it->second;
+      NGL_ASSERT(pRadio);
+
+      pRadio->PlayTrack(filename, delay, offset, crossfade);
+    }
   }
   else if (type == "user_authentication")
   {
@@ -905,6 +940,17 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
     nglString auth_token = msg.get("auth_token", nuiJson::Value()).asString();
     nglString username = msg.get("username", nuiJson::Value()).asString();
     nglString api_key = msg.get("api_key", nuiJson::Value()).asString();
+
+    NGL_LOG("radio", NGL_LOG_INFO, "Redis: user_authentication %s %s %s %s %s\n", uuid.GetChars(), hd?"HD":"SD", auth_token.GetChars(), username.GetChars(), api_key.GetChars());
+
+    nglString id(uuid);
+    id.Add(auth_token).Add(username).Add(api_key);
+
+    {
+      nglCriticalSectionGuard g(gCS);
+      gUserHD[id] = hd;
+      SignallEvent(id);
+    }
   }
   else if (type == "ping")
   {
@@ -954,4 +1000,46 @@ void Radio::StopRedis()
   mpRedisThreadOut = NULL;
 }
 
+Radio::EventMap Radio::gEvents;
+std::map<nglString, bool> Radio::gUserHD;
+
+nglSyncEvent* Radio::AddEvent(const nglString& rName)
+{
+  nglCriticalSectionGuard g(gCS);
+
+  NGL_ASSERT(gEvents.find(rName) == gEvents.end());
+
+  nglSyncEvent* pEvent = new nglSyncEvent();
+  pEvent->Reset();
+  gEvents[rName] = pEvent;
+  return pEvent;
+}
+
+void Radio::DelEvent(const nglString& rName)
+{
+  nglCriticalSectionGuard g(gCS);
+
+  EventMap::iterator it = gEvents.find(rName);
+  NGL_ASSERT(it != gEvents.end());
+
+  nglSyncEvent* pEvent = gEvents[rName];
+  delete pEvent;
+  gEvents.erase(it);
+}
+
+void Radio::SignallEvent(const nglString& rName)
+{
+  nglCriticalSectionGuard g(gCS);
+
+  EventMap::iterator it = gEvents.find(rName);
+  NGL_ASSERT(it != gEvents.end());
+
+  nglSyncEvent* pEvent = gEvents[rName];
+  pEvent->Set();
+}
+
+void Radio::PlayTrack(const nglString& rFilename, double delay, double offet, double fade)
+{
+  // #TODO
+}
 

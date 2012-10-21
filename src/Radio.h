@@ -47,6 +47,8 @@ public:
   void SetNetworkSource(nuiTCPClient* pHQSource, nuiTCPClient* pLQSource);
 
 
+  void PlayTrack(const nglString& rFilename, double delay, double offet, double fade);
+
   static void StartRedis();
   static void StopRedis();
 
@@ -107,9 +109,16 @@ private:
   static void RegisterRadio(const nglString& rURL, Radio* pRadio);
   static void UnregisterRadio(const nglString& rURL);
 
-
   static RedisThread* mpRedisThreadIn;
   static RedisThread* mpRedisThreadOut;
+
+  typedef std::map<nglString, nglSyncEvent*> EventMap;
+  static EventMap gEvents;
+  static std::map<nglString, bool> gUserHD;
+
+  static nglSyncEvent* AddEvent(const nglString& rName);
+  static void DelEvent(const nglString& rName);
+  static void SignallEvent(const nglString& rName);
 
 };
 
