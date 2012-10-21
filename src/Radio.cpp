@@ -701,55 +701,6 @@ bool Radio::LoadNextTrack()
   if (mGoOffline) // We were asked to kill this radio once the current song was finished.
     return false;
 
-  //while (1)
-  {
-    // Try to get the new track from the app server:
-    nglString url;
-    url.Format("%s/api/v1/radio/%s/get_next_song/", mAppUrl.GetChars(), mID.GetChars());
-    nuiHTTPRequest request(url);
-    nuiHTTPResponse* pResponse = request.SendRequest();
-
-    //NGL_LOG("radio", NGL_LOG_INFO, "get next song: %s\n", url.GetChars());
-    //NGL_LOG("radio", NGL_LOG_INFO, "response: %d - %s\n", pResponse->GetStatusCode(), pResponse->GetStatusLine().GetChars());
-
-    if (pResponse->GetStatusCode() == 200)
-    {
-      //NGL_LOG("radio", NGL_LOG_INFO, "new trackid: %s\n", pResponse->GetBodyStr().GetChars());
-
-      nglString p = pResponse->GetBodyStr();
-      //p.Insert("_preview64", 9);
-      p.Insert('/', 6);
-      p.Insert('/', 3);
-
-      //nglPath path = "/space/new/medias/song";
-      nglPath path = mDataPath;//"/data/glusterfs-storage/replica2all/song/";
-      path += p;
-
-      //NGL_LOG("radio", NGL_LOG_INFO, "new song from server: %s\n", path.GetChars());
-      if (SetTrack(path))
-      {
-        delete pResponse;
-        return true;
-      }
-      else
-      {
-        NGL_LOG("radio", NGL_LOG_ERROR, "Unable to set track '%s'\n", path.GetChars());
-        delete pResponse;
-        pResponse = request.SendRequest();
-        //return false;
-      }
-    }
-    else
-    {
-      NGL_LOG("radio", NGL_LOG_ERROR, "Server error (%s): %d\n", url.GetChars(), pResponse->GetStatusCode());
-      NGL_LOG("radio", NGL_LOG_ERROR, "response data:\n%s\n", pResponse->GetBodyStr().GetChars());
-      delete pResponse;
-
-      if (mTracks.empty())
-        return false;
-    }
-  }
-
   // Otherwise load a track from mTracks
   if (!mTracks.empty())
   {
