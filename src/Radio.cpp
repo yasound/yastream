@@ -931,6 +931,7 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
       NGL_ASSERT(pRadio);
 
       pRadio->PlayTrack(filename, delay, offset, crossfade);
+      SignallEvent(uuid);
     }
   }
   else if (type == "user_authentication")
