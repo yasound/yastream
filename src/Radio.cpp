@@ -735,7 +735,7 @@ bool Radio::LoadNextTrack()
     return true;
   }
 
-  NGL_LOG("radio", NGL_LOG_INFO, "No more track in the list. Bailout...\n");
+  //NGL_LOG("radio", NGL_LOG_INFO, "No more track in the list. Bailout...\n");
   return false;
 }
 
