@@ -856,6 +856,11 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
   nuiJson::Reader reader;
   nuiJson::Value msg;
 
+  for (int i = 0; i < rReply.GetCount(); i++)
+  {
+    NGL_LOG("radio", NGL_LOG_INFO, "   Redis arg[%d] = '%s'", i, rReply.GetReply(i).GetChars());
+  }
+
   bool res = reader.parse(str.GetStdString(), msg);
 
   if (!res)
