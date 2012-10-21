@@ -115,6 +115,7 @@ private:
   typedef std::map<nglString, nglSyncEvent*> EventMap;
   static EventMap gEvents;
   static std::map<nglString, bool> gUserHD;
+  static nglCriticalSection gEventCS;
 
   static nglSyncEvent* AddEvent(const nglString& rName);
   static void DelEvent(const nglString& rName);

@@ -1004,10 +1004,11 @@ void Radio::StopRedis()
 
 Radio::EventMap Radio::gEvents;
 std::map<nglString, bool> Radio::gUserHD;
+nglCriticalSection Radio::gEventCS;
 
 nglSyncEvent* Radio::AddEvent(const nglString& rName)
 {
-  nglCriticalSectionGuard g(gCS);
+  nglCriticalSectionGuard g(gEventCS);
 
   NGL_ASSERT(gEvents.find(rName) == gEvents.end());
 
@@ -1020,7 +1021,7 @@ nglSyncEvent* Radio::AddEvent(const nglString& rName)
 
 void Radio::DelEvent(const nglString& rName)
 {
-  nglCriticalSectionGuard g(gCS);
+  nglCriticalSectionGuard g(gEventCS);
 
   EventMap::iterator it = gEvents.find(rName);
   NGL_ASSERT(it != gEvents.end());
@@ -1033,7 +1034,7 @@ void Radio::DelEvent(const nglString& rName)
 
 void Radio::SignallEvent(const nglString& rName)
 {
-  nglCriticalSectionGuard g(gCS);
+  nglCriticalSectionGuard g(gEventCS);
 
   EventMap::iterator it = gEvents.find(rName);
   NGL_ASSERT(it != gEvents.end());
