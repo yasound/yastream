@@ -959,14 +959,20 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
       nglCriticalSectionGuard g(gCS);
       RadioMap::const_iterator it = gRadios.find(uuid);
 
-      NGL_ASSERT(it != gRadios.end());
-      Radio* pRadio = it->second;
-      NGL_ASSERT(pRadio);
-      nglString id(uuid);
-      id.Add(pRadio);
-      SignallEvent(id);
+      if (it != gRadios.end())
+      {
+        Radio* pRadio = it->second;
+        NGL_ASSERT(pRadio);
+        nglString id(uuid);
+        id.Add(pRadio);
+        SignallEvent(id);
 
-      pRadio->PlayTrack(filename, delay, offset, crossfade);
+        pRadio->PlayTrack(filename, delay, offset, crossfade);
+      }
+      else
+      {
+        NGL_LOG("radio", NGL_LOG_INFO, "Redis: unkown radio %s\n", uuid.GetChars());
+      }
     }
   }
   else if (type == "user_authentication")
