@@ -230,9 +230,12 @@ bool Radio::SetTrack(const Track& rTrack)
   nglPath path = mDataPath;//"/data/glusterfs-storage/replica2all/song/";
   path += p;
 
+  NGL_LOG("radio", NGL_LOG_INFO, "SetTrack %s\n", path.GetChars());
+
   nglIStream* pStream = path.OpenRead();
   if (!pStream)
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "SetTrack error 1\n");
     return false;
   }
 
@@ -240,6 +243,7 @@ bool Radio::SetTrack(const Track& rTrack)
   nglIStream* pStreamPreview = previewPath.OpenRead();
   if (!pStreamPreview)
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "SetTrack error 2\n");
     delete pStream;
     return false;
   }
@@ -248,6 +252,7 @@ bool Radio::SetTrack(const Track& rTrack)
   bool valid = pParser->GetCurrentFrame().IsValid();
   if (!valid)
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "SetTrack error 3\n");
     delete pParser;
     delete pStream;
     delete pStreamPreview;
@@ -258,6 +263,7 @@ bool Radio::SetTrack(const Track& rTrack)
   valid = pParserPreview->GetCurrentFrame().IsValid();
   if (!valid)
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "SetTrack error 4\n");
     delete pParserPreview;
     delete pStreamPreview;
     delete pParser;
@@ -276,6 +282,8 @@ bool Radio::SetTrack(const Track& rTrack)
 
   mpParser->Seek(rTrack.mOffset);
   mpParserPreview->Seek(rTrack.mOffset);
+
+  NGL_LOG("radio", NGL_LOG_INFO, "SetTrack OK\n");
   return true;
 }
 
@@ -725,7 +733,7 @@ bool Radio::LoadNextTrack()
       mTracks.pop_front();
     }
     //NGL_LOG("radio", NGL_LOG_INFO, "Started '%s' from static track list\n", p.GetChars());
-    return true;
+    return mpParser && mpParserPreview;
   }
 
   //NGL_LOG("radio", NGL_LOG_INFO, "No more track in the list. Bailout...\n");
