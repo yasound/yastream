@@ -978,7 +978,8 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
   }
   else if (type == "user_authentication")
   {
-    nglString uuid = msg.get("user_id", nuiJson::Value()).asString();
+    nglString uuid;
+    uuid.Add(msg.get("user_id", nuiJson::Value()).asUInt());
     bool hd = msg.get("hd", nuiJson::Value()).asBool();
     nglString auth_token = msg.get("auth_token", nuiJson::Value()).asString();
     nglString username = msg.get("username", nuiJson::Value()).asString();
