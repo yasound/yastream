@@ -103,12 +103,8 @@ void Radio::Start()
   }
   else
   {
-    if (mOnline)
-      mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), nglThread::Normal, stacksize);
-    else
-    {
-      NGL_LOG("radio", NGL_LOG_ERROR, "Error while creating radio: unable to find a track to play\n");
-    }
+    mOnline = true;
+    mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), nglThread::Normal, stacksize);
   }
 
   if (mpThread)
@@ -566,11 +562,11 @@ void Radio::OnStart()
   int counter = 0;
 
   // Pre buffering:
-  while ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) && mOnline)
-  {
-    ReadSet(chunk_count_preview, chunk_count);
-    //NGL_LOG("radio", NGL_LOG_INFO, "Preload buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
-  }
+//  while ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) && mOnline)
+//  {
+//    ReadSet(chunk_count_preview, chunk_count);
+//    //NGL_LOG("radio", NGL_LOG_INFO, "Preload buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
+//  }
   // Do the actual regular streaming:
   double nexttime = nglTime();
   while (mOnline)
