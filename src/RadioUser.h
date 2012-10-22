@@ -15,7 +15,7 @@ class RadioUser
 public:
   RadioUser();
 
-  nglString uuid;
+  int uuid;
   bool hd;
 };
 

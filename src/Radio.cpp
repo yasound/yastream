@@ -26,7 +26,8 @@ Radio::Radio(const nglString& rID, const nglString& rHost)
   mBufferDurationPreview(0),
   mpSource(NULL),
   mpPreviewSource(NULL),
-  mpThread(NULL)
+  mpThread(NULL),
+  mLastUpdateTime(0)
 {
   if (!rHost.IsNull())
   {
@@ -102,9 +103,6 @@ void Radio::Start()
   }
   else
   {
-    //mOnline = LoadNextTrack();
-    LoadNextTrack();
-
     if (mOnline)
       mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), nglThread::Normal, stacksize);
     else
@@ -418,8 +416,7 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 {
   if (!mpParser)
   {
-    if (!LoadNextTrack())
-      return 0;
+    return 0;
   }
 
   double duration = 0;
@@ -455,9 +452,14 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 
   if (!pChunk || !nextFramePreviewOK || !nextFrameOK)
   {
-    //NGL_LOG("radio", NGL_LOG_INFO, "[skip: %c][pChunk: %p][nextFrameOK: %c / %c]\n", skip?'y':'n', pChunk, nextFramePreviewOK?'y':'n', nextFrameOK?'y':'n');
-    LoadNextTrack();
-    //mOnline = LoadNextTrack();
+    delete mpParser;
+    delete mpStream;
+    delete mpParserPreview;
+    delete mpStreamPreview;
+    mpParser = NULL;
+    mpStream = NULL;
+    mpParserPreview = NULL;
+    mpStreamPreview = NULL;
 
     if (!mOnline)
     {
@@ -610,6 +612,7 @@ void Radio::OnStart()
         while (mOnline && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || now >= nexttime))
         {
           nglCriticalSectionGuard guard(mCS);
+          UpdateRadio();
           nexttime += ReadSet(chunk_count_preview, chunk_count);
           //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
         }
@@ -715,29 +718,40 @@ void Radio::KillClients()
   }
 }
 
-bool Radio::LoadNextTrack()
+void Radio::UpdateRadio()
 {
   if (mGoOffline) // We were asked to kill this radio once the current song was finished.
-    return false;
+    return;
 
-  // Otherwise load a track from mTracks
-  if (!mTracks.empty())
+  double now = nglTime();
+  double t = now - mLastUpdateTime;
+  if (mLastUpdateTime == 0)
   {
-    Track track = mTracks.front();
-    mTracks.pop_front();
+    // We're starting up, let's pretend...
+    if (!mTracks.empty())
+      t = mTracks.front().mDelay;
+    else
+      t = 0;
+  }
+  mLastUpdateTime = now;
+  // Otherwise load a track from mTracks
 
-    while (!SetTrack(track) && mOnline && !mTracks.empty())
-    {
-      NGL_LOG("radio", NGL_LOG_INFO, "Skipping unreadable file '%s'\n", track.mFileID.GetChars());
-      track = mTracks.front();
-      mTracks.pop_front();
-    }
-    //NGL_LOG("radio", NGL_LOG_INFO, "Started '%s' from static track list\n", p.GetChars());
-    return mpParser && mpParserPreview;
+  std::list<Track>::iterator it = mTracks.begin();
+  std::list<Track>::iterator end = mTracks.end();
+
+  for ( ; it != end; ++it)
+  {
+    Track& rTrack(*it);
+    rTrack.mDelay -= t;
   }
 
-  //NGL_LOG("radio", NGL_LOG_INFO, "No more track in the list. Bailout...\n");
-  return false;
+  while (!mTracks.empty() && mTracks.front().mDelay <= 0)
+  {
+    Track& track(mTracks.front());
+    SetTrack(track);
+    mTracks.pop_front();
+    //NGL_LOG("radio", NGL_LOG_INFO, "Started '%s' from static track list\n", p.GetChars());
+  }
 }
 
 nglCriticalSection Radio::gCS;
@@ -978,14 +992,13 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
   }
   else if (type == "user_authentication")
   {
-    nglString uuid;
-    uuid.Add(msg.get("user_id", nuiJson::Value()).asUInt());
+    int uuid = msg.get("user_id", nuiJson::Value()).asUInt();
     bool hd = msg.get("hd", nuiJson::Value()).asBool();
     nglString auth_token = msg.get("auth_token", nuiJson::Value()).asString();
     nglString username = msg.get("username", nuiJson::Value()).asString();
     nglString api_key = msg.get("api_key", nuiJson::Value()).asString();
 
-    NGL_LOG("radio", NGL_LOG_INFO, "Redis: user_authentication '%s' (%s) (%s) (%s) (%s)\n", uuid.GetChars(), hd?"HD":"SD", auth_token.GetChars(), username.GetChars(), api_key.GetChars());
+    NGL_LOG("radio", NGL_LOG_INFO, "Redis: user_authentication '%d' (%s) (%s) (%s) (%s)\n", uuid, hd?"HD":"SD", auth_token.GetChars(), username.GetChars(), api_key.GetChars());
 
     nglString id("auth_");
     id.Add(auth_token).Add(username).Add(api_key);
@@ -1104,11 +1117,17 @@ void Radio::SignallEvent(const nglString& rName)
   }
 }
 
+bool compare_track(const Track& rLeft, const Track& rRight)
+{
+  return rLeft.mDelay < rRight.mDelay;
+}
+
 void Radio::PlayTrack(const nglString& rFilename, double delay, double offet, double fade)
 {
   nglCriticalSectionGuard g(mCS);
   NGL_LOG("radio", NGL_LOG_INFO, "Add track %s to radio %s", rFilename.GetChars(), mID.GetChars());
   Track track(rFilename, delay, offset, fade);
   mTracks.push_back(track);
+  mTracks.sort(compare_track);
 }
 

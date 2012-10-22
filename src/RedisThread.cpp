@@ -239,25 +239,25 @@ void RedisThread::StopRadio(const nglString& rRadioID)
   Post(val);
 }
 
-void RedisThread::RegisterListener(const nglString& rRadioID, const nglString& rSessionID, const nglString& rUserID)
+void RedisThread::RegisterListener(const nglString& rRadioID, const nglString& rSessionID, uint32 UserID)
 {
   nuiJson::Value val;
   val["type"] = "register_listener";
   val["streamer"] = mID.GetChars();
   val["radio_uuid"] = rRadioID.GetChars();
   val["session_id"] = rSessionID.GetChars();
-  val["user_id"] = rUserID.GetChars();
+  val["user_id"] = UserID;
   Post(val);
 }
 
-void RedisThread::UnregisterListener(const nglString& rRadioID, const nglString& rSessionID, const nglString& rUserID)
+void RedisThread::UnregisterListener(const nglString& rRadioID, const nglString& rSessionID, uint32 UserID)
 {
   nuiJson::Value val;
   val["type"] = "unregister_listener";
   val["streamer"] = mID.GetChars();
   val["radio_uuid"] = rRadioID.GetChars();
   val["session_id"] = rSessionID.GetChars();
-  val["user_id"] = rUserID.GetChars();
+  val["user_id"] = UserID;
   Post(val);
 }
 
