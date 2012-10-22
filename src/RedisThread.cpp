@@ -242,7 +242,7 @@ void RedisThread::StopRadio(const nglString& rRadioID)
 void RedisThread::RegisterListener(const nglString& rRadioID, const nglString& rSessionID, const nglString& rUserID)
 {
   nuiJson::Value val;
-  val["type"] = "stop_radio";
+  val["type"] = "register_listener";
   val["streamer"] = mID.GetChars();
   val["radio_uuid"] = rRadioID.GetChars();
   val["session_id"] = rSessionID.GetChars();
@@ -253,7 +253,7 @@ void RedisThread::RegisterListener(const nglString& rRadioID, const nglString& r
 void RedisThread::UnregisterListener(const nglString& rRadioID, const nglString& rSessionID, const nglString& rUserID)
 {
   nuiJson::Value val;
-  val["type"] = "stop_radio";
+  val["type"] = "unregister_listener";
   val["streamer"] = mID.GetChars();
   val["radio_uuid"] = rRadioID.GetChars();
   val["session_id"] = rSessionID.GetChars();
