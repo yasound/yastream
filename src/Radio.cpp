@@ -561,57 +561,49 @@ void Radio::OnStart()
   // the preview is 64k while the hq is 192k. For some reasons, the chunks are not of the same duration in between preview and HQ: 12 HQ chunks = 13 Preview chunks. So let's skip one HQ every 13 LQ:
   int counter = 0;
 
-  // Pre buffering:
-//  while ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) && mOnline)
-//  {
-//    ReadSet(chunk_count_preview, chunk_count);
-//    //NGL_LOG("radio", NGL_LOG_INFO, "Preload buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
-//  }
   // Do the actual regular streaming:
   double nexttime = nglTime();
   while (mOnline)
   {
+    if (mLive)
     {
-      if (mLive)
+      double over = nglTime() - nexttime;
+      while (mOnline && mLive && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || over >= 0))
       {
-        double over = nglTime() - nexttime;
-        while (mOnline && mLive && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || over >= 0))
+        nglCriticalSectionGuard guard(mCS);
+        double duration = ReadSetProxy(chunk_count_preview, chunk_count);
+        nexttime += duration;
+        if (duration == 0)
         {
-          nglCriticalSectionGuard guard(mCS);
-          double duration = ReadSetProxy(chunk_count_preview, chunk_count);
-          nexttime += duration;
-          if (duration == 0)
+          if (mLive)
           {
-            if (mLive)
-            {
-              SetNetworkSource(NULL, NULL);
-              nexttime = nglTime();
+            SetNetworkSource(NULL, NULL);
+            nexttime = nglTime();
 
-              //NGL_LOG("radio", NGL_LOG_INFO, "Radio source broken");
-              if (!mOnline)
-              {
-                NGL_LOG("radio", NGL_LOG_ERROR, "Radio offline");
-              }
-            }
-            else
+            //NGL_LOG("radio", NGL_LOG_INFO, "Radio source broken");
+            if (!mOnline)
             {
-              NGL_LOG("radio", NGL_LOG_ERROR, "Radio broken AND offline");
-              mOnline = false; //#FIXME Handle HQ Stream: && mpSource->IsReadConnected();
+              NGL_LOG("radio", NGL_LOG_ERROR, "Radio offline");
             }
           }
-          //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
+          else
+          {
+            NGL_LOG("radio", NGL_LOG_ERROR, "Radio broken AND offline");
+            mOnline = false; //#FIXME Handle HQ Stream: && mpSource->IsReadConnected();
+          }
         }
+        //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
       }
-      else
+    }
+    else
+    {
+      double now = nglTime();
+      while (mOnline && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || now >= nexttime))
       {
-        double now = nglTime();
-        while (mOnline && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || now >= nexttime))
-        {
-          nglCriticalSectionGuard guard(mCS);
-          UpdateRadio();
-          nexttime += ReadSet(chunk_count_preview, chunk_count);
-          //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
-        }
+        nglCriticalSectionGuard guard(mCS);
+        UpdateRadio();
+        nexttime += ReadSet(chunk_count_preview, chunk_count);
+        //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
       }
     }
     nglThread::MsSleep(10);
