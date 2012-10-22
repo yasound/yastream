@@ -716,6 +716,7 @@ void Radio::KillClients()
 
 void Radio::UpdateRadio()
 {
+  NGL_LOG("radio", NGL_LOG_ALWAYS, "UpdateRadio()");
   double now = nglTime();
   double t = now - mLastUpdateTime;
   if (mLastUpdateTime == 0)
@@ -728,7 +729,7 @@ void Radio::UpdateRadio()
       t = 0;
   }
   mLastUpdateTime = now;
-  // Otherwise load a track from mTracks
+  NGL_LOG("radio", NGL_LOG_ALWAYS, "UpdateRadio for %f seconds (%d tracks)", t, mTracks.size());
 
   std::list<Track>::iterator it = mTracks.begin();
   std::list<Track>::iterator end = mTracks.end();
