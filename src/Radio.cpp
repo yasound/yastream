@@ -592,12 +592,12 @@ void Radio::OnStart()
               //NGL_LOG("radio", NGL_LOG_INFO, "Radio source broken");
               if (!mOnline)
               {
-                NGL_LOG("radio", NGL_LOG_INFO, "Radio offline");
+                NGL_LOG("radio", NGL_LOG_ERROR, "Radio offline");
               }
             }
             else
             {
-              NGL_LOG("radio", NGL_LOG_INFO, "Radio broken AND offline");
+              NGL_LOG("radio", NGL_LOG_ERROR, "Radio broken AND offline");
               mOnline = false; //#FIXME Handle HQ Stream: && mpSource->IsReadConnected();
             }
           }
@@ -621,7 +621,7 @@ void Radio::OnStart()
   // tell clients to stop:
   KillClients();
 
-  NGL_LOG("radio", NGL_LOG_INFO, "radio '%s' is now offline\n", mID.GetChars());
+  NGL_LOG("radio", NGL_LOG_ERROR, "radio '%s' is now offline\n", mID.GetChars());
 
   delete this;
 }
