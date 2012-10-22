@@ -720,9 +720,6 @@ void Radio::KillClients()
 
 void Radio::UpdateRadio()
 {
-  if (mGoOffline) // We were asked to kill this radio once the current song was finished.
-    return;
-
   double now = nglTime();
   double t = now - mLastUpdateTime;
   if (mLastUpdateTime == 0)
