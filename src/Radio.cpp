@@ -1054,11 +1054,17 @@ nglSyncEvent* Radio::AddEvent(const nglString& rName)
 {
   nglCriticalSectionGuard g(gEventCS);
 
-  NGL_ASSERT(gEvents.find(rName) == gEvents.end());
+  EventMap::iterator it = gEvents.find(rName);
+  if (it != gEvents.end())
+  {
+    EventPair& rEvent(it->second);
+    rEvent.second++;
+    return rEvent.first;
+  }
 
   nglSyncEvent* pEvent = new nglSyncEvent();
-  //pEvent->Reset();
-  gEvents[rName] = pEvent;
+  EventPair Event(pEvent, 1);
+  gEvents[rName] = Event;
   NGL_LOG("radio", NGL_LOG_INFO, "add event: %s - %p", rName.GetChars(), pEvent);
   return pEvent;
 }
@@ -1070,10 +1076,17 @@ void Radio::DelEvent(const nglString& rName)
   EventMap::iterator it = gEvents.find(rName);
   NGL_ASSERT(it != gEvents.end());
 
-  nglSyncEvent* pEvent = gEvents[rName];
-  NGL_LOG("radio", NGL_LOG_INFO, "del event: %s - %p", rName.GetChars(), pEvent);
-  delete pEvent;
-  gEvents.erase(it);
+  EventPair& rEvent(it->second);
+  rEvent.second--;
+  NGL_LOG("radio", NGL_LOG_INFO, "del event: %s - %p", rName.GetChars(), rEvent.first);
+
+  if (!rEvent.second)
+  {
+    NGL_LOG("radio", NGL_LOG_INFO, "kill event: %s - %p", rName.GetChars(), rEvent.first);
+    nglSyncEvent* pEvent = rEvent.first;
+    delete pEvent;
+    gEvents.erase(it);
+  }
 }
 
 void Radio::SignallEvent(const nglString& rName)
@@ -1083,7 +1096,8 @@ void Radio::SignallEvent(const nglString& rName)
   EventMap::iterator it = gEvents.find(rName);
   if (it != gEvents.end())
   {
-    nglSyncEvent* pEvent = gEvents[rName];
+    EventPair& rEvent(it->second);
+    nglSyncEvent* pEvent = rEvent.first;
     NGL_LOG("radio", NGL_LOG_INFO, "signal event: %s - %p", rName.GetChars(), pEvent);
     pEvent->Set();
   }

@@ -129,7 +129,8 @@ private:
   static RedisThread* mpRedisThreadIn;
   static RedisThread* mpRedisThreadOut;
 
-  typedef std::map<nglString, nglSyncEvent*> EventMap;
+  typedef std::pair<nglSyncEvent*, int> EventPair;
+  typedef std::map<nglString, EventPair > EventMap;
   static EventMap gEvents;
   static std::map<nglString, RadioUser> gUsers;
   static nglCriticalSection gEventCS;
