@@ -728,6 +728,7 @@ void Radio::UpdateRadio()
   if (mLastUpdateTime == 0)
   {
     // We're starting up, let's pretend...
+    NGL_LOG("radio", NGL_LOG_INFO, "first time in update radio");
     if (!mTracks.empty())
       t = mTracks.front().mDelay;
     else
@@ -748,6 +749,7 @@ void Radio::UpdateRadio()
   while (!mTracks.empty() && mTracks.front().mDelay <= 0)
   {
     Track& track(mTracks.front());
+    NGL_LOG("radio", NGL_LOG_INFO, "Start new track: %s", track.mFileID.GetChars());
     SetTrack(track);
     mTracks.pop_front();
     //NGL_LOG("radio", NGL_LOG_INFO, "Started '%s' from static track list\n", p.GetChars());
