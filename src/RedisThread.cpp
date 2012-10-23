@@ -63,6 +63,10 @@ void RedisThread::Broadcast()
             if (mpClient->Connect(mHost) && mpClient->IsConnected())
             {
               NGL_LOG("radio", NGL_LOG_INFO, "Redis message broadcaster connected\n");
+
+              RedisRequest select;
+              select.SELECT(3);
+              mpClient->SendCommand(select);
             }
             else
             {
@@ -91,12 +95,26 @@ void RedisThread::PumpMessages()
       if (mpClient->Connect(mHost) && mpClient->IsConnected())
       {
         NGL_LOG("radio", NGL_LOG_INFO, "Redis message pump connected\n");
+
+        RedisRequest select;
+        select.SELECT(3);
+        RedisReplyType res = mpClient->SendCommand(select);
+        if (res == eRedisError)
+        {
+          NGL_LOG("radio", NGL_LOG_INFO, "Redis unable to change redis db\n");
+          mpClient->Disconnect();
+        }
+        else
+        {
+          NGL_LOG("radio", NGL_LOG_INFO, "Redis db changed\n");
+        }
+
         RedisRequest request;
         nglString channel("yastream.");
         channel += mID;
           NGL_LOG("radio", NGL_LOG_INFO, "Redis yascheduler channel: %s\n", channel.GetChars());
         request.PSUBSCRIBE(channel);
-        RedisReplyType res = mpClient->SendCommand(request);
+        res = mpClient->SendCommand(request);
         if (res == eRedisError)
         {
           NGL_LOG("radio", NGL_LOG_INFO, "Redis message unable to subscribe to yascheduler channel\n");
