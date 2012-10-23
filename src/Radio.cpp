@@ -1081,7 +1081,7 @@ nglSyncEvent* Radio::AddEvent(const nglString& rName)
   nglSyncEvent* pEvent = new nglSyncEvent();
   EventPair Event(pEvent, 1);
   gEvents[rName] = Event;
-  NGL_LOG("radio", NGL_LOG_INFO, "add event: %s - %p", rName.GetChars(), pEvent);
+  //NGL_LOG("radio", NGL_LOG_INFO, "add event: %s - %p", rName.GetChars(), pEvent);
   return pEvent;
 }
 
@@ -1094,11 +1094,11 @@ void Radio::DelEvent(const nglString& rName)
 
   EventPair& rEvent(it->second);
   rEvent.second--;
-  NGL_LOG("radio", NGL_LOG_INFO, "del event: %s - %p", rName.GetChars(), rEvent.first);
+  //NGL_LOG("radio", NGL_LOG_INFO, "del event: %s - %p", rName.GetChars(), rEvent.first);
 
   if (!rEvent.second)
   {
-    NGL_LOG("radio", NGL_LOG_INFO, "kill event: %s - %p", rName.GetChars(), rEvent.first);
+    //NGL_LOG("radio", NGL_LOG_INFO, "kill event: %s - %p", rName.GetChars(), rEvent.first);
     nglSyncEvent* pEvent = rEvent.first;
     delete pEvent;
     gEvents.erase(it);
@@ -1114,7 +1114,7 @@ void Radio::SignallEvent(const nglString& rName)
   {
     EventPair& rEvent(it->second);
     nglSyncEvent* pEvent = rEvent.first;
-    NGL_LOG("radio", NGL_LOG_INFO, "signal event: %s - %p", rName.GetChars(), pEvent);
+    //NGL_LOG("radio", NGL_LOG_INFO, "signal event: %s - %p", rName.GetChars(), pEvent);
     pEvent->Set();
   }
 }
