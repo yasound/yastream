@@ -10,8 +10,8 @@
 #include "RedisThread.h"
 
 //class RedisThread : public nglThread
-RedisThread::RedisThread(const nuiNetworkHost& rHost, Mode mode, const nglString rID)
-: mHost(rHost), mMode(mode), mID(rID)
+RedisThread::RedisThread(const nuiNetworkHost& rHost, Mode mode, const nglString rID, int db)
+: mHost(rHost), mMode(mode), mID(rID), mDB(db)
 {
   mpClient = new RedisClient();
   mOnline = true;
@@ -65,7 +65,7 @@ void RedisThread::Broadcast()
               NGL_LOG("radio", NGL_LOG_INFO, "Redis message broadcaster connected\n");
 
               RedisRequest select;
-              select.SELECT(3);
+              select.SELECT(mDB);
               mpClient->SendCommand(select);
             }
             else
@@ -97,7 +97,7 @@ void RedisThread::PumpMessages()
         NGL_LOG("radio", NGL_LOG_INFO, "Redis message pump connected\n");
 
         RedisRequest select;
-        select.SELECT(3);
+        select.SELECT(mDB);
         RedisReplyType res = mpClient->SendCommand(select);
         if (res == eRedisError)
         {

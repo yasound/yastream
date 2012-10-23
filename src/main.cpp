@@ -376,6 +376,8 @@ int main(int argc, const char** argv)
 
   NGL_OUT("Radio BEGIN");
 
+  Radio::SetRedisDB(redishost, redisdb);
+
   NGL_OUT("Starting http streaming server %s:%d\n", bindhost.GetChars(), port);
   nuiHTTPServer* pServer = new HTTPServer();
   //pServer->SetClientStackSize(1024 * 1024 * 4);

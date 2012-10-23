@@ -11,6 +11,9 @@
 
 #define ENABLE_REDIS_THREADS 1
 
+int Radio::gRedisDB = 3;
+nglString Radio::gRedisHost = "127.0.0.1";
+
 ///////////////////////////////////////////////////
 //class Radio
 Radio::Radio(const nglString& rID, const nglString& rHost)
@@ -1024,11 +1027,11 @@ RedisThread* Radio::mpRedisThreadOut = NULL;
 void Radio::StartRedis()
 {
 #if ENABLE_REDIS_THREADS
-  mpRedisThreadIn = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::MessagePump, mHostname);
+  mpRedisThreadIn = new RedisThread(nuiNetworkHost(gRedisHost, 6379, nuiNetworkHost::eTCP), RedisThread::MessagePump, mHostname, gRedisDB);
   mpRedisThreadIn->SetMessageHandler(Radio::HandleRedisMessage);
   mpRedisThreadIn->Start();
 
-  mpRedisThreadOut = new RedisThread(nuiNetworkHost("127.0.0.1", 6379, nuiNetworkHost::eTCP), RedisThread::Broadcaster, mHostname);
+  mpRedisThreadOut = new RedisThread(nuiNetworkHost(gRedisHost, 6379, nuiNetworkHost::eTCP), RedisThread::Broadcaster, mHostname, gRedisDB);
   mpRedisThreadOut->Start();
 
   mpRedisThreadOut->RegisterStreamer(mHostname);
@@ -1119,3 +1122,8 @@ void Radio::PlayTrack(const nglString& rFilename, double delay, double offet, do
   mTracks.sort(compare_track);
 }
 
+void Radio::SetRedisDB(const nglString& rHost, int db)
+{
+  gRedisDB = db;
+  gRedisHost = rHost;
+}

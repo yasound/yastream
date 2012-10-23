@@ -21,7 +21,7 @@ public:
     Broadcaster
   };
 
-  RedisThread(const nuiNetworkHost& rHost, Mode mode, const nglString rID);
+  RedisThread(const nuiNetworkHost& rHost, Mode mode, const nglString rID, int db);
   virtual ~RedisThread();
   void Stop();
   void OnStart();
@@ -53,5 +53,6 @@ private:
   nuiMessageQueue mMessageQueue;
   nuiFastDelegate1<const RedisReply&> mMessageHandlerDelegate;
   nglString mID;
+  int mDB;
 };
 

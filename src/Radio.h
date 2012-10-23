@@ -69,6 +69,7 @@ public:
   static bool GetUser(const nglString& rToken, RadioUser& rUser);
   static bool GetUser(const nglString& rUsername, const nglString& rApiKey, RadioUser& rUser);
 
+  static void SetRedisDB(const nglString& rHost, int db);
 private:
   static void HandleRedisMessage(const RedisReply& rReply);
   void RegisterClient(HTTPHandler* pClient, bool highQuality);
@@ -142,5 +143,7 @@ private:
   void UpdateRadio();
   double mLastUpdateTime;
 
+  static nglString gRedisHost;
+  static int gRedisDB;
 };
 
