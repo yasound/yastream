@@ -607,6 +607,10 @@ void Radio::OnStart()
         UpdateRadio();
         nexttime += ReadSet(chunk_count_preview, chunk_count);
         //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
+
+        if (!mpParser) // we're waiting for the scheduler to send us something to do so let's not tax the CPU for nothing
+          nglThread::MsSleep(1);
+
       }
     }
     nglThread::MsSleep(10);
@@ -936,6 +940,13 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
     NGL_LOG("radio", NGL_LOG_INFO, "Redis: radio_started %s\n", uuid.GetChars());
 
     SignallEvent(uuid);
+  }
+  else if (type == "radio_unkown")
+  {
+    nglString uuid = msg.get("radio_uuid", nuiJson::Value()).asString();
+    NGL_LOG("radio", NGL_LOG_INFO, "Redis: radio_unkown %s\n", uuid.GetChars());
+
+    //SignallEvent(uuid);
   }
   else if (type == "radio_exists")
   {
