@@ -202,7 +202,7 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
     //  Shutdown radio
     NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio %s\n", mID.GetChars());
     //mOnline = false;
-    mGoOffline = true;
+    //mGoOffline = true;
   }
 }
 

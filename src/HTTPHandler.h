@@ -52,6 +52,7 @@ private:
   nglString mUsername;
   nglString mApiKey;
   nglString mRadioID;
+  int32 mUserID;
   nglTime mStartTime;
 
   nuiStringTemplate* mpTemplate;

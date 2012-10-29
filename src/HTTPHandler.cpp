@@ -21,7 +21,7 @@ nuiSocketPool* HTTPHandler::gmpPool = NULL;
 ///////////////////////////////////////////////////
 //class HTTPHandler : public nuiHTTPHandler
 HTTPHandler::HTTPHandler(nuiSocket::SocketType s)
-: nuiHTTPHandler(s), mOnline(true), mLive(false), mpRadio(NULL)
+: nuiHTTPHandler(s), mOnline(true), mLive(false), mpRadio(NULL), mUserID(-1)
 {
 #if TEMPLATE_TEST
   mpTemplate = new nuiStringTemplate("<html><body><br>This template is a test<br>ClassName: {{Class}}<br>ObjectName: {{Name}}<br>{%for elem in array%}{{elem}}<br>{%end%}Is it ok?<br></body></html>");
@@ -260,7 +260,7 @@ bool HTTPHandler::OnBodyStart()
             return ReplyAndClose();
           }
 
-          bool user_id = msg.get("user_id", nuiJson::Value()).asBool();
+          mUserID = msg.get("user_id", nuiJson::Value()).asInt();
           bool hd_enabled = msg.get("hd_enabled", nuiJson::Value()).asBool();
 
           hq = hd_enabled;
@@ -370,6 +370,8 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
   nglString params;
   if (!mUsername.IsEmpty() && !mApiKey.IsEmpty())
     params.CFormat("?username=%s&api_key=%s", mUsername.GetChars(), mApiKey.GetChars());
+  else if (mUserID < 0)
+    params.CFormat("?user_id=%d&streamer=1", mUserID);
   else
   {
     nglString address;
