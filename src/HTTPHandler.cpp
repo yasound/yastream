@@ -224,6 +224,8 @@ bool HTTPHandler::OnBodyStart()
   }
 
   bool hq = false;
+  bool hd_requested = false;
+  bool hd_enabled = false;
 
   if (tokens.size() > 1)
   {
@@ -231,6 +233,9 @@ bool HTTPHandler::OnBodyStart()
 
     if (it != params.end() && it->second == "1")
     {
+      hd_requested = true;
+    }
+      
       // Check with new method (temp token):
       it = params.find("token");
       if (it != params.end())
@@ -261,12 +266,10 @@ bool HTTPHandler::OnBodyStart()
           }
 
           mUserID = msg.get("user_id", nuiJson::Value()).asInt();
-          bool hd_enabled = msg.get("hd_enabled", nuiJson::Value()).asBool();
+          NGL_LOG("radio", NGL_LOG_INFO, "UserID = %d\n", mUserID);
+          
+          hd_enabled = msg.get("hd_enabled", nuiJson::Value()).asBool();
 
-          hq = hd_enabled;
-
-          if (!hq)
-            NGL_LOG("radio", NGL_LOG_WARNING, "user '%s' requested high quality but did not subscribe!\n", mUsername.GetChars());
         }
       }
       else
@@ -280,14 +283,15 @@ bool HTTPHandler::OnBodyStart()
         if (pResponse->GetStatusCode() == 200)
         {
           nglString subscription = pResponse->GetBodyStr();
-          hq = (subscription == SUBSCRIPTION_PREMIUM);
-
-          if (!hq)
-            NGL_LOG("radio", NGL_LOG_WARNING, "user '%s' requested high quality but did not subscribe!\n", mUsername.GetChars());
+          hd_enabled = (subscription == SUBSCRIPTION_PREMIUM);
         }
       }
     }
-  }
+
+  hq = hd_requested && hd_enabled;
+
+  if (!hq)
+    NGL_LOG("radio", NGL_LOG_WARNING, "user '%s' requested high quality but did not subscribe!\n", mUsername.GetChars());
 //   if (!hq)
 //     NGL_LOG("radio", NGL_LOG_WARNING, "Requesting low quality stream\n");
 
@@ -370,7 +374,7 @@ void HTTPHandler::SendListenStatus(ListenStatus status)
   nglString params;
   if (!mUsername.IsEmpty() && !mApiKey.IsEmpty())
     params.CFormat("?username=%s&api_key=%s", mUsername.GetChars(), mApiKey.GetChars());
-  else if (mUserID < 0)
+  else if (mUserID >=  0)
     params.CFormat("?user_id=%d&streamer=1", mUserID);
   else
   {
