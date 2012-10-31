@@ -36,8 +36,20 @@ public:
   {
     return mIterator;
   }
+
+  void SetWeight(int64 Weight)
+  {
+    mWeight = Weight;
+  }
+
+
+  int64 GetWeight() const
+  {
+    return mWeight;
+  }
 private:
   CacheItem mItem;
+  int64 mWeight;
   typename KeyList::iterator mIterator;
 };
 
@@ -59,10 +71,15 @@ public:
 
   const ItemType& GetItem(const KeyType& rKey)
   {
+    nglCriticalSectionGuard g(mCS);
     typename ItemMap::iterator it = mItems.find(rKey);
     if (it == mItems.end())
     {
-      const ItemType& item(mCreateItem(rKey));
+      mCS.Unlock(); // Beware!!! We temporarly unlock the CS because calling mCreateItem may be time consuming!
+      int64 Weight = 0;
+      const ItemType& item(mCreateItem(rKey, Weight));
+      mCS.Lock(); // Beware!!! We temporarly relock the CS because calling mCreateItem may have been time consuming!
+
       const typename KeyList::iterator i = mKeys.push_front(rKey);
       CacheItem<KeyType, ItemType> cacheItem(i, item);
       mItems[rKey] = cacheItem;
@@ -75,17 +92,36 @@ public:
     return it->second.GetItem();
   }
 
-  typedef nuiFastDelegate1<const KeyType&, const ItemType&> CreateItemDelegate;
+  typedef nuiFastDelegate2<const KeyType&, int64&, const ItemType&> CreateItemDelegate;
   typedef nuiFastDelegate2<const KeyType&, const ItemType&> DisposeItemDelegate;
 
   const ItemType& SetDelegates(const CreateItemDelegate& rCreateDelegate, const DisposeItemDelegate& rDisposeDelegate)
   {
+    nglCriticalSectionGuard g(mCS);
     mCreateItem = rCreateDelegate;
     mDisposeItem = rDisposeDelegate;
   }
   
+  void SetMaxWeight(int64 MaxWeight)
+  {
+    nglCriticalSectionGuard g(mCS);
+    mMaxWeight = MaxWeight;
+  }
+
+  int64 GetMaxWeight() const
+  {
+    nglCriticalSectionGuard g(mCS);
+    return mMaxWeight;
+  }
+
+  int64 GetWeight() const
+  {
+    nglCriticalSectionGuard g(mCS);
+    return mWeight;
+  }
 
 private:
+  int64 mMaxWeight;
   KeyList mKeys;
   ItemMap mItems;
 
@@ -96,5 +132,7 @@ private:
   {
 
   }
+
+  nglCriticalSection mCS;
 };
 
