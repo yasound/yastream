@@ -58,6 +58,7 @@ class Cache
 {
 public:
   Cache()
+  : mWeight(0), mMaxWeight(0)
   {
   }
 
@@ -71,6 +72,7 @@ public:
 
   const ItemType& GetItem(const KeyType& rKey)
   {
+    NGL_ASSERT(mCreateItem);
     nglCriticalSectionGuard g(mCS);
     typename ItemMap::iterator it = mItems.find(rKey);
     if (it == mItems.end())
@@ -122,6 +124,7 @@ public:
 
 private:
   int64 mMaxWeight;
+  int64 mWeight;
   KeyList mKeys;
   ItemMap mItems;
 
@@ -130,7 +133,32 @@ private:
 
   void Purge()
   {
+    NGL_ASSERT(mDisposeItem);
+    bool cont = true;
+    while (mWeight > mMaxWeight && cont)
+    {
+      ItemType i;
+      nglString key;
+      {
+        nglCriticalSectionGuard g(mCS);
 
+        key = mKeys.back();
+        mKeys.pop_back();
+
+        ItemMap it = mItems.find(key);
+        NGL_ASSERT(it != mItems.end());
+
+        CacheItem<KeyType, ItemType>& item(mItems[key]);
+        mWeight -= item.GetWeight();
+
+        mItems.erase(it);
+
+        cont = mKeys.empty();
+      }
+
+      mDisposeItem(i);
+
+    }
   }
 
   nglCriticalSection mCS;
