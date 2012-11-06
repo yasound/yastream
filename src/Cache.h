@@ -23,6 +23,16 @@ public:
   {
   }
 
+  CacheItem()
+  : mRefCount(-1)
+  {
+  }
+
+  CacheItem(const CacheItem<KeyType, ItemType>& rCacheItem)
+  : mIterator(rCacheItem.mIterator), mItem(rCacheItem.mItem), mRefCount(rCacheItem.mRefCount)
+  {
+  }
+
   ~CacheItem()
   {
   }
@@ -59,6 +69,12 @@ public:
     mRefCount--;
     return mRefCount;
   }
+
+  int64 GetRefCount() const
+  {
+    return mRefCount;
+  }
+
 private:
   ItemType mItem;
   int64 mWeight;
@@ -92,10 +108,12 @@ public:
     {
       mCS.Unlock(); // Beware!!! We temporarly unlock the CS because calling mCreateItem may be time consuming!
       int64 Weight = 0;
-      const ItemType& item(mCreateItem(rKey, Weight));
+      ItemType item;
+      bool res = mCreateItem(rKey, item, Weight);
       mCS.Lock(); // Beware!!! We temporarly relock the CS because calling mCreateItem may have been time consuming!
 
-      const typename KeyList::iterator i = mKeys.push_front(rKey);
+      mKeys.push_front(rKey);
+      typename KeyList::iterator i = mKeys.begin();
       CacheItem<KeyType, ItemType> cacheItem(i, item);
       mItems[rKey] = cacheItem;
 
@@ -146,7 +164,7 @@ public:
     return mWeight;
   }
 
-private:
+protected:
   int64 mMaxWeight;
   int64 mWeight;
   KeyList mKeys;
@@ -169,7 +187,7 @@ private:
         nglCriticalSectionGuard g(mCS);
 
         key = *rit;
-        ItemMap it = mItems.find(key);
+        typename ItemMap::iterator it = mItems.find(key);
         NGL_ASSERT(it != mItems.end());
 
         CacheItem<KeyType, ItemType>& item(mItems[key]);
@@ -179,8 +197,12 @@ private:
 
           ItemType i(item.GetItem());
           mItems.erase(it);
-          mKeys.erase(rit++);
-          mDisposeItem(i);
+
+          typename KeyList::iterator itr(rit.base());
+          rit++;
+          itr--;
+          mKeys.erase(itr);
+          mDisposeItem(key, i);
         }
         else
         {
@@ -318,14 +340,10 @@ public:
 
   nglIStream* GetStream(const nglPath& rSource)
   {
-    nglIStream* pStream = NULL;
     nglPath path;
-    int64 filesize = 0;
-    if (Create(rSource, path, filesize))
-    {
-      pStream = new File(*this, rSource, path);
-    }
-    return pStream;
+    if (GetItem(rSource, path))
+      return new File(*this, rSource, path);
+    return NULL;
   }
 
   bool Dispose(const nglPath& rSource, const nglPath& rDestination)
