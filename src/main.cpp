@@ -31,6 +31,8 @@ int port = 8000;
 nglString hostname = "0.0.0.0";
 nglString appurl = "https://api.yasound.com";
 nglPath datapath = "/data/glusterfs-storage/replica2all/song/";
+nglPath CachePath = "/data/cache/";
+int64 CacheSize = 1024 * 1024 * 1024 * 1; // 1 Gb
 nglString redishost = "127.0.0.1";
 int redisport = 6379;
 int redisdb = 1;
@@ -287,6 +289,28 @@ int main(int argc, const char** argv)
 
       datapath = argv[i];
     }
+    else if (strcmp(argv[i], "-cachepath") == 0)
+    {
+      i++;
+      if (i >= argc)
+      {
+        NGL_LOG("yastream", NGL_LOG_ERROR, "ERROR: -cachepath must be followed by a valid path\n");
+        exit(1);
+      }
+
+      CachePath = argv[i];
+    }
+    else if (strcmp(argv[i], "-cachesize") == 0)
+    {
+      i++;
+      if (i >= argc)
+      {
+        NGL_LOG("yastream", NGL_LOG_ERROR, "ERROR: -cachesize must be followed by a number of bytes\n");
+        exit(1);
+      }
+
+      CacheSize = atoi(argv[i]);
+    }
     else if (strcmp(argv[i], "-testsignal") == 0)
     {
       kill(0, SIGSEGV);
@@ -301,6 +325,8 @@ int main(int argc, const char** argv)
       printf("\t-redishost\tset the redis server host name or ip address.\n");
       printf("\t-redisdb\tset the redis db index (must be an integer, default = 0).\n");
       printf("\t-datapath\tset the path to the song folder (the one that contains the mp3 hashes).\n");
+      printf("\t-cachepath\tset the path to the song folder local cache.\n");
+      printf("\t-cachesize\tset the maximum size of the local song cache in bytes.\n");
       printf("\t-daemon\tlaunch in daemon mode (will fork!).\n");
       printf("\t-syslog\tSend logs to syslog.\n");
       printf("\t-flushall\tBEWARE this option completely DESTROYS all records in the DB before proceeding to the server launch.\n");
@@ -385,6 +411,8 @@ int main(int argc, const char** argv)
   pServer->SetNonBlocking(true);
 
   Radio::SetParams(appurl, hostname, port, datapath);
+  Radio::InitCache(CacheSize, datapath, CachePath);
+
   NGL_OUT("Flush OK");
 
   Radio::StartRedis();
