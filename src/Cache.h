@@ -197,6 +197,71 @@ private:
 class FileCache : public Cache<nglPath, nglPath>
 {
 public:
+
+  class File : public nglIStream
+  {
+  public:
+    File(FileCache& rCache, const nglPath& rKey, const nglPath& rPath)
+    : mrCache(rCache), mKey(rKey), mPath(rPath)
+    {
+    }
+
+    virtual ~File()
+    {
+      delete mpStream;
+      mpStream = NULL;
+
+      mrCache.ReleaseItem(mKey, mPath);
+    }
+
+    bool Open()
+    {
+      mpStream = mPath.OpenRead();
+      return mpStream != NULL;
+    }
+
+    nglStreamState GetState() const
+    {
+      return mpStream->GetState();
+    }
+
+    nglFileOffset GetPos() const
+    {
+      return mpStream->GetPos();
+    }
+
+    nglFileOffset SetPos (nglFileOffset Where, nglStreamWhence Whence = eStreamFromStart)
+    {
+      return mpStream->SetPos(Where, Whence);
+    }
+
+    nglFileSize Available (uint WordSize = 1)
+    {
+      return mpStream->Available(WordSize);
+    }
+
+    virtual int64 Read (void* pData, int64 WordCount, uint WordSize = 1)
+    {
+      return mpStream->Read(pData, WordCount, WordSize);
+    }
+
+    virtual void SetEndian(nglEndian Endian)
+    {
+      return mpStream->SetEndian(Endian);
+    }
+    
+  private:
+    nglIStream* mpStream;
+    FileCache& mrCache;
+    nglPath mKey;
+    nglPath mPath;
+    
+  };
+
+
+
+
+  ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   FileCache(int64 MaxBytes, const nglPath& rSource, const nglPath& rDestination)
   : mSource(rSource), mDestination(rDestination)
   {
@@ -251,6 +316,18 @@ public:
     return true;
   }
 
+  nglIStream* GetStream(const nglPath& rSource)
+  {
+    nglIStream* pStream = NULL;
+    nglPath path;
+    int64 filesize = 0;
+    if (Create(rSource, path, filesize))
+    {
+      pStream = new File(*this, rSource, path);
+    }
+    return pStream;
+  }
+
   bool Dispose(const nglPath& rSource, const nglPath& rDestination)
   {
     rDestination.Delete();
@@ -262,3 +339,5 @@ private:
   nglPath mSource;
   nglPath mDestination;
 };
+
+
