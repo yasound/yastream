@@ -98,6 +98,7 @@ public:
       const typename KeyList::iterator i = mKeys.push_front(rKey);
       CacheItem<KeyType, ItemType> cacheItem(i, item);
       mItems[rKey] = cacheItem;
+      NGL_LOG("radio", NGL_LOG_INFO, "Cache::GetItem '%s'", rKey.GetChars());
 
       Purge();
       rItem = item;
@@ -112,6 +113,7 @@ public:
 
   bool ReleaseItem(const KeyType& rKey, const ItemType& rItem)
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "Cache::ReleaseItem '%s'", rKey.GetChars());
     nglCriticalSectionGuard g(mCS);
     typename ItemMap::iterator it = mItems.find(rKey);
     NGL_ASSERT(it != mItems.end());
@@ -175,6 +177,7 @@ private:
         CacheItem<KeyType, ItemType>& item(mItems[key]);
         if (item.GetRefCount() == 0)
         {
+          NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge '%s'", key.GetChars());
           mWeight -= item.GetWeight();
 
           ItemType i(item.GetItem());
@@ -319,12 +322,17 @@ public:
 
   nglIStream* GetStream(const nglPath& rSource)
   {
-    nglIStream* pStream = NULL;
+    File* pStream = NULL;
     nglPath path;
     int64 filesize = 0;
     if (Create(rSource, path, filesize))
     {
       pStream = new File(*this, rSource, path);
+      if (!pStream->Open())
+      {
+        delete pStream;
+        pStream = NULL;
+      }
     }
     return pStream;
   }

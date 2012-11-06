@@ -219,13 +219,8 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
 bool Radio::SetTrack(const Track& rTrack)
 {
   nglString p = rTrack.mFileID;
-  //p.Insert("_preview64", 9);
-  p.Insert('/', 6);
-  p.Insert('/', 3);
-
   //nglPath path = "/space/new/medias/song";
-  nglPath path = mDataPath;//"/data/glusterfs-storage/replica2all/song/";
-  path += p;
+  nglPath path = p;
 
   NGL_LOG("radio", NGL_LOG_INFO, "SetTrack %s\n", path.GetChars());
 
