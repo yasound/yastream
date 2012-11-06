@@ -277,8 +277,12 @@ bool Radio::SetTrack(const Track& rTrack)
   mpParserPreview = pParserPreview;
   mpStreamPreview = pStreamPreview;
 
-  mpParser->Seek(rTrack.mOffset);
-  mpParserPreview->Seek(rTrack.mOffset);
+  if (rTrack.mOffset > 0)
+  {
+    NGL_LOG("radio", NGL_LOG_INFO, "An offset of %f seconds was requested.", rTrack.mOffset); 
+    mpParser->Seek(rTrack.mOffset);
+    mpParserPreview->Seek(rTrack.mOffset);
+  }
 
   NGL_LOG("radio", NGL_LOG_INFO, "SetTrack OK\n");
   return true;
@@ -353,10 +357,11 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
   }
 }
 
-int32 offset = 0;
 
 Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
 {
+  int32 offset = 0;
+  
   if (!pClient)
     return NULL;
   Mp3Chunk* pChunk = new Mp3Chunk();
@@ -1124,7 +1129,7 @@ bool compare_track(const Track& rLeft, const Track& rRight)
   return rLeft.mDelay < rRight.mDelay;
 }
 
-void Radio::PlayTrack(const nglString& rFilename, double delay, double offet, double fade)
+void Radio::PlayTrack(const nglString& rFilename, double delay, double offset, double fade)
 {
   nglCriticalSectionGuard g(mCS);
   NGL_LOG("radio", NGL_LOG_INFO, "Add track %s to radio %s", rFilename.GetChars(), mID.GetChars());

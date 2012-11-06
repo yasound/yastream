@@ -52,14 +52,16 @@ bool Mp3Parser::GoToNextFrame()
 
 double Mp3Parser::Seek(double seconds)
 {
+  //NGL_LOG("radio", NGL_LOG_INFO, "Mp3Parser::Seek %f", seconds);
   double t = 0;
 
   while (t < seconds)
   {
     const Mp3Frame& rFrame(GetCurrentFrame());
-    t += rFrame.GetDuration();
+    t += ((double)rFrame.GetDuration())/1000.0;
     if (!GoToNextFrame())
       return t;
+    //NGL_LOG("radio", NGL_LOG_INFO, "  %fs", t);
   }
 
   return t;
