@@ -346,7 +346,12 @@ public:
   {
     nglPath path;
     if (GetItem(rSource, path))
-      return new File(*this, rSource, path);
+    {
+      File* pFile = new File(*this, rSource, path);
+      if (pFile->Open())
+        return pFile;
+      delete pFile;
+    }
     return NULL;
   }
 
