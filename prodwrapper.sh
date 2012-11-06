@@ -17,7 +17,7 @@ CMD="./yastream \
 -host `hostname -a`.ig-1.net \
 -datapath /data/glusterfs-mnt/replica2all/song/ \
 -redishost yas-sql-01.sadm.ig-1.net \
--flushdb \
+-redisidb 3 \
 -redisport 6379 >>$LOGS"
 
 export LD_LIBRARY_PATH=/home/customer/streamer/work/nui3/bin/debug/:$LD_LIBRARY_PATH
