@@ -301,6 +301,7 @@ public:
     cache += b;
     cache += c;
 
+    cache.Create(true);
     cache += rSource;
 
     NGL_LOG("radio", NGL_LOG_INFO, "SetTrack %s\n", path.GetChars());
