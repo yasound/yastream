@@ -19,7 +19,7 @@ public:
   typedef std::list<KeyType> KeyList;
 
   CacheItem(const typename KeyList::iterator& rIterator, const ItemType& rItem)
-  : mIterator(rIterator), mItem(rItem)
+  : mIterator(rIterator), mItem(rItem), mRefCount(1)
   {
   }
 
@@ -47,14 +47,27 @@ public:
   {
     return mWeight;
   }
+
+  int64 Acquire()
+  {
+    mRefCount++;
+    return mRefCount;
+  }
+
+  int64 Release()
+  {
+    mRefCount--;
+    return mRefCount;
+  }
 private:
-  CacheItem mItem;
+  ItemType mItem;
   int64 mWeight;
   typename KeyList::iterator mIterator;
+  int64 mRefCount;
 };
 
 template <class KeyType, class ItemType>
-class Cache
+class Cache : public nuiNonCopyable
 {
 public:
   Cache()
@@ -62,7 +75,7 @@ public:
   {
   }
 
-  ~Cache()
+  virtual ~Cache()
   {
   }
 
@@ -70,7 +83,7 @@ public:
   typedef std::list<KeyType> KeyList;
   typedef std::map<KeyType, Item> ItemMap;
 
-  const ItemType& GetItem(const KeyType& rKey)
+  bool GetItem(const KeyType& rKey, ItemType& rItem)
   {
     NGL_ASSERT(mCreateItem);
     nglCriticalSectionGuard g(mCS);
@@ -87,15 +100,26 @@ public:
       mItems[rKey] = cacheItem;
 
       Purge();
-      return item;
+      rItem = item;
+      return true;
     }
 
     mKeys.splice(mKeys.begin(), mKeys, it->second.GetIterator());
-    return it->second.GetItem();
+    rItem = it->second.GetItem();
+    it->second.Acquire();
+    return true;
   }
 
-  typedef nuiFastDelegate2<const KeyType&, int64&, const ItemType&> CreateItemDelegate;
-  typedef nuiFastDelegate2<const KeyType&, const ItemType&> DisposeItemDelegate;
+  bool ReleaseItem(const KeyType& rKey, const ItemType& rItem)
+  {
+    nglCriticalSectionGuard g(mCS);
+    typename ItemMap::iterator it = mItems.find(rKey);
+    NGL_ASSERT(it != mItems.end());
+    it->second.Release();
+  }
+
+  typedef nuiFastDelegate3<const KeyType&, ItemType&, int64&, bool> CreateItemDelegate;
+  typedef nuiFastDelegate2<const KeyType&, const ItemType&, bool> DisposeItemDelegate;
 
   const ItemType& SetDelegates(const CreateItemDelegate& rCreateDelegate, const DisposeItemDelegate& rDisposeDelegate)
   {
@@ -134,29 +158,35 @@ private:
   void Purge()
   {
     NGL_ASSERT(mDisposeItem);
-    bool cont = true;
-    while (mWeight > mMaxWeight && cont)
+
+    typename KeyList::reverse_iterator rit(mKeys.rbegin());
+    typename KeyList::reverse_iterator rend(mKeys.rend());
+
+    while (mWeight > mMaxWeight && rit != rend)
     {
-      ItemType i;
       nglString key;
       {
         nglCriticalSectionGuard g(mCS);
 
-        key = mKeys.back();
-        mKeys.pop_back();
-
+        key = *rit;
         ItemMap it = mItems.find(key);
         NGL_ASSERT(it != mItems.end());
 
         CacheItem<KeyType, ItemType>& item(mItems[key]);
-        mWeight -= item.GetWeight();
+        if (item.GetRefCount() == 0)
+        {
+          mWeight -= item.GetWeight();
 
-        mItems.erase(it);
-
-        cont = mKeys.empty();
+          ItemType i(item.GetItem());
+          mItems.erase(it);
+          mKeys.erase(rit++);
+          mDisposeItem(i);
+        }
+        else
+        {
+          ++rit;
+        }
       }
-
-      mDisposeItem(i);
 
     }
   }
@@ -164,3 +194,71 @@ private:
   nglCriticalSection mCS;
 };
 
+class FileCache : public Cache<nglPath, nglPath>
+{
+public:
+  FileCache(int64 MaxBytes, const nglPath& rSource, const nglPath& rDestination)
+  : mSource(rSource), mDestination(rDestination)
+  {
+    SetMaxWeight(MaxBytes);
+    SetDelegates(nuiMakeDelegate(this, &FileCache::Create), nuiMakeDelegate(this, &FileCache::Dispose));
+  }
+
+  virtual ~FileCache()
+  {
+
+  }
+
+  bool Create(const nglPath& rSource, nglPath& rDestination, int64& rFileSize)
+  {
+    // Compute original path
+    nglString p = rSource.GetPathName();
+    nglString a = p.Extract(0, 1);
+    nglString b = p.Extract(1, 1);
+    nglString c = p.Extract(2, 1);
+    p.Insert('/', 6);
+    p.Insert('/', 3);
+
+    nglString file = p;
+
+    //nglPath path = "/space/new/medias/song";
+    nglPath path = mSource;//"/data/glusterfs-storage/replica2all/song/";
+    path += file;
+
+    NGL_LOG("radio", NGL_LOG_INFO, "SetTrack %s\n", path.GetChars());
+
+
+    // Compute destination path
+
+    //nglPath path = "/space/new/medias/song";
+    nglPath cache = mDestination;//"/data/glusterfs-storage/replica2all/song/";
+    cache += a;
+    cache += b;
+    cache += c;
+
+    cache += rSource;
+
+    NGL_LOG("radio", NGL_LOG_INFO, "SetTrack %s\n", path.GetChars());
+
+  // Copy file
+    path.Copy(cache);
+
+  // Compute file size
+    rFileSize = cache.GetSize();
+
+    rDestination = cache;
+
+    return true;
+  }
+
+  bool Dispose(const nglPath& rSource, const nglPath& rDestination)
+  {
+    rDestination.Delete();
+    return true;
+  }
+
+
+private:
+  nglPath mSource;
+  nglPath mDestination;
+};
