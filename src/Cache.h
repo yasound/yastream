@@ -106,11 +106,11 @@ public:
     typename ItemMap::iterator it = mItems.find(rKey);
     if (it == mItems.end())
     {
-      mCS.Unlock(); // Beware!!! We temporarly unlock the CS because calling mCreateItem may be time consuming!
+      //mCS.Unlock(); // Beware!!! We temporarly unlock the CS because calling mCreateItem may be time consuming!
       int64 Weight = 0;
       ItemType item;
       bool res = mCreateItem(rKey, item, Weight);
-      mCS.Lock(); // Beware!!! We temporarly relock the CS because calling mCreateItem may have been time consuming!
+      //mCS.Lock(); // Beware!!! We temporarly relock the CS because calling mCreateItem may have been time consuming!
 
       mKeys.push_front(rKey);
       typename KeyList::iterator i = mKeys.begin();
