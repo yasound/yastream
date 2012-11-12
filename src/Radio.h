@@ -6,6 +6,7 @@
 #include "nglReaderWriterLock.h"
 #include "nuiTCPClient.h"
 #include "nuiNetworkHost.h"
+#include "Cache.h"
 
 class HTTPHandler;
 
@@ -44,9 +45,13 @@ public:
   }
 
   void SetNetworkSource(nuiTCPClient* pHQSource, nuiTCPClient* pLQSource);
+
+  static void InitCache(int64 MaxSizeBytes, const nglPath& rSource, const nglPath& rDestination);
+  static void ReleaseCache();
+
 private:
   void RegisterClient(HTTPHandler* pClient, bool highQuality);
-  bool SetTrack(const nglPath& rPath);
+  bool SetTrack(const nglString& rPath);
   bool LoadNextTrack();
   double ReadSet(int64& chunk_count_preview, int64& chunk_count);
   double ReadSetProxy(int64& chunk_count_preview, int64& chunk_count);
@@ -99,5 +104,8 @@ private:
   static Radio* CreateRadio(const nglString& rURL, const nglString& rHost);
   static void RegisterRadio(const nglString& rURL, Radio* pRadio);
   static void UnregisterRadio(const nglString& rURL);
+
+  static FileCache* gpCache;
+
 };
 

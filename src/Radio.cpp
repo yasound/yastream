@@ -206,36 +206,25 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   }
 }
 
-bool Radio::SetTrack(const nglPath& rPath)
+bool Radio::SetTrack(const nglString& rPath)
 {
-  nglIStream* pStream = rPath.OpenRead();
-  if (!pStream)
-  {
-    return false;
-  }
-
   nglPath previewPath = GetPreviewPath(rPath);
-  nglIStream* pStreamPreview = previewPath.OpenRead();
-  if (!pStreamPreview)
+  nglIStream* pStream = gpCache->GetStream(rPath);
+  nglIStream* pStreamPreview = gpCache->GetStream(previewPath);
+
+  if (!pStream || !pStreamPreview)
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "SetTrack error (%p, %p)\n", pStream, pStreamPreview);
     delete pStream;
     return false;
   }
 
   Mp3Parser* pParser = new Mp3Parser(*pStream, false, false);
-  bool valid = pParser->GetCurrentFrame().IsValid();
-  if (!valid)
-  {
-    delete pParser;
-    delete pStream;
-    delete pStreamPreview;
-    return false;
-  }
-
   Mp3Parser* pParserPreview = new Mp3Parser(*pStreamPreview, false, false);
-  valid = pParserPreview->GetCurrentFrame().IsValid();
+  bool valid = pParser->GetCurrentFrame().IsValid() && pParserPreview->GetCurrentFrame().IsValid();
   if (!valid)
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "SetTrack error 4\n");
     delete pParserPreview;
     delete pStreamPreview;
     delete pParser;
@@ -251,6 +240,11 @@ bool Radio::SetTrack(const nglPath& rPath)
   mpStream = pStream;
   mpParserPreview = pParserPreview;
   mpStreamPreview = pStreamPreview;
+
+//  mpParser->Seek(rTrack.mOffset);
+//  mpParserPreview->Seek(rTrack.mOffset);
+
+  NGL_LOG("radio", NGL_LOG_INFO, "SetTrack OK\n");
 
   return true;
 }
@@ -697,23 +691,16 @@ bool Radio::LoadNextTrack()
       //NGL_LOG("radio", NGL_LOG_INFO, "new trackid: %s\n", pResponse->GetBodyStr().GetChars());
 
       nglString p = pResponse->GetBodyStr();
-      //p.Insert("_preview64", 9);
-      p.Insert('/', 6);
-      p.Insert('/', 3);
-
-      //nglPath path = "/space/new/medias/song";
-      nglPath path = mDataPath;//"/data/glusterfs-storage/replica2all/song/";
-      path += p;
 
       //NGL_LOG("radio", NGL_LOG_INFO, "new song from server: %s\n", path.GetChars());
-      if (SetTrack(path))
+      if (SetTrack(p))
       {
         delete pResponse;
         return true;
       }
       else
       {
-        NGL_LOG("radio", NGL_LOG_ERROR, "Unable to set track '%s'\n", path.GetChars());
+        NGL_LOG("radio", NGL_LOG_ERROR, "Unable to set track '%s'\n", p.GetChars());
         delete pResponse;
         pResponse = request.SendRequest();
         //return false;
@@ -733,7 +720,7 @@ bool Radio::LoadNextTrack()
   // Otherwise load a track from mTracks
   if (!mTracks.empty())
   {
-    nglPath p = mTracks.front();
+    nglString p = mTracks.front().GetPathName();
     mTracks.pop_front();
     while (!SetTrack(p) && mOnline && !mTracks.empty())
     {
@@ -896,5 +883,17 @@ bool Radio::IsOnline() const
 {
   nglCriticalSectionGuard guard(gCS);
   return mOnline;
+}
+
+FileCache* Radio::gpCache = NULL;
+
+void Radio::InitCache(int64 MaxSizeBytes, const nglPath& rSource, const nglPath& rDestination)
+{
+  gpCache = new FileCache(MaxSizeBytes, rSource, rDestination);
+}
+
+void Radio::ReleaseCache()
+{
+  delete gpCache;
 }
 
