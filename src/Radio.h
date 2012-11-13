@@ -74,6 +74,7 @@ public:
 
   static void InitCache(int64 MaxSizeBytes, const nglPath& rSource, const nglPath& rDestination);
   static void ReleaseCache();
+  static const FileCache& GetCache();
 private:
   static void HandleRedisMessage(const RedisReply& rReply);
   void RegisterClient(HTTPHandler* pClient, bool highQuality);

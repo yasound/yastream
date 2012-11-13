@@ -1134,3 +1134,7 @@ void Radio::ReleaseCache()
   delete gpCache;
 }
 
+const FileCache& Radio::GetCache()
+{
+  return *gpCache;
+}

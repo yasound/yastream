@@ -172,17 +172,19 @@ protected:
 
   void Purge()
   {
+    nglCriticalSectionGuard g(mCS);
     NGL_ASSERT(mDisposeItem);
 
-    typename KeyList::reverse_iterator rit(mKeys.rbegin());
-    typename KeyList::reverse_iterator rend(mKeys.rend());
+    typename KeyList::reverse_iterator rit;
+    typename KeyList::reverse_iterator rend;
+
+    rit = mKeys.rbegin();
+    rend = mKeys.rend();
 
     while (mWeight > mMaxWeight && rit != rend)
     {
       nglString key;
       {
-        nglCriticalSectionGuard g(mCS);
-
         key = *rit;
         typename ItemMap::iterator it = mItems.find(key);
         NGL_ASSERT(it != mItems.end());
@@ -218,7 +220,7 @@ protected:
     mItems[rKey] = CacheItem<KeyType, ItemType>(i, rItem);
 
   }
-  nglCriticalSection mCS;
+  mutable nglCriticalSection mCS;
 };
 
 class FileCache : public Cache<nglPath, nglPath>
@@ -377,6 +379,7 @@ public:
 
   bool Save(nglOStream* pStream) const
   {
+    nglCriticalSectionGuard g(mCS);
     pStream->WriteText("YaCache\0");
 
     int32 count = 0;
@@ -425,6 +428,8 @@ public:
 
   bool Load(nglIStream* pStream)
   {
+    nglCriticalSectionGuard g(mCS);
+
     const int32 BUF_SIZE = 4*1024;
     int64 r = 0;
     nglChar pChars[BUF_SIZE];
@@ -498,6 +503,39 @@ public:
     return res;
   }
 
+  void Dump(nglString& rString) const
+  {
+    nglCriticalSectionGuard g(mCS);
+
+    KeyList::const_iterator it = mKeys.begin();
+    KeyList::const_iterator end = mKeys.end();
+
+    int32 i = 0;
+    int64 s = 0;
+    while (it != end)
+    {
+      const nglPath& rKey(*it);
+      ItemMap::const_iterator it2 = mItems.find(rKey);
+      NGL_ASSERT(it2 != mItems.end());
+      const CacheItem<nglPath, nglPath>& rItem(it2->second);
+
+      // Write source path (key)
+      rString.Add("[").Add(i).Add("] ");
+      rString.Add(rItem.GetRefCount()).Add(" - ").Add(rItem.GetWeight()).Add(" | ");
+      rString.Add(rKey.GetPathName());
+      rString.Add(" -.> ");
+      rString.Add(rItem.GetItem().GetPathName());
+
+      rString.AddNewLine();
+      i++;
+      s += rItem.GetWeight();
+      ++it;
+    }
+
+    rString.AddNewLine();
+    rString.Add("Total files: ").Add(i).AddNewLine();
+    rString.Add("Total bytes: ").Add(s).AddNewLine();
+  }
 private:
   nglPath mSource;
   nglPath mDestination;
