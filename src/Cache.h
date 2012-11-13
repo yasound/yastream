@@ -108,18 +108,13 @@ public:
     {
       //mCS.Unlock(); // Beware!!! We temporarly unlock the CS because calling mCreateItem may be time consuming!
       int64 Weight = 0;
-      ItemType item;
-      bool res = mCreateItem(rKey, item, Weight);
+      bool res = mCreateItem(rKey, rItem, Weight);
       //mCS.Lock(); // Beware!!! We temporarly relock the CS because calling mCreateItem may have been time consuming!
 
-      mKeys.push_front(rKey);
-      typename KeyList::iterator i = mKeys.begin();
-      CacheItem<KeyType, ItemType> cacheItem(i, item);
-      mItems[rKey] = cacheItem;
+      AddItem(rKey, rItem);
       NGL_LOG("radio", NGL_LOG_INFO, "Cache::GetItem '%s'", rKey.GetChars());
 
       Purge();
-      rItem = item;
       return true;
     }
 
@@ -216,6 +211,13 @@ protected:
     }
   }
 
+  void AddItem(const KeyType& rKey, const ItemType& rItem)
+  {
+    mKeys.push_front(rKey);
+    typename KeyList::iterator i = mKeys.begin();
+    mItems[rKey] = CacheItem<KeyType, ItemType>(i, rItem);
+
+  }
   nglCriticalSection mCS;
 };
 
@@ -288,7 +290,7 @@ public:
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   FileCache(int64 MaxBytes, const nglPath& rSource, const nglPath& rDestination)
-  : mSource(rSource), mDestination(rDestination)
+  : mSource(rSource), mDestination(rDestination), mByPass(rSource == rDestination)
   {
     SetMaxWeight(MaxBytes);
     SetDelegates(nuiMakeDelegate(this, &FileCache::Create), nuiMakeDelegate(this, &FileCache::Dispose));
@@ -321,20 +323,29 @@ public:
     // Compute destination path
 
     //nglPath path = "/space/new/medias/song";
-    nglPath cache = mDestination;//"/data/glusterfs-storage/replica2all/song/";
-    cache += a;
-    cache += b;
-    cache += c;
+    nglPath cache;
 
-    cache.Create(true);
-    cache += rSource;
+    if (mByPass)
+    {
+      cache = path;
+    }
+    else
+    {
+      cache = mDestination;//"/data/glusterfs-storage/replica2all/song/";
+      cache += a;
+      cache += b;
+      cache += c;
 
-    NGL_LOG("radio", NGL_LOG_INFO, "SetTrack %s\n", path.GetChars());
+      cache.Create(true);
+      cache += rSource;
 
-  // Copy file
-    path.Copy(cache);
+      NGL_LOG("radio", NGL_LOG_INFO, "SetTrack %s\n", path.GetChars());
 
-  // Compute file size
+      // Copy file
+      path.Copy(cache);
+    }
+
+    // Compute file size
     rFileSize = cache.GetSize();
 
     rDestination = cache;
@@ -357,14 +368,140 @@ public:
 
   bool Dispose(const nglPath& rSource, const nglPath& rDestination)
   {
-    rDestination.Delete();
+    if (!mByPass)
+      rDestination.Delete();
     return true;
   }
 
+#define CACHE_VERSION 0
+
+  bool Save(nglOStream* pStream) const
+  {
+    pStream->WriteText("YaCache\0");
+
+    int32 count = 0;
+
+    int32 version = CACHE_VERSION;
+    pStream->WriteInt32(&version);
+
+    // Source path:
+    count = mSource.GetPathName().GetLength();
+    pStream->WriteInt32(&count);
+    pStream->WriteText(mSource.GetChars());
+
+    // Destination path:
+    count = mDestination.GetPathName().GetLength();
+    pStream->WriteInt32(&count);
+    pStream->WriteText(mDestination.GetChars());
+
+    // Write caches:
+    count = mItems.size();
+    pStream->WriteInt32(&count);
+
+    KeyList::const_iterator it = mKeys.begin();
+    KeyList::const_iterator end = mKeys.end();
+
+    while (it != end)
+    {
+      const nglPath& rKey(*it);
+      ItemMap::const_iterator it2 = mItems.find(rKey);
+      NGL_ASSERT(it2 != mItems.end());
+      const CacheItem<nglPath, nglPath>& rItem(it2->second);
+
+      // Write source path (key)
+      count = rKey.GetPathName().GetLength();
+      pStream->WriteInt32(&count);
+      pStream->WriteText(rKey.GetChars());
+
+      // Write source path (key)
+      count = rItem.GetItem().GetPathName().GetLength();
+      pStream->WriteInt32(&count);
+      pStream->WriteText(rItem.GetItem().GetPathName().GetChars());
+
+      ++it;
+    }
+    return true;
+  }
+
+  bool Load(nglIStream* pStream)
+  {
+    const int32 BUF_SIZE = 4*1024;
+    int64 r = 0;
+    nglChar pChars[BUF_SIZE];
+    memset(pChars, 0, BUF_SIZE);
+    r = pStream->Read(pChars, 1, 8);
+    nglString tag(pChars);
+    if (tag != "YaCache!")
+      return false;
+
+    int32 count = 0;
+
+    int32 version = CACHE_VERSION;
+    pStream->ReadInt32(&version);
+
+    // Source path:
+    pStream->ReadInt32(&count);
+    pStream->Read(pChars, 1, count);
+    nglString src;
+    src.Import(pChars, count, eEncodingNative);;
+    mSource = src;
+
+    // Destination path:
+    count = mDestination.GetPathName().GetLength();
+    pStream->ReadInt32(&count);
+    pStream->Read(pChars, 1, count);
+    nglString dest;
+    dest.Import(pChars, count, eEncodingNative);
+    mDestination = dest;
+
+    // Read caches:
+    pStream->ReadInt32(&count);
+
+    int32 items = count;
+    for (int32 i = 0; i < items; i++)
+    {
+      nglString key;
+      nglString item;
+
+      // Write source path (key)
+      pStream->ReadInt32(&count);
+      pStream->Read(pChars, 1, count);
+      key.Import(pChars, count, eEncodingNative);
+
+      // Write source path (key)
+      pStream->ReadInt32(&count);
+      pStream->Read(pChars, 1, count);
+      item.Import(pChars, count, eEncodingNative);
+
+      AddItem(key, item);
+    }
+    return true;
+  }
+
+  bool Save(const nglPath& rPath) const
+  {
+    if (mByPass)
+      return true;
+    nglOStream* pStream = rPath.OpenWrite();
+    bool res = Save(pStream);
+    delete pStream;
+    return res;
+  }
+
+  bool Load(const nglPath& rPath)
+  {
+    if (mByPass)
+      return true;
+    nglIStream* pStream = rPath.OpenRead();
+    bool res = Load(pStream);
+    delete pStream;
+    return res;
+  }
 
 private:
   nglPath mSource;
   nglPath mDestination;
+  bool mByPass;
 };
 
 
