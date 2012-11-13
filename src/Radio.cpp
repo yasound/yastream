@@ -1102,6 +1102,8 @@ void Radio::SignallEvent(const nglString& rName)
   }
 }
 
+bool compare_track(const Track& rLeft, const Track& rRight);
+
 bool compare_track(const Track& rLeft, const Track& rRight)
 {
   return rLeft.mDelay < rRight.mDelay;
