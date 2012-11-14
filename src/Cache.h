@@ -89,7 +89,7 @@ class Cache : public nuiNonCopyable
 {
 public:
   Cache()
-  : mWeight(0), mMaxWeight(0)
+  : mWeight(0), mMaxWeight(0), mByPass(false)
   {
   }
 
@@ -173,6 +173,7 @@ protected:
   int64 mWeight;
   KeyList mKeys;
   ItemMap mItems;
+  bool mByPass;
 
   CreateItemDelegate mCreateItem;
   DisposeItemDelegate mDisposeItem;
@@ -180,6 +181,11 @@ protected:
   void Purge()
   {
     nglCriticalSectionGuard g(mCS);
+
+   if (mByPass)
+     return;
+
+    NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge current = %s  max = %s", nglBytes(mWeight).GetChars(), nglBytes(mMaxWeight).GetChars());
     NGL_ASSERT(mDisposeItem);
 
     typename KeyList::reverse_iterator rit;
@@ -190,33 +196,33 @@ protected:
 
     while (mWeight > mMaxWeight && rit != rend)
     {
-      nglString key;
+      nglString key = (*rit).GetPathName();
+
+      typename ItemMap::iterator it = mItems.find(key);
+      NGL_ASSERT(it != mItems.end());
+
+      CacheItem<KeyType, ItemType>& item(mItems[key]);
+
+      NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge %s > %s - %s => %s (%d)", nglBytes(mWeight).GetChars(), nglBytes(mMaxWeight).GetChars(), key.GetChars(), nglBytes(item.GetWeight()).GetChars(), (int32)item.GetRefCount());
+
+      if (item.GetRefCount() == 0)
       {
-        key = *rit;
-        typename ItemMap::iterator it = mItems.find(key);
-        NGL_ASSERT(it != mItems.end());
+        NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge '%s'", key.GetChars());
+        mWeight -= item.GetWeight();
 
-        CacheItem<KeyType, ItemType>& item(mItems[key]);
-        if (item.GetRefCount() == 0)
-        {
-          NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge '%s'", key.GetChars());
-          mWeight -= item.GetWeight();
+        ItemType i(item.GetItem());
+        mItems.erase(it);
 
-          ItemType i(item.GetItem());
-          mItems.erase(it);
-
-          typename KeyList::iterator itr(rit.base());
-          rit++;
-          itr--;
-          mKeys.erase(itr);
-          mDisposeItem(key, i);
-        }
-        else
-        {
-          ++rit;
-        }
+        typename KeyList::iterator itr(rit.base());
+        ++rit;
+        --itr;
+        mKeys.erase(itr);
+        mDisposeItem(key, i);
       }
-
+      else
+      {
+        ++rit;
+      }
     }
   }
 
@@ -299,8 +305,9 @@ public:
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   FileCache(int64 MaxBytes, const nglPath& rSource, const nglPath& rDestination)
-  : mSource(rSource), mDestination(rDestination), mByPass(rSource == rDestination)
+  : mSource(rSource), mDestination(rDestination)
   {
+    mByPass = rSource == rDestination;
     SetMaxWeight(MaxBytes);
     SetDelegates(nuiMakeDelegate(this, &FileCache::Create), nuiMakeDelegate(this, &FileCache::Dispose));
     Load(mDestination + nglPath("yastream.cache"));
@@ -569,7 +576,6 @@ public:
 private:
   nglPath mSource;
   nglPath mDestination;
-  bool mByPass;
 };
 
 
