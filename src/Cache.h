@@ -18,8 +18,8 @@ class CacheItem
 public:
   typedef std::list<KeyType> KeyList;
 
-  CacheItem(const typename KeyList::iterator& rIterator, const ItemType& rItem)
-  : mIterator(rIterator), mItem(rItem), mRefCount(1)
+  CacheItem(const typename KeyList::iterator& rIterator, const ItemType& rItem, int64 weight)
+  : mIterator(rIterator), mItem(rItem), mRefCount(1), mWeight(weight)
   {
   }
 
@@ -111,7 +111,7 @@ public:
       bool res = mCreateItem(rKey, rItem, Weight);
       //mCS.Lock(); // Beware!!! We temporarly relock the CS because calling mCreateItem may have been time consuming!
 
-      AddItem(rKey, rItem);
+      AddItem(rKey, rItem, Weight);
       NGL_LOG("radio", NGL_LOG_INFO, "Cache::GetItem '%s'", rKey.GetChars());
 
       Purge();
@@ -222,6 +222,8 @@ protected:
   }
   mutable nglCriticalSection mCS;
 };
+
+nglString nglBytes(int64 b);
 
 class FileCache : public Cache<nglPath, nglPath>
 {
@@ -521,7 +523,7 @@ public:
 
       // Write source path (key)
       rString.Add("[").Add(i).Add("] ");
-      rString.Add(rItem.GetRefCount()).Add(" - ").Add(rItem.GetWeight()).Add(" | ");
+      rString.Add(nglBytes(rItem.GetRefCount())).Add(" - ").Add(rItem.GetWeight()).Add(" | ");
       rString.Add(rKey.GetPathName());
       rString.Add(" -.> ");
       rString.Add(rItem.GetItem().GetPathName());
@@ -534,7 +536,7 @@ public:
 
     rString.AddNewLine();
     rString.Add("Total files: ").Add(i).AddNewLine();
-    rString.Add("Total bytes: ").Add(s).AddNewLine();
+    rString.Add("Total bytes: ").Add(nglBytes(s)).AddNewLine();
   }
 private:
   nglPath mSource;
