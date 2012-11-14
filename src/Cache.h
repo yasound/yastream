@@ -121,7 +121,7 @@ public:
       return true;
     }
 
-    mKeys.splice(mKeys.begin(), mKeys, it->second.GetIterator());
+    mKeys.splice(mKeys.end(), mKeys, it->second.GetIterator());
     rItem = it->second.GetItem();
     it->second.Acquire();
     return true;
@@ -190,8 +190,8 @@ protected:
     NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge current = %s  max = %s", nglBytes(mWeight).GetChars(), nglBytes(mMaxWeight).GetChars());
     NGL_ASSERT(mDisposeItem);
 
-    typename KeyList::reverse_iterator rit(mKeys.rbegin());
-    typename KeyList::reverse_iterator rend(mKeys.rend());
+    typename KeyList::iterator rit(mKeys.begin());
+    typename KeyList::iterator rend(mKeys.end());
 
     while ((mWeight > mMaxWeight) && (rit != rend))
     {
@@ -212,9 +212,8 @@ protected:
         NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge '%s'", key.GetChars());
         mWeight -= item.GetWeight();
 
-        ++rit;
         ItemType i(item.GetItem());
-        mKeys.erase(item.GetIterator());
+        mKeys.erase(rit++);
         mItems.erase(it);
 
         mDisposeItem(key, i);
@@ -228,8 +227,7 @@ protected:
 
   void AddItem(const KeyType& rKey, const ItemType& rItem, int64 Weight, bool AutoAcquired)
   {
-    mKeys.push_front(rKey);
-    typename KeyList::iterator i = mKeys.begin();
+    typename KeyList::iterator i = mKeys.insert(mKeys.end(). rKey);
     mItems[rKey] = CacheItem<KeyType, ItemType>(i, rItem, Weight, AutoAcquired);
     mWeight += Weight;
   }
@@ -422,8 +420,8 @@ public:
     count = mItems.size();
     pStream->WriteInt32(&count);
 
-    KeyList::const_reverse_iterator it = mKeys.rbegin();
-    KeyList::const_reverse_iterator end = mKeys.rend();
+    KeyList::const_iterator it = mKeys.begin();
+    KeyList::const_iterator end = mKeys.end();
 
     int c = 0;
     while (it != end)
