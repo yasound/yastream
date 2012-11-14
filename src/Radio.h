@@ -48,6 +48,7 @@ public:
 
   static void InitCache(int64 MaxSizeBytes, const nglPath& rSource, const nglPath& rDestination);
   static void ReleaseCache();
+  static const FileCache& GetCache();
 
 private:
   void RegisterClient(HTTPHandler* pClient, bool highQuality);

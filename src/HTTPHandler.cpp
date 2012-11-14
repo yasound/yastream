@@ -80,6 +80,22 @@ bool HTTPHandler::OnURL(const nglString& rValue)
 
     return ReplyAndClose();
   }
+  else if (mURL == "/cache")
+  {
+    ReplyLine("HTTP/1.1 200 OK");
+    ReplyHeader("Content-Type", "text/plain");
+    ReplyLine("");
+
+    nglString str;
+
+    nglString report;
+    nuiSocket::GetStatusReport(report);
+
+    Radio::GetCache().Dump(str);
+    ReplyLine(str);
+
+    return ReplyAndClose();
+  }
   else if ((mURL.GetLeft(4) == "http") || (mURL.GetLeft(5) == "/http"))
   {
     ReplyError(404, "Not found");
