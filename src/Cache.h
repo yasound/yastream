@@ -20,8 +20,8 @@ class CacheItem
 public:
   typedef std::list<KeyType> KeyList;
 
-  CacheItem(const typename KeyList::iterator& rIterator, const ItemType& rItem, int64 Weight)
-  : mIterator(rIterator), mItem(rItem), mRefCount(1), mWeight(Weight)
+  CacheItem(const typename KeyList::iterator& rIterator, const ItemType& rItem, int64 Weight, bool AutoAcquire)
+  : mIterator(rIterator), mItem(rItem), mRefCount(AutoAcquire?1:0), mWeight(Weight)
   {
   }
 
@@ -113,7 +113,7 @@ public:
       bool res = mCreateItem(rKey, rItem, Weight);
       //mCS.Lock(); // Beware!!! We temporarly relock the CS because calling mCreateItem may have been time consuming!
 
-      AddItem(rKey, rItem, Weight);
+      AddItem(rKey, rItem, Weight, true);
       NGL_LOG("radio", NGL_LOG_INFO, "Cache::GetItem '%s'", rKey.GetChars());
 
       Purge();
@@ -220,11 +220,11 @@ protected:
     }
   }
 
-  void AddItem(const KeyType& rKey, const ItemType& rItem, int64 Weight)
+  void AddItem(const KeyType& rKey, const ItemType& rItem, int64 Weight, bool AutoAcquired)
   {
     mKeys.push_front(rKey);
     typename KeyList::iterator i = mKeys.begin();
-    mItems[rKey] = CacheItem<KeyType, ItemType>(i, rItem, Weight);
+    mItems[rKey] = CacheItem<KeyType, ItemType>(i, rItem, Weight, AutoAcquired);
 
   }
   mutable nglCriticalSection mCS;
@@ -499,7 +499,7 @@ public:
       item.Import(pChars, count, eEncodingNative);
 
       NGL_LOG("radio", NGL_LOG_INFO, "load cache %s -> %s", key.GetChars(), item.GetChars());
-      AddItem(key, item, nglPath(item).GetSize());
+      AddItem(key, item, nglPath(item).GetSize(), false);
     }
     return true;
   }
