@@ -231,7 +231,7 @@ protected:
     mKeys.push_front(rKey);
     typename KeyList::iterator i = mKeys.begin();
     mItems[rKey] = CacheItem<KeyType, ItemType>(i, rItem, Weight, AutoAcquired);
-
+    mWeight += Weight;
   }
   mutable nglCriticalSection mCS;
 };
@@ -571,7 +571,7 @@ public:
 
     rString.AddNewLine();
     rString.Add("Total files: ").Add(i).AddNewLine();
-    rString.Add("Total bytes: ").Add(nglBytes(s)).Add(" (max = ").Add(nglBytes(GetMaxWeight())).Add(")").AddNewLine();
+    rString.Add("Total bytes: ").Add(nglBytes(GetWeight())).Add(" (max = ").Add(nglBytes(GetMaxWeight())).Add(")").AddNewLine();
   }
 private:
   nglPath mSource;
