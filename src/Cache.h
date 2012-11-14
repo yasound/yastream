@@ -180,10 +180,11 @@ protected:
 
   void Purge()
   {
+    nglThread::Sleep(20);
     nglCriticalSectionGuard g(mCS);
 
-   if (mByPass)
-     return;
+    if (mByPass)
+      return;
 
     NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge current = %s  max = %s", nglBytes(mWeight).GetChars(), nglBytes(mMaxWeight).GetChars());
     NGL_ASSERT(mDisposeItem);
