@@ -20,8 +20,8 @@ class CacheItem
 public:
   typedef std::list<KeyType> KeyList;
 
-  CacheItem(const typename KeyList::iterator& rIterator, const ItemType& rItem)
-  : mIterator(rIterator), mItem(rItem), mRefCount(1)
+  CacheItem(const typename KeyList::iterator& rIterator, const ItemType& rItem, int64 Weight)
+  : mIterator(rIterator), mItem(rItem), mRefCount(1), mWeight(Weight)
   {
   }
 
@@ -31,7 +31,7 @@ public:
   }
 
   CacheItem(const CacheItem<KeyType, ItemType>& rCacheItem)
-  : mIterator(rCacheItem.mIterator), mItem(rCacheItem.mItem), mRefCount(rCacheItem.mRefCount)
+  : mIterator(rCacheItem.mIterator), mItem(rCacheItem.mItem), mRefCount(rCacheItem.mRefCount), mWeight(rCacheItem.mWeight)
   {
   }
 
@@ -113,7 +113,7 @@ public:
       bool res = mCreateItem(rKey, rItem, Weight);
       //mCS.Lock(); // Beware!!! We temporarly relock the CS because calling mCreateItem may have been time consuming!
 
-      AddItem(rKey, rItem);
+      AddItem(rKey, rItem, Weight);
       NGL_LOG("radio", NGL_LOG_INFO, "Cache::GetItem '%s'", rKey.GetChars());
 
       Purge();
@@ -215,11 +215,11 @@ protected:
     }
   }
 
-  void AddItem(const KeyType& rKey, const ItemType& rItem)
+  void AddItem(const KeyType& rKey, const ItemType& rItem, int64 Weight)
   {
     mKeys.push_front(rKey);
     typename KeyList::iterator i = mKeys.begin();
-    mItems[rKey] = CacheItem<KeyType, ItemType>(i, rItem);
+    mItems[rKey] = CacheItem<KeyType, ItemType>(i, rItem, Weight);
 
   }
   mutable nglCriticalSection mCS;
@@ -480,7 +480,7 @@ public:
       pStream->Read(pChars, 1, count);
       item.Import(pChars, count, eEncodingNative);
 
-      AddItem(key, item);
+      AddItem(key, item, nglPath(item).GetSize());
     }
     return true;
   }
