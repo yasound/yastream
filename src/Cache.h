@@ -138,12 +138,13 @@ public:
     typename ItemMap::iterator it = mItems.find(rKey);
     NGL_ASSERT(it != mItems.end());
     it->second.Release();
+    return true;
   }
 
   typedef nuiFastDelegate3<const KeyType&, ItemType&, int64&, bool> CreateItemDelegate;
   typedef nuiFastDelegate2<const KeyType&, const ItemType&, bool> DisposeItemDelegate;
 
-  const ItemType& SetDelegates(const CreateItemDelegate& rCreateDelegate, const DisposeItemDelegate& rDisposeDelegate)
+  void SetDelegates(const CreateItemDelegate& rCreateDelegate, const DisposeItemDelegate& rDisposeDelegate)
   {
     nglCriticalSectionGuard g(mCS);
     mCreateItem = rCreateDelegate;
@@ -211,13 +212,11 @@ protected:
         NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge '%s'", key.GetChars());
         mWeight -= item.GetWeight();
 
+        ++rit;
         ItemType i(item.GetItem());
+        mKeys.erase(item.GetIterator());
         mItems.erase(it);
 
-        typename KeyList::iterator itr(rit.base());
-        ++rit;
-        //--itr;
-        mKeys.erase(itr);
         mDisposeItem(key, i);
       }
       else
