@@ -181,7 +181,7 @@ protected:
 
   void Purge()
   {
-    nglThread::Sleep(20);
+    //nglThread::Sleep(20);
     nglCriticalSectionGuard g(mCS);
 
     if (mByPass)
