@@ -298,6 +298,7 @@ public:
   {
     SetMaxWeight(MaxBytes);
     SetDelegates(nuiMakeDelegate(this, &FileCache::Create), nuiMakeDelegate(this, &FileCache::Dispose));
+    Load(mDestination + nglPath("yastream.cache"));
   }
 
   virtual ~FileCache()
@@ -354,6 +355,7 @@ public:
 
     rDestination = cache;
 
+    Save(mDestination + nglPath("yastream.cache"));
     return true;
   }
 
@@ -374,6 +376,7 @@ public:
   {
     if (!mByPass)
       rDestination.Delete();
+    Save(mDestination + nglPath("yastream.cache"));
     return true;
   }
 
@@ -382,7 +385,7 @@ public:
   bool Save(nglOStream* pStream) const
   {
     nglCriticalSectionGuard g(mCS);
-    pStream->WriteText("YaCache\0");
+    pStream->WriteText("YaCache!");
 
     int32 count = 0;
 
@@ -403,9 +406,10 @@ public:
     count = mItems.size();
     pStream->WriteInt32(&count);
 
-    KeyList::const_iterator it = mKeys.begin();
-    KeyList::const_iterator end = mKeys.end();
+    KeyList::const_reverse_iterator it = mKeys.rbegin();
+    KeyList::const_reverse_iterator end = mKeys.rend();
 
+    int c = 0;
     while (it != end)
     {
       const nglPath& rKey(*it);
@@ -423,8 +427,11 @@ public:
       pStream->WriteInt32(&count);
       pStream->WriteText(rItem.GetItem().GetPathName().GetChars());
 
+      c++;
       ++it;
     }
+
+    NGL_LOG("radio", NGL_LOG_INFO, "Saved %d cache items", c);
     return true;
   }
 
@@ -439,7 +446,10 @@ public:
     r = pStream->Read(pChars, 1, 8);
     nglString tag(pChars);
     if (tag != "YaCache!")
+    {
+      NGL_LOG("radio", NGL_LOG_ERROR, "Tag not found: %s", tag.GetChars());
       return false;
+    }
 
     int32 count = 0;
 
@@ -480,6 +490,7 @@ public:
       pStream->Read(pChars, 1, count);
       item.Import(pChars, count, eEncodingNative);
 
+      NGL_LOG("radio", NGL_LOG_INFO, "load cache %s -> %s", key.GetChars(), item.GetChars());
       AddItem(key, item, nglPath(item).GetSize());
     }
     return true;
@@ -490,6 +501,8 @@ public:
     if (mByPass)
       return true;
     nglOStream* pStream = rPath.OpenWrite();
+    if (!pStream)
+      return false;
     bool res = Save(pStream);
     delete pStream;
     return res;
@@ -497,9 +510,15 @@ public:
 
   bool Load(const nglPath& rPath)
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "FileCache::Load %s", rPath.GetChars());
     if (mByPass)
       return true;
     nglIStream* pStream = rPath.OpenRead();
+    if (!pStream)
+    {
+      NGL_LOG("radio", NGL_LOG_INFO, "FileCache::Load unable to open file");
+      return false;
+    }
     bool res = Load(pStream);
     delete pStream;
     return res;
@@ -536,7 +555,7 @@ public:
 
     rString.AddNewLine();
     rString.Add("Total files: ").Add(i).AddNewLine();
-    rString.Add("Total bytes: ").Add(nglBytes(s)).AddNewLine();
+    rString.Add("Total bytes: ").Add(nglBytes(s)).Add(" (max = ").Add(nglBytes(GetMaxWeight())).Add(")").AddNewLine();
   }
 private:
   nglPath mSource;
