@@ -304,6 +304,7 @@ public:
     SetMaxWeight(MaxBytes);
     SetDelegates(nuiMakeDelegate(this, &FileCache::Create), nuiMakeDelegate(this, &FileCache::Dispose));
     Load(mDestination + nglPath("yastream.cache"));
+    Purge();
   }
 
   virtual ~FileCache()
