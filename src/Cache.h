@@ -192,7 +192,7 @@ protected:
     typename KeyList::reverse_iterator rit(mKeys.rbegin());
     typename KeyList::reverse_iterator rend(mKeys.rend());
 
-    while ((mWeight > mMaxWeight) && (rit < rend))
+    while ((mWeight > mMaxWeight) && (rit != rend))
     {
       const nglPath& k = *rit;
       nglString key = k.GetPathName();
