@@ -180,6 +180,9 @@ protected:
   void Purge()
   {
     nglCriticalSectionGuard g(mCS);
+
+    NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge current = %s  max = %s", nglBytes(mWeight).GetChars(), nglBytes(mMaxWeight).GetChars());
+
     NGL_ASSERT(mDisposeItem);
 
     typename KeyList::reverse_iterator rit;
@@ -190,33 +193,32 @@ protected:
 
     while (mWeight > mMaxWeight && rit != rend)
     {
-      nglString key;
+      nglString key = (*rit).GetPathName();
+      typename ItemMap::iterator it = mItems.find(key);
+      NGL_ASSERT(it != mItems.end());
+
+      CacheItem<KeyType, ItemType>& item(mItems[key]);
+
+      NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge %s > %s - %s => %s (%d)", nglBytes(mWeight).GetChars(), nglBytes(mMaxWeight).GetChars(), key.GetChars(), nglBytes(item.GetWeight()).GetChars(), (int32)item.GetRefCount());
+
+      if (item.GetRefCount() == 0)
       {
-        key = *rit;
-        typename ItemMap::iterator it = mItems.find(key);
-        NGL_ASSERT(it != mItems.end());
+        NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge '%s'", key.GetChars());
+        mWeight -= item.GetWeight();
 
-        CacheItem<KeyType, ItemType>& item(mItems[key]);
-        if (item.GetRefCount() == 0)
-        {
-          NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge '%s'", key.GetChars());
-          mWeight -= item.GetWeight();
+        ItemType i(item.GetItem());
+        mItems.erase(it);
 
-          ItemType i(item.GetItem());
-          mItems.erase(it);
-
-          typename KeyList::iterator itr(rit.base());
-          rit++;
-          itr--;
-          mKeys.erase(itr);
-          mDisposeItem(key, i);
-        }
-        else
-        {
-          ++rit;
-        }
+        typename KeyList::iterator itr(rit.base());
+        ++rit;
+        --itr;
+        mKeys.erase(itr);
+        mDisposeItem(key, i);
       }
-
+      else
+      {
+        ++rit;
+      }
     }
   }
 
@@ -225,7 +227,7 @@ protected:
     mKeys.push_front(rKey);
     typename KeyList::iterator i = mKeys.begin();
     mItems[rKey] = CacheItem<KeyType, ItemType>(i, rItem, Weight, AutoAcquired);
-
+    mWeight += Weight;
   }
   mutable nglCriticalSection mCS;
 };
@@ -564,7 +566,7 @@ public:
 
     rString.AddNewLine();
     rString.Add("Total files: ").Add(i).AddNewLine();
-    rString.Add("Total bytes: ").Add(nglBytes(s)).Add(" (max = ").Add(nglBytes(GetMaxWeight())).Add(")").AddNewLine();
+    rString.Add("Total bytes: ").Add(nglBytes(GetWeight())).Add(" (max = ").Add(nglBytes(GetMaxWeight())).Add(")").AddNewLine();
   }
 private:
   nglPath mSource;
