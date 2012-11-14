@@ -189,13 +189,10 @@ protected:
     NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge current = %s  max = %s", nglBytes(mWeight).GetChars(), nglBytes(mMaxWeight).GetChars());
     NGL_ASSERT(mDisposeItem);
 
-    typename KeyList::reverse_iterator rit;
-    typename KeyList::reverse_iterator rend;
+    typename KeyList::reverse_iterator rit(mKeys.rbegin());
+    typename KeyList::reverse_iterator rend(mKeys.rend());
 
-    rit = mKeys.rbegin();
-    rend = mKeys.rend();
-
-    while ((mWeight > mMaxWeight) && (rit != rend))
+    while ((mWeight > mMaxWeight) && (rit < rend))
     {
       const nglPath& k = *rit;
       nglString key = k.GetPathName();
@@ -219,7 +216,7 @@ protected:
 
         typename KeyList::iterator itr(rit.base());
         ++rit;
-        --itr;
+        //--itr;
         mKeys.erase(itr);
         mDisposeItem(key, i);
       }
