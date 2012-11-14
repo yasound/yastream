@@ -117,6 +117,7 @@ public:
       NGL_LOG("radio", NGL_LOG_INFO, "Cache::GetItem '%s'", rKey.GetChars());
 
       Purge();
+      OnCacheModified();
       return true;
     }
 
@@ -124,6 +125,10 @@ public:
     rItem = it->second.GetItem();
     it->second.Acquire();
     return true;
+  }
+
+  virtual void OnCacheModified()
+  {
   }
 
   bool ReleaseItem(const KeyType& rKey, const ItemType& rItem)
@@ -355,7 +360,6 @@ public:
 
     rDestination = cache;
 
-    Save(mDestination + nglPath("yastream.cache"));
     return true;
   }
 
@@ -376,8 +380,12 @@ public:
   {
     if (!mByPass)
       rDestination.Delete();
-    Save(mDestination + nglPath("yastream.cache"));
     return true;
+  }
+
+  void OnCacheModified()
+  {
+    Save(mDestination + nglPath("yastream.cache"));
   }
 
 #define CACHE_VERSION 0
