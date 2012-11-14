@@ -227,7 +227,7 @@ protected:
 
   void AddItem(const KeyType& rKey, const ItemType& rItem, int64 Weight, bool AutoAcquired)
   {
-    typename KeyList::iterator i = mKeys.insert(mKeys.end(). rKey);
+    typename KeyList::iterator i = mKeys.insert(mKeys.end(), rKey);
     mItems[rKey] = CacheItem<KeyType, ItemType>(i, rItem, Weight, AutoAcquired);
     mWeight += Weight;
   }
