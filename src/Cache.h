@@ -194,9 +194,12 @@ protected:
     rit = mKeys.rbegin();
     rend = mKeys.rend();
 
-    while (mWeight > mMaxWeight && rit != rend)
+    while ((mWeight > mMaxWeight) && (rit != rend))
     {
-      nglString key = (*rit).GetPathName();
+      const nglPath& k = *rit;
+      nglString key = k.GetPathName();
+      NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge try key %s", key.GetChars());
+
 
       typename ItemMap::iterator it = mItems.find(key);
       NGL_ASSERT(it != mItems.end());
