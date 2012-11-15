@@ -199,7 +199,7 @@ bool HTTPHandler::OnBodyStart()
   mURL.Tokenize(tokens, "/");
 
   if (tokens.size() < 1)
-    return false;
+    return ReplyAndClose();
 
   mRadioID = tokens[0];
 
