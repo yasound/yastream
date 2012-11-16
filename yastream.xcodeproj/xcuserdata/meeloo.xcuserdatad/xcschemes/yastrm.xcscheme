@@ -63,7 +63,7 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "--test"
-            isEnabled = "YES">
+            isEnabled = "NO">
          </CommandLineArgument>
          <CommandLineArgument
             argument = "-host 0.0.0.0"
