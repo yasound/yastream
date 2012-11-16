@@ -21,17 +21,17 @@ public:
   typedef std::list<KeyType> KeyList;
 
   CacheItem(const typename KeyList::iterator& rIterator, const ItemType& rItem, int64 Weight, bool AutoAcquire)
-  : mIterator(rIterator), mItem(rItem), mRefCount(AutoAcquire?1:0), mWeight(Weight)
+  : mIterator(rIterator), mItem(rItem), mRefCount(AutoAcquire?1:0), mWeight(Weight), mHits(mRefCount), mMaxRefCount(mRefCount)
   {
   }
 
   CacheItem()
-  : mRefCount(-1)
+  : mRefCount(-1), mWeight(0), mMaxRefCount(0), mHits(0)
   {
   }
 
   CacheItem(const CacheItem<KeyType, ItemType>& rCacheItem)
-  : mIterator(rCacheItem.mIterator), mItem(rCacheItem.mItem), mRefCount(rCacheItem.mRefCount), mWeight(rCacheItem.mWeight)
+  : mIterator(rCacheItem.mIterator), mItem(rCacheItem.mItem), mRefCount(rCacheItem.mRefCount), mWeight(rCacheItem.mWeight), mMaxRefCount(rCacheItem.mMaxRefCount), mHits(rCacheItem.mHits)
   {
   }
 
@@ -63,6 +63,8 @@ public:
   int64 Acquire()
   {
     mRefCount++;
+    mMaxRefCount = MAX(mRefCount, mMaxRefCount);
+    mHits++;
     return mRefCount;
   }
 
@@ -77,11 +79,23 @@ public:
     return mRefCount;
   }
 
+  int64 GetMaxRefCount() const
+  {
+    return mMaxRefCount;
+  }
+
+  int64 GetHits() const
+  {
+    return mHits;
+  }
+
 private:
   ItemType mItem;
   int64 mWeight;
   typename KeyList::iterator mIterator;
   int64 mRefCount;
+  int64 mMaxRefCount;
+  int64 mHits;
 };
 
 template <class KeyType, class ItemType>
@@ -89,7 +103,7 @@ class Cache : public nuiNonCopyable
 {
 public:
   Cache()
-  : mWeight(0), mMaxWeight(0), mByPass(false)
+  : mWeight(0), mMaxWeight(0), mByPass(false), mHits(0), mMisses(0)
   {
   }
 
@@ -113,17 +127,22 @@ public:
       bool res = mCreateItem(rKey, rItem, Weight);
       //mCS.Lock(); // Beware!!! We temporarly relock the CS because calling mCreateItem may have been time consuming!
 
+      if (!res)
+        return false;
+
       AddItem(rKey, rItem, Weight, true);
       NGL_LOG("radio", NGL_LOG_INFO, "Cache::GetItem '%s'", rKey.GetChars());
 
       Purge();
       OnCacheModified();
+      mMisses++;
       return true;
     }
 
     mKeys.splice(mKeys.end(), mKeys, it->second.GetIterator());
     rItem = it->second.GetItem();
     it->second.Acquire();
+    mHits++;
     return true;
   }
 
@@ -169,12 +188,27 @@ public:
     return mWeight;
   }
 
+  int64 GetHits() const
+  {
+    nglCriticalSectionGuard g(mCS);
+    return mHits;
+  }
+
+  int64 GetMisses() const
+  {
+    nglCriticalSectionGuard g(mCS);
+    return mMisses;
+  }
+
 protected:
   int64 mMaxWeight;
   int64 mWeight;
   KeyList mKeys;
   ItemMap mItems;
   bool mByPass;
+  int64 mHits;
+  int64 mMisses;
+
 
   CreateItemDelegate mCreateItem;
   DisposeItemDelegate mDisposeItem;
@@ -578,9 +612,25 @@ public:
     }
 
     rString.AddNewLine();
-    rString.Add("Total files: ").Add(i).AddNewLine();
-    rString.Add("Total bytes: ").Add(nglBytes(GetWeight())).Add(" (max = ").Add(nglBytes(GetMaxWeight())).Add(")").AddNewLine();
+
+    DumpStats(rString);
   }
+
+  void DumpStats(nglString& rString) const
+  {
+    nglCriticalSectionGuard g(mCS);
+
+    rString.Add("Total files: ").Add((int64)mItems.size()).AddNewLine();
+    rString.Add("Total bytes: ").Add(nglBytes(GetWeight())).Add(" (max = ").Add(nglBytes(GetMaxWeight())).Add(")").AddNewLine();
+
+    rString.Add("Total accesses: ").Add(mHits + mMisses).Add(" (hits = ").Add(mHits).Add(" misses = ");
+
+    if (mMisses + mHits != 0)
+      rString.Add(" ratio = ").Add((double)mHits / (double)(mHits+mMisses));
+
+    rString.Add(mMisses).Add(")").AddNewLine();
+  }
+
 private:
   nglPath mSource;
   nglPath mDestination;
