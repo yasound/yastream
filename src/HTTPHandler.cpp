@@ -74,6 +74,10 @@ bool HTTPHandler::OnURL(const nglString& rValue)
     
     str.CFormat("All systems nominal\n\n");
     str.Add(report.GetChars());
+    str.AddNewLine();
+
+    Radio::GetCache().DumpStats(str);
+
     ReplyLine(str);
 
     return ReplyAndClose();
