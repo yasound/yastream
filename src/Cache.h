@@ -181,11 +181,13 @@ protected:
 
   void Purge()
   {
+    if (mByPass)
+      return;
+
     //nglThread::Sleep(20);
     nglCriticalSectionGuard g(mCS);
 
-    if (mByPass)
-      return;
+    nglTime start;
 
     NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge current = %s  max = %s", nglBytes(mWeight).GetChars(), nglBytes(mMaxWeight).GetChars());
     NGL_ASSERT(mDisposeItem);
@@ -223,6 +225,10 @@ protected:
         ++rit;
       }
     }
+
+    nglTime end;
+    double t = end - start;
+    NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge took %f seconds", t);
   }
 
   void AddItem(const KeyType& rKey, const ItemType& rItem, int64 Weight, bool AutoAcquired)
@@ -399,6 +405,9 @@ public:
   bool Save(nglOStream* pStream) const
   {
     nglCriticalSectionGuard g(mCS);
+
+    double start = nglTime();
+
     pStream->WriteText("YaCache!");
 
     int32 count = 0;
@@ -445,7 +454,8 @@ public:
       ++it;
     }
 
-    NGL_LOG("radio", NGL_LOG_INFO, "Saved %d cache items", c);
+    double t = nglTime() - start;
+    NGL_LOG("radio", NGL_LOG_INFO, "Saved %d cache items in %f seconds", c, t);
     return true;
   }
 
