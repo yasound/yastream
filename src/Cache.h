@@ -451,7 +451,7 @@ public:
     pStream->WriteText(mDestination.GetChars());
 
 
-    if (CACHE_VERSION > 0)
+    //if (CACHE_VERSION > 0)
     {
       pStream->WriteInt64(&mHits);
       pStream->WriteInt64(&mMisses);
@@ -483,7 +483,7 @@ public:
       pStream->WriteText(rItem.GetItem().GetPathName().GetChars());
 
 
-      if (CACHE_VERSION > 0)
+      //if (CACHE_VERSION > 0)
       {
         int64 maxrefs = rItem.GetMaxRefCount();
         int64 hits = rItem.GetHits();
@@ -535,7 +535,7 @@ public:
     dest.Import(pChars, count, eEncodingNative);
     mDestination = dest;
 
-    if (CACHE_VERSION > 0)
+    if (version > 0)
     {
       int64 t = 0;
       pStream->ReadInt64(&t);
@@ -565,7 +565,7 @@ public:
 
       int64 maxrefs = 0;
       int64 hits = 1;
-      if (CACHE_VERSION > 0)
+      if (version > 0)
       {
         pStream->ReadInt64(&maxrefs);
         pStream->ReadInt64(&hits);
