@@ -12,24 +12,26 @@
 #include <map>
 #include "nui.h"
 
+nglString nglBytes(int64 b);
+
 template <class KeyType, class ItemType>
 class CacheItem
 {
 public:
   typedef std::list<KeyType> KeyList;
 
-  CacheItem(const typename KeyList::iterator& rIterator, const ItemType& rItem, int64 weight)
-  : mIterator(rIterator), mItem(rItem), mRefCount(1), mWeight(weight)
+  CacheItem(const typename KeyList::iterator& rIterator, const ItemType& rItem, int64 Weight, bool AutoAcquire)
+  : mIterator(rIterator), mItem(rItem), mRefCount(AutoAcquire?1:0), mWeight(Weight), mHits(mRefCount), mMaxRefCount(mRefCount)
   {
   }
 
   CacheItem()
-  : mRefCount(-1)
+  : mRefCount(-1), mWeight(0), mMaxRefCount(0), mHits(0)
   {
   }
 
   CacheItem(const CacheItem<KeyType, ItemType>& rCacheItem)
-  : mIterator(rCacheItem.mIterator), mItem(rCacheItem.mItem), mRefCount(rCacheItem.mRefCount)
+  : mIterator(rCacheItem.mIterator), mItem(rCacheItem.mItem), mRefCount(rCacheItem.mRefCount), mWeight(rCacheItem.mWeight), mMaxRefCount(rCacheItem.mMaxRefCount), mHits(rCacheItem.mHits)
   {
   }
 
@@ -61,6 +63,8 @@ public:
   int64 Acquire()
   {
     mRefCount++;
+    mMaxRefCount = MAX(mRefCount, mMaxRefCount);
+    mHits++;
     return mRefCount;
   }
 
@@ -75,11 +79,23 @@ public:
     return mRefCount;
   }
 
+  int64 GetMaxRefCount() const
+  {
+    return mMaxRefCount;
+  }
+
+  int64 GetHits() const
+  {
+    return mHits;
+  }
+
 private:
   ItemType mItem;
   int64 mWeight;
   typename KeyList::iterator mIterator;
   int64 mRefCount;
+  int64 mMaxRefCount;
+  int64 mHits;
 };
 
 template <class KeyType, class ItemType>
@@ -87,7 +103,7 @@ class Cache : public nuiNonCopyable
 {
 public:
   Cache()
-  : mWeight(0), mMaxWeight(0)
+  : mWeight(0), mMaxWeight(0), mByPass(false), mHits(0), mMisses(0)
   {
   }
 
@@ -111,17 +127,27 @@ public:
       bool res = mCreateItem(rKey, rItem, Weight);
       //mCS.Lock(); // Beware!!! We temporarly relock the CS because calling mCreateItem may have been time consuming!
 
-      AddItem(rKey, rItem, Weight);
+      if (!res)
+        return false;
+
+      AddItem(rKey, rItem, Weight, true);
       NGL_LOG("radio", NGL_LOG_INFO, "Cache::GetItem '%s'", rKey.GetChars());
 
       Purge();
+      OnCacheModified();
+      mMisses++;
       return true;
     }
 
-    mKeys.splice(mKeys.begin(), mKeys, it->second.GetIterator());
+    mKeys.splice(mKeys.end(), mKeys, it->second.GetIterator());
     rItem = it->second.GetItem();
     it->second.Acquire();
+    mHits++;
     return true;
+  }
+
+  virtual void OnCacheModified()
+  {
   }
 
   bool ReleaseItem(const KeyType& rKey, const ItemType& rItem)
@@ -131,12 +157,13 @@ public:
     typename ItemMap::iterator it = mItems.find(rKey);
     NGL_ASSERT(it != mItems.end());
     it->second.Release();
+    return true;
   }
 
   typedef nuiFastDelegate3<const KeyType&, ItemType&, int64&, bool> CreateItemDelegate;
   typedef nuiFastDelegate2<const KeyType&, const ItemType&, bool> DisposeItemDelegate;
 
-  const ItemType& SetDelegates(const CreateItemDelegate& rCreateDelegate, const DisposeItemDelegate& rDisposeDelegate)
+  void SetDelegates(const CreateItemDelegate& rCreateDelegate, const DisposeItemDelegate& rDisposeDelegate)
   {
     nglCriticalSectionGuard g(mCS);
     mCreateItem = rCreateDelegate;
@@ -161,69 +188,85 @@ public:
     return mWeight;
   }
 
+  int64 GetHits() const
+  {
+    nglCriticalSectionGuard g(mCS);
+    return mHits;
+  }
+
+  int64 GetMisses() const
+  {
+    nglCriticalSectionGuard g(mCS);
+    return mMisses;
+  }
+
 protected:
   int64 mMaxWeight;
   int64 mWeight;
   KeyList mKeys;
   ItemMap mItems;
+  bool mByPass;
+  int64 mHits;
+  int64 mMisses;
+
 
   CreateItemDelegate mCreateItem;
   DisposeItemDelegate mDisposeItem;
 
   void Purge()
   {
+    nglThread::Sleep(20);
     nglCriticalSectionGuard g(mCS);
+
+    if (mByPass)
+      return;
+
+    NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge current = %s  max = %s", nglBytes(mWeight).GetChars(), nglBytes(mMaxWeight).GetChars());
     NGL_ASSERT(mDisposeItem);
 
-    typename KeyList::reverse_iterator rit;
-    typename KeyList::reverse_iterator rend;
+    typename KeyList::iterator rit(mKeys.begin());
+    typename KeyList::iterator rend(mKeys.end());
 
-    rit = mKeys.rbegin();
-    rend = mKeys.rend();
-
-    while (mWeight > mMaxWeight && rit != rend)
+    while ((mWeight > mMaxWeight) && (rit != rend))
     {
-      nglString key;
+      const nglPath& k = *rit;
+      nglString key = k.GetPathName();
+      NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge try key %s", key.GetChars());
+
+
+      typename ItemMap::iterator it = mItems.find(key);
+      NGL_ASSERT(it != mItems.end());
+
+      CacheItem<KeyType, ItemType>& item(mItems[key]);
+
+      NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge %s > %s - %s => %s (%d)", nglBytes(mWeight).GetChars(), nglBytes(mMaxWeight).GetChars(), key.GetChars(), nglBytes(item.GetWeight()).GetChars(), (int32)item.GetRefCount());
+
+      if (item.GetRefCount() == 0)
       {
-        key = *rit;
-        typename ItemMap::iterator it = mItems.find(key);
-        NGL_ASSERT(it != mItems.end());
+        NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge '%s'", key.GetChars());
+        mWeight -= item.GetWeight();
 
-        CacheItem<KeyType, ItemType>& item(mItems[key]);
-        if (item.GetRefCount() == 0)
-        {
-          NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge '%s'", key.GetChars());
-          mWeight -= item.GetWeight();
+        ItemType i(item.GetItem());
+        mKeys.erase(rit++);
+        mItems.erase(it);
 
-          ItemType i(item.GetItem());
-          mItems.erase(it);
-
-          typename KeyList::iterator itr(rit.base());
-          rit++;
-          itr--;
-          mKeys.erase(itr);
-          mDisposeItem(key, i);
-        }
-        else
-        {
-          ++rit;
-        }
+        mDisposeItem(key, i);
       }
-
+      else
+      {
+        ++rit;
+      }
     }
   }
 
-  void AddItem(const KeyType& rKey, const ItemType& rItem)
+  void AddItem(const KeyType& rKey, const ItemType& rItem, int64 Weight, bool AutoAcquired)
   {
-    mKeys.push_front(rKey);
-    typename KeyList::iterator i = mKeys.begin();
-    mItems[rKey] = CacheItem<KeyType, ItemType>(i, rItem);
-
+    typename KeyList::iterator i = mKeys.insert(mKeys.end(), rKey);
+    mItems[rKey] = CacheItem<KeyType, ItemType>(i, rItem, Weight, AutoAcquired);
+    mWeight += Weight;
   }
   mutable nglCriticalSection mCS;
 };
-
-nglString nglBytes(int64 b);
 
 class FileCache : public Cache<nglPath, nglPath>
 {
@@ -294,10 +337,13 @@ public:
 
   ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
   FileCache(int64 MaxBytes, const nglPath& rSource, const nglPath& rDestination)
-  : mSource(rSource), mDestination(rDestination), mByPass(rSource == rDestination)
+  : mSource(rSource), mDestination(rDestination)
   {
+    mByPass = rSource == rDestination;
     SetMaxWeight(MaxBytes);
     SetDelegates(nuiMakeDelegate(this, &FileCache::Create), nuiMakeDelegate(this, &FileCache::Dispose));
+    Load(mDestination + nglPath("yastream.cache"));
+    Purge();
   }
 
   virtual ~FileCache()
@@ -377,12 +423,17 @@ public:
     return true;
   }
 
+  void OnCacheModified()
+  {
+    Save(mDestination + nglPath("yastream.cache"));
+  }
+
 #define CACHE_VERSION 0
 
   bool Save(nglOStream* pStream) const
   {
     nglCriticalSectionGuard g(mCS);
-    pStream->WriteText("YaCache\0");
+    pStream->WriteText("YaCache!");
 
     int32 count = 0;
 
@@ -406,6 +457,7 @@ public:
     KeyList::const_iterator it = mKeys.begin();
     KeyList::const_iterator end = mKeys.end();
 
+    int c = 0;
     while (it != end)
     {
       const nglPath& rKey(*it);
@@ -423,8 +475,11 @@ public:
       pStream->WriteInt32(&count);
       pStream->WriteText(rItem.GetItem().GetPathName().GetChars());
 
+      c++;
       ++it;
     }
+
+    NGL_LOG("radio", NGL_LOG_INFO, "Saved %d cache items", c);
     return true;
   }
 
@@ -439,7 +494,10 @@ public:
     r = pStream->Read(pChars, 1, 8);
     nglString tag(pChars);
     if (tag != "YaCache!")
+    {
+      NGL_LOG("radio", NGL_LOG_ERROR, "Tag not found: %s", tag.GetChars());
       return false;
+    }
 
     int32 count = 0;
 
@@ -480,7 +538,8 @@ public:
       pStream->Read(pChars, 1, count);
       item.Import(pChars, count, eEncodingNative);
 
-      AddItem(key, item);
+      NGL_LOG("radio", NGL_LOG_INFO, "load cache %s -> %s", key.GetChars(), item.GetChars());
+      AddItem(key, item, nglPath(item).GetSize(), false);
     }
     return true;
   }
@@ -490,6 +549,8 @@ public:
     if (mByPass)
       return true;
     nglOStream* pStream = rPath.OpenWrite();
+    if (!pStream)
+      return false;
     bool res = Save(pStream);
     delete pStream;
     return res;
@@ -497,9 +558,15 @@ public:
 
   bool Load(const nglPath& rPath)
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "FileCache::Load %s", rPath.GetChars());
     if (mByPass)
       return true;
     nglIStream* pStream = rPath.OpenRead();
+    if (!pStream)
+    {
+      NGL_LOG("radio", NGL_LOG_INFO, "FileCache::Load unable to open file");
+      return false;
+    }
     bool res = Load(pStream);
     delete pStream;
     return res;
@@ -523,7 +590,7 @@ public:
 
       // Write source path (key)
       rString.Add("[").Add(i).Add("] ");
-      rString.Add(nglBytes(rItem.GetRefCount())).Add(" - ").Add(rItem.GetWeight()).Add(" | ");
+      rString.Add(rItem.GetRefCount()).Add(" - ").Add(nglBytes(rItem.GetWeight())).Add(" | ");
       rString.Add(rKey.GetPathName());
       rString.Add(" -.> ");
       rString.Add(rItem.GetItem().GetPathName());
@@ -535,13 +602,28 @@ public:
     }
 
     rString.AddNewLine();
-    rString.Add("Total files: ").Add(i).AddNewLine();
-    rString.Add("Total bytes: ").Add(nglBytes(s)).AddNewLine();
+
+    DumpStats(rString);
   }
+
+  void DumpStats(nglString& rString) const
+  {
+    nglCriticalSectionGuard g(mCS);
+
+    rString.Add("Total files: ").Add((int64)mItems.size()).AddNewLine();
+    rString.Add("Total bytes: ").Add(nglBytes(GetWeight())).Add(" (max = ").Add(nglBytes(GetMaxWeight())).Add(")").AddNewLine();
+
+    rString.Add("Total accesses: ").Add(mHits + mMisses).Add(" (hits = ").Add(mHits).Add(" misses = ");
+
+    if (mMisses + mHits != 0)
+      rString.Add(" ratio = ").Add((double)mHits / (double)(mHits+mMisses));
+
+    rString.Add(mMisses).Add(")").AddNewLine();
+  }
+
 private:
   nglPath mSource;
   nglPath mDestination;
-  bool mByPass;
 };
 
 
