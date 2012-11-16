@@ -20,8 +20,8 @@ class CacheItem
 public:
   typedef std::list<KeyType> KeyList;
 
-  CacheItem(const typename KeyList::iterator& rIterator, const ItemType& rItem, int64 Weight, bool AutoAcquire)
-  : mIterator(rIterator), mItem(rItem), mRefCount(AutoAcquire?1:0), mWeight(Weight), mHits(mRefCount), mMaxRefCount(mRefCount)
+  CacheItem(const typename KeyList::iterator& rIterator, const ItemType& rItem, int64 Weight, bool AutoAcquire, int64 maxref, int64 hits)
+  : mIterator(rIterator), mItem(rItem), mRefCount(AutoAcquire?1:0), mWeight(Weight), mHits(mRefCount), mMaxRefCount(MAX(maxref, mRefCount))
   {
   }
 
@@ -130,7 +130,7 @@ public:
       if (!res)
         return false;
 
-      AddItem(rKey, rItem, Weight, true);
+      AddItem(rKey, rItem, Weight, true, 0, 1);
       NGL_LOG("radio", NGL_LOG_INFO, "Cache::GetItem '%s'", rKey.GetChars());
 
       Purge();
@@ -215,13 +215,11 @@ protected:
 
   void Purge()
   {
-    if (mByPass)
-      return;
-
-    //nglThread::Sleep(20);
+    nglThread::Sleep(20);
     nglCriticalSectionGuard g(mCS);
 
-    nglTime start;
+    if (mByPass)
+      return;
 
     NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge current = %s  max = %s", nglBytes(mWeight).GetChars(), nglBytes(mMaxWeight).GetChars());
     NGL_ASSERT(mDisposeItem);
@@ -259,16 +257,12 @@ protected:
         ++rit;
       }
     }
-
-    nglTime end;
-    double t = end - start;
-    NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge took %f seconds", t);
   }
 
-  void AddItem(const KeyType& rKey, const ItemType& rItem, int64 Weight, bool AutoAcquired)
+  void AddItem(const KeyType& rKey, const ItemType& rItem, int64 Weight, bool AutoAcquired, int64 maxrefs, int64 hits)
   {
     typename KeyList::iterator i = mKeys.insert(mKeys.end(), rKey);
-    mItems[rKey] = CacheItem<KeyType, ItemType>(i, rItem, Weight, AutoAcquired);
+    mItems[rKey] = CacheItem<KeyType, ItemType>(i, rItem, Weight, AutoAcquired, maxrefs, hits);
     mWeight += Weight;
   }
   mutable nglCriticalSection mCS;
@@ -434,14 +428,11 @@ public:
     Save(mDestination + nglPath("yastream.cache"));
   }
 
-#define CACHE_VERSION 0
+#define CACHE_VERSION 1
 
   bool Save(nglOStream* pStream) const
   {
     nglCriticalSectionGuard g(mCS);
-
-    double start = nglTime();
-
     pStream->WriteText("YaCache!");
 
     int32 count = 0;
@@ -458,6 +449,13 @@ public:
     count = mDestination.GetPathName().GetLength();
     pStream->WriteInt32(&count);
     pStream->WriteText(mDestination.GetChars());
+
+
+    if (CACHE_VERSION > 0)
+    {
+      pStream->WriteInt64(&mHits);
+      pStream->WriteInt64(&mMisses);
+    }
 
     // Write caches:
     count = mItems.size();
@@ -484,12 +482,20 @@ public:
       pStream->WriteInt32(&count);
       pStream->WriteText(rItem.GetItem().GetPathName().GetChars());
 
+
+      if (CACHE_VERSION > 0)
+      {
+        int64 maxrefs = rItem.GetMaxRefCount();
+        int64 hits = rItem.GetHits();
+        pStream->WriteInt64(&maxrefs);
+        pStream->WriteInt64(&hits);
+      }
+
       c++;
       ++it;
     }
 
-    double t = nglTime() - start;
-    NGL_LOG("radio", NGL_LOG_INFO, "Saved %d cache items in %f seconds", c, t);
+    NGL_LOG("radio", NGL_LOG_INFO, "Saved %d cache items", c);
     return true;
   }
 
@@ -529,6 +535,15 @@ public:
     dest.Import(pChars, count, eEncodingNative);
     mDestination = dest;
 
+    if (CACHE_VERSION > 0)
+    {
+      int64 t = 0;
+      pStream->ReadInt64(&t);
+      mHits = t;
+      pStream->ReadInt64(&t);
+      mMisses = t;
+    }
+
     // Read caches:
     pStream->ReadInt32(&count);
 
@@ -548,8 +563,16 @@ public:
       pStream->Read(pChars, 1, count);
       item.Import(pChars, count, eEncodingNative);
 
+      int64 maxrefs = 0;
+      int64 hits = 1;
+      if (CACHE_VERSION > 0)
+      {
+        pStream->ReadInt64(&maxrefs);
+        pStream->ReadInt64(&hits);
+      }
+
       NGL_LOG("radio", NGL_LOG_INFO, "load cache %s -> %s", key.GetChars(), item.GetChars());
-      AddItem(key, item, nglPath(item).GetSize(), false);
+      AddItem(key, item, nglPath(item).GetSize(), false, maxrefs, hits);
     }
     return true;
   }

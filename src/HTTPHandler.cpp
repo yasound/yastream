@@ -76,6 +76,9 @@ bool HTTPHandler::OnURL(const nglString& rValue)
     
     str.CFormat("All systems nominal (listeners: ? - anonymous: ?)\n\n");
     str.Add(report.GetChars());
+    str.AddNewLine();
+    str.AddNewLine();
+    Radio::GetCache().DumpStats(str);
     ReplyLine(str);
 
     return ReplyAndClose();
