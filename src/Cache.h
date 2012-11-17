@@ -215,7 +215,7 @@ protected:
 
   void Purge()
   {
-    nglThread::Sleep(20);
+    //nglThread::Sleep(20);
     nglCriticalSectionGuard g(mCS);
 
     if (mByPass)
@@ -239,7 +239,7 @@ protected:
 
       CacheItem<KeyType, ItemType>& item(mItems[key]);
 
-      NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge %s > %s - %s => %s (%d)", nglBytes(mWeight).GetChars(), nglBytes(mMaxWeight).GetChars(), key.GetChars(), nglBytes(item.GetWeight()).GetChars(), (int32)item.GetRefCount());
+      //NGL_LOG("radio", NGL_LOG_INFO, "Cache::Purge %s > %s - %s => %s (%d)", nglBytes(mWeight).GetChars(), nglBytes(mMaxWeight).GetChars(), key.GetChars(), nglBytes(item.GetWeight()).GetChars(), (int32)item.GetRefCount());
 
       if (item.GetRefCount() == 0)
       {
@@ -367,7 +367,7 @@ public:
     nglPath path = mSource;//"/data/glusterfs-storage/replica2all/song/";
     path += file;
 
-    NGL_LOG("radio", NGL_LOG_INFO, "SetTrack %s\n", path.GetChars());
+    //NGL_LOG("radio", NGL_LOG_INFO, "SetTrack %s\n", path.GetChars());
 
 
     // Compute destination path
@@ -389,7 +389,7 @@ public:
       cache.Create(true);
       cache += rSource;
 
-      NGL_LOG("radio", NGL_LOG_INFO, "SetTrack %s\n", path.GetChars());
+      //NGL_LOG("radio", NGL_LOG_INFO, "SetTrack %s\n", path.GetChars());
 
       // Copy file
       path.Copy(cache);
@@ -433,6 +433,7 @@ public:
   bool Save(nglOStream* pStream) const
   {
     nglCriticalSectionGuard g(mCS);
+    double start = nglTime();
     pStream->WriteText("YaCache!");
 
     int32 count = 0;
@@ -495,13 +496,15 @@ public:
       ++it;
     }
 
-    NGL_LOG("radio", NGL_LOG_INFO, "Saved %d cache items", c);
+    double t = nglTime() - start;
+    NGL_LOG("radio", NGL_LOG_INFO, "Saved %d cache items (%f seconds)", c, t);
     return true;
   }
 
   bool Load(nglIStream* pStream)
   {
     nglCriticalSectionGuard g(mCS);
+    double start = nglTime();
 
     const int32 BUF_SIZE = 4*1024;
     int64 r = 0;
@@ -571,9 +574,13 @@ public:
         pStream->ReadInt64(&hits);
       }
 
-      NGL_LOG("radio", NGL_LOG_INFO, "load cache %s -> %s", key.GetChars(), item.GetChars());
+      //NGL_LOG("radio", NGL_LOG_INFO, "load cache %s -> %s", key.GetChars(), item.GetChars());
       AddItem(key, item, nglPath(item).GetSize(), false, maxrefs, hits);
     }
+
+    double t = nglTime() - start;
+    NGL_LOG("radio", NGL_LOG_INFO, "loaded cache in %f seconds", t);
+
     return true;
   }
 
@@ -646,7 +653,7 @@ public:
     rString.Add("Total files: ").Add((int64)mItems.size()).AddNewLine();
     rString.Add("Total bytes: ").Add(nglBytes(GetWeight())).Add(" (max = ").Add(nglBytes(GetMaxWeight())).Add(")").AddNewLine();
 
-    rString.Add("Total accesses: ").Add(mHits + mMisses).Add(" (hits = ").Add(mHits).Add(" misses = ");
+    rString.Add("Total accesses: ").Add(mHits + mMisses).Add(" (hits = ").Add(mHits).Add(" misses = ").Add(mMisses);
 
     if (mMisses + mHits != 0)
       rString.Add(" ratio = ").Add((double)mHits / (double)(mHits+mMisses));

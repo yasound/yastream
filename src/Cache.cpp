@@ -29,7 +29,7 @@ nglString nglBytes(int64 b)
     s.Add((int32)m).Add(" Mb");
   else if (k)
     s.Add((int32)k).Add(" Kb");
-  else if (b)
+  else //if (b)
     s.Add((int32)b).Add(" bytes");
 
   return s;
