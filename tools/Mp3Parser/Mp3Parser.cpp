@@ -54,9 +54,10 @@ double Mp3Parser::Seek(double seconds)
 {
   //NGL_LOG("radio", NGL_LOG_INFO, "Mp3Parser::Seek %f", seconds);
   double t = 0;
-
+  //NGL_LOG("radio", NGL_LOG_INFO, "Mp3Parser::Seek(%f)", seconds);
   while (t < seconds)
   {
+    //NGL_LOG("radio", NGL_LOG_INFO, "    %f < %f", t, seconds);
     const Mp3Frame& rFrame(GetCurrentFrame());
     t += ((double)rFrame.GetDuration())/1000.0;
     if (!GoToNextFrame())

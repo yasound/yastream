@@ -219,45 +219,28 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
 bool Radio::SetTrack(const Track& rTrack)
 {
   nglString p = rTrack.mFileID;
-  //p.Insert("_preview64", 9);
-  p.Insert('/', 6);
-  p.Insert('/', 3);
-
   //nglPath path = "/space/new/medias/song";
-  nglPath path = mDataPath;//"/data/glusterfs-storage/replica2all/song/";
-  path += p;
+  nglPath path = p;
 
   NGL_LOG("radio", NGL_LOG_INFO, "SetTrack %s\n", path.GetChars());
 
-  nglIStream* pStream = path.OpenRead();
-  if (!pStream)
-  {
-    NGL_LOG("radio", NGL_LOG_INFO, "SetTrack error 1\n");
-    return false;
-  }
-
   nglPath previewPath = GetPreviewPath(path);
-  nglIStream* pStreamPreview = previewPath.OpenRead();
-  if (!pStreamPreview)
+
+//  nglIStream* pStream = path.OpenRead();
+//  nglIStream* pStreamPreview = previewPath.OpenRead();
+  nglIStream* pStream = gpCache->GetStream(path);
+  nglIStream* pStreamPreview = gpCache->GetStream(previewPath);
+
+  if (!pStream || !pStreamPreview)
   {
-    NGL_LOG("radio", NGL_LOG_INFO, "SetTrack error 2\n");
+    NGL_LOG("radio", NGL_LOG_INFO, "SetTrack error (%p, %p)\n", pStream, pStreamPreview);
     delete pStream;
     return false;
   }
 
   Mp3Parser* pParser = new Mp3Parser(*pStream, false, false);
-  bool valid = pParser->GetCurrentFrame().IsValid();
-  if (!valid)
-  {
-    NGL_LOG("radio", NGL_LOG_INFO, "SetTrack error 3\n");
-    delete pParser;
-    delete pStream;
-    delete pStreamPreview;
-    return false;
-  }
-
   Mp3Parser* pParserPreview = new Mp3Parser(*pStreamPreview, false, false);
-  valid = pParserPreview->GetCurrentFrame().IsValid();
+  bool valid = pParser->GetCurrentFrame().IsValid() && pParserPreview->GetCurrentFrame().IsValid();
   if (!valid)
   {
     NGL_LOG("radio", NGL_LOG_INFO, "SetTrack error 4\n");
@@ -1124,6 +1107,8 @@ void Radio::SignallEvent(const nglString& rName)
   }
 }
 
+bool compare_track(const Track& rLeft, const Track& rRight);
+
 bool compare_track(const Track& rLeft, const Track& rRight)
 {
   return rLeft.mDelay < rRight.mDelay;
@@ -1143,3 +1128,22 @@ void Radio::SetRedisDB(const nglString& rHost, int db)
   gRedisDB = db;
   gRedisHost = rHost;
 }
+
+FileCache* Radio::gpCache = NULL;
+
+void Radio::InitCache(int64 MaxSizeBytes, const nglPath& rSource, const nglPath& rDestination)
+{
+  gpCache = new FileCache(MaxSizeBytes, rSource, rDestination);
+}
+
+void Radio::ReleaseCache()
+{
+  delete gpCache;
+}
+
+const FileCache& Radio::GetCache()
+{
+  return *gpCache;
+}
+
+
