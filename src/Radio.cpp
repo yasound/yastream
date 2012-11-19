@@ -206,7 +206,8 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   {
     //  Shutdown radio
     NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio %s\n", mID.GetChars());
-    //mOnline = false;
+    // Now that the scheduler handles the programming of the radio, the stream just can drop the radio when no one listens anymore
+    mOnline = false;
     mGoOffline = true;
   }
 
