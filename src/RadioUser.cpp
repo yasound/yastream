@@ -10,5 +10,6 @@
 
 RadioUser::RadioUser()
 {
+  uuid = -1;
   hd = false;
 }

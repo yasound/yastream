@@ -42,8 +42,8 @@ public:
   void UserAuthentication(const nglString& rUserName, const nglString& rAPIKey);
   void PlayRadio(const nglString& rRadioID);
   void StopRadio(const nglString& rRadioID);
-  void RegisterListener(const nglString& rRadioID, const nglString& rSessionID, uint32 UserID);
-  void UnregisterListener(const nglString& rRadioID, const nglString& rSessionID, uint32 UserID);
+  void RegisterListener(const nglString& rRadioID, const nglString& rSessionID, int32 UserID);
+  void UnregisterListener(const nglString& rRadioID, const nglString& rSessionID, int32 UserID);
 
 private:
   RedisClient* mpClient;
