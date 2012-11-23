@@ -245,24 +245,25 @@ bool HTTPHandler::OnBodyStart()
 
   if (tokens.size() > 1)
   {
-    std::map<nglString, nglString>::const_iterator it = params.find("hd");
+    std::map<nglString, nglString>::const_iterator it = params.find("token");
+
+    if (it != params.end())
+    {
+      nglString token = it->second;
+      // check if the user is allowed to play high quality stream
+      Radio::GetUser(token, mUser);
+    }
+    else
+    {
+      // check with old method if the user is allowed to play high quality stream
+      Radio::GetUser(mUsername, mApiKey, mUser);
+    }
+
+    it = params.find("hd");
 
     if (it != params.end() && it->second == "1")
     {
       // Check with new method (temp token):
-      it = params.find("token");
-      
-      if (it != params.end())
-      {
-        nglString token = it->second;
-        // check if the user is allowed to play high quality stream
-        Radio::GetUser(token, mUser);
-      }
-      else
-      {
-        // check with old method if the user is allowed to play high quality stream
-        Radio::GetUser(mUsername, mApiKey, mUser);
-      }
 
       hq = mUser.hd;
     }
