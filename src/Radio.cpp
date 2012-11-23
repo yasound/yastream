@@ -214,7 +214,7 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   const RadioUser& rUser = pClient->GetUser();
   nglString sessionid;
   sessionid.Add(pClient);
-  mpRedisThreadOut->RegisterListener(mID, sessionid, rUser.uuid);
+  mpRedisThreadOut->UnregisterListener(mID, sessionid, rUser.uuid);
 }
 
 bool Radio::SetTrack(const Track& rTrack)
