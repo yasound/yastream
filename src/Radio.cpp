@@ -179,15 +179,15 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
   //NGL_LOG("radio", NGL_LOG_INFO, "Prepare the new client:\n");
   // Fill the buffer:
   {
-    nglCriticalSectionGuard guard(mClientListCS);
-    for (std::deque<Mp3Chunk*>::const_iterator it = rChunks.begin(); it != rChunks.end(); ++it)
+    nglCriticalSectionGuard guard(mCS);
+    for (std::deque<Mp3Chunk*>::const_iterator it = rChunks.begin();
+         it != rChunks.end()
+         && pClient->IsWriteConnected()
+         && pClient->IsReadConnected();
+         ++it)
     {
       Mp3Chunk* pChunk = *it;
       pClient->AddChunk(pChunk);
-      if (!pClient->IsWriteConnected() || !pClient->IsReadConnected())
-      {
-        return;
-      }
       //NGL_LOG("radio", NGL_LOG_INFO, "Chunk %f\n", pChunk->GetTime());
     }
   }

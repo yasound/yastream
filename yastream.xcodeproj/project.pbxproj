@@ -26,6 +26,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		400938531696E0BB00913EAE /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E511CA80142A27E90079F31F /* nui3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = E5FB9CF3147D5CEE001A1829;
+			remoteInfo = minui3D;
+		};
 		E511CAC1142A29460079F31F /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E511CA80142A27E90079F31F /* nui3.xcodeproj */;
@@ -102,13 +109,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = E5A8CCAE11E33A54004E14CE;
 			remoteInfo = nui3CocoaD;
-		};
-		E58A95F815EEEE0000E34CFB /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = E511CA80142A27E90079F31F /* nui3.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = E5FB9CF3147D5CEE001A1829;
-			remoteInfo = minui3D;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -217,7 +217,7 @@
 				E511CAD0142A29460079F31F /* libthirdparty.a */,
 				E511CAD2142A29460079F31F /* libthirdparty_ios.a */,
 				E511CAD4142A29460079F31F /* libthirdparty_ios_arm7.a */,
-				E58A95F915EEEE0000E34CFB /* libminui3D.a */,
+				400938541696E0BB00913EAE /* libminui3D.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -313,6 +313,13 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		400938541696E0BB00913EAE /* libminui3D.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libminui3D.a;
+			remoteRef = 400938531696E0BB00913EAE /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		E511CAC2142A29460079F31F /* libnui3D.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -381,13 +388,6 @@
 			fileType = archive.ar;
 			path = libthirdparty_ios_arm7.a;
 			remoteRef = E511CAD3142A29460079F31F /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		E58A95F915EEEE0000E34CFB /* libminui3D.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = libminui3D.a;
-			remoteRef = E58A95F815EEEE0000E34CFB /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */

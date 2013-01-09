@@ -89,7 +89,7 @@ private:
   bool mOnline;
   bool mGoOffline;
   nglCriticalSection mCS;
-  nglCriticalSection mClientListCS;
+  nglCriticalSection mClientListCS; // Protects the list of clients for one radio
   nglString mID;
 
   typedef std::list<HTTPHandler*> ClientList;
@@ -118,7 +118,7 @@ private:
 
 //  uint64 mTime;
 
-  static nglCriticalSection gCS;
+  static nglCriticalSection gCS; // Protect lists of radios and users
   typedef std::map<nglString, Radio*> RadioMap;
   static RadioMap gRadios;
   static nglString mHostname;
