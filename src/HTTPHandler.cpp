@@ -5,6 +5,7 @@
 #include "nuiHTTP.h"
 #include "nuiNetworkHost.h"
 #include "nuiJson.h"
+#include "nglThreadChecker.h"
 
 #define SUBSCRIPTION_NONE "none"
 #define SUBSCRIPTION_PREMIUM "premium"
@@ -71,7 +72,7 @@ bool HTTPHandler::OnURL(const nglString& rValue)
 
     nglString report;
     nuiSocket::GetStatusReport(report);
-    
+
     str.CFormat("All systems nominal\n\n");
     str.Add(report.GetChars());
     str.AddNewLine();
@@ -79,6 +80,18 @@ bool HTTPHandler::OnURL(const nglString& rValue)
     Radio::GetCache().DumpStats(str);
 
     ReplyLine(str);
+
+    return ReplyAndClose();
+  }
+  else if (mURL == "/threads")
+  {
+    ReplyLine("HTTP/1.1 200 OK");
+    ReplyHeader("Content-Type", "text/plain");
+    ReplyLine("");
+
+    nglString report = nglThreadChecker::Dump();
+
+    ReplyLine(report);
 
     return ReplyAndClose();
   }
