@@ -30,7 +30,9 @@ Radio::Radio(const nglString& rID, const nglString& rHost)
   mpSource(NULL),
   mpPreviewSource(NULL),
   mpThread(NULL),
-  mLastUpdateTime(0)
+  mLastUpdateTime(0),
+  mCS(nglString("RadioCS (").Add(rID).Add(")")),
+  mClientListCS(nglString("RadioClientList (").Add(rID).Add(")"))
 {
   if (!rHost.IsNull())
   {
@@ -96,18 +98,23 @@ void Radio::SetNetworkSource(nuiTCPClient* pHQSource, nuiTCPClient* pLQSource)
 void Radio::Start()
 {
   size_t stacksize = 1024 * 1024 * 4;
+  nglString name;
+  name.Add("Radio[").Add(mID).Add("]");
 
   if (mpPreviewSource)
   {
     mOnline = mpPreviewSource->IsReadConnected();
 
     if (mOnline)
-      mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStartProxy), nglThread::Normal, stacksize);
+    {
+      name.Add("Proxy");
+      mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStartProxy), name, nglThread::Normal, stacksize);
+    }
   }
   else
   {
     mOnline = true;
-    mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), nglThread::Normal, stacksize);
+    mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), name, nglThread::Normal, stacksize);
   }
 
   if (mpThread)
@@ -738,7 +745,7 @@ void Radio::UpdateRadio()
   }
 }
 
-nglCriticalSection Radio::gCS;
+nglCriticalSection Radio::gCS("Radio::gCS");
 std::map<nglString, Radio*> Radio::gRadios;
 nglString Radio::mHostname = "0.0.0.0";
 nglString Radio::mAppUrl = "https://api.yasound.com";
@@ -1043,7 +1050,7 @@ void Radio::StopRedis()
 
 Radio::EventMap Radio::gEvents;
 std::map<nglString, RadioUser> Radio::gUsers;
-nglCriticalSection Radio::gEventCS;
+nglCriticalSection Radio::gEventCS("Radio::gEvents");
 
 nglSyncEvent* Radio::AddEvent(const nglString& rName)
 {

@@ -22,7 +22,7 @@ nuiSocketPool* HTTPHandler::gmpPool = NULL;
 ///////////////////////////////////////////////////
 //class HTTPHandler : public nuiHTTPHandler
 HTTPHandler::HTTPHandler(nuiSocket::SocketType s)
-: nuiHTTPHandler(s), mOnline(true), mLive(false), mpRadio(NULL)
+: nuiHTTPHandler(s), mOnline(true), mLive(false), mpRadio(NULL), mCS(nglString("HTTPHandler(").Add(s).Add(")"))
 {
 #if TEMPLATE_TEST
   mpTemplate = new nuiStringTemplate("<html><body><br>This template is a test<br>ClassName: {{Class}}<br>ObjectName: {{Name}}<br>{%for elem in array%}{{elem}}<br>{%end%}Is it ok?<br></body></html>");

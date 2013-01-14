@@ -1,6 +1,8 @@
 
 #include "nui.h"
 #include "nuiInit.h"
+#include "nglThreadChecker.h"
+
 #include "nuiHTTPServer.h"
 #include "nuiHTTP.h"
 #include "HTTPHandler.h"
@@ -177,6 +179,7 @@ int main(int argc, const char** argv)
   bool daemon = false;
 
   nuiInit(NULL);
+  nglThreadChecker::EnableChecker(true);
 
   NGL_OUT("Socket Pool Creation");
   pMainPool = new nuiSocketPool();

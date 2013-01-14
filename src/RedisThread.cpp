@@ -11,7 +11,7 @@
 
 //class RedisThread : public nglThread
 RedisThread::RedisThread(const nuiNetworkHost& rHost, Mode mode, const nglString rID, int db)
-: mHost(rHost), mMode(mode), mID(rID), mDB(db)
+: nglThread(nglString("Redis").Add(mode == MessagePump ? "MessagePump":"BroadCast")), mHost(rHost), mMode(mode), mID(rID), mDB(db)
 {
   mpClient = new RedisClient();
   mOnline = true;
