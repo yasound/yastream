@@ -151,7 +151,7 @@ int main(int argc, const char** argv)
   bool daemon = false;
 
   nuiInit(NULL);
-  //nglThreadChecker::EnableChecker(true);
+  nglThreadChecker::EnableChecker(true, false);
 
   NGL_OUT("Socket Pool Creation");
   pMainPool = new nuiSocketPool();
