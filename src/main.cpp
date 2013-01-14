@@ -81,39 +81,11 @@ void SigPipeSink(int signal)
   //NGL_LOG("radio", NGL_LOG_INFO, "SigPipe!\n");
 }
 
-void DumpStackTrace()
-{
-  void * array[25];
-  int nSize = backtrace(array, 25);
-  char ** symbols = backtrace_symbols(array, nSize);
-
-  for (int i = 0; i < nSize; i++)
-  {
-    int status;
-    char *realname;
-    std::string current = symbols[i];
-    size_t start = current.find("(");
-    size_t end = current.find("+");
-    realname = NULL;
-    if (start != std::string::npos && end != std::string::npos)
-    {
-      std::string symbol = current.substr(start+1, end-start-1);
-      realname = abi::__cxa_demangle(symbol.c_str(), 0, 0, &status);
-    }
-    if (realname != NULL)
-      syslog(LOG_ERR, "[%d] %s (%p)\n", i, realname, array[i]);
-    else
-      syslog(LOG_ERR, "[%d] %s (%p)\n", i, symbols[i], array[i]);
-    free(realname);
-  }
-
-  free(symbols);
-}
 
 void sig_handler(int sig)
 {
   syslog(LOG_ERR, "Crash\n");
-  DumpStackTrace();
+  nglDumpStackTrace();
 
   //signal(sig, &sig_handler);
   exit(-1);
@@ -129,7 +101,7 @@ class SyslogConsole : public nglConsole
 public:
   SyslogConsole (bool IsVisible = false)
   {
-    DumpStackTrace();
+    nglDumpStackTrace();
   }
 
   virtual ~SyslogConsole()
