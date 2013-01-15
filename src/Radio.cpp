@@ -1176,8 +1176,8 @@ void Radio::Dump(nglString& rDump)
     }
 
     {
-      ClientList::iterator it = mClients.begin();
-      ClientList::iterator end = mClients.end();
+      ClientList::iterator it = mClientsPreview.begin();
+      ClientList::iterator end = mClientsPreview.end();
 
       while (it != end)
       {
