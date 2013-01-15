@@ -1152,14 +1152,18 @@ void Radio::Dump(nglString& rDump)
 
   if (mLive)
     rDump.Add("Live ");
+
   if (mOnline)
     rDump.Add("Online ");
+
   if (mGoOffline)
     rDump.Add("GoOffline ");
+
   if (mpParser)
-    rDump.Add("ParserOK");
+    rDump.Add("ParserOK ");
+
   if (mpParserPreview)
-    rDump.Add("ParserPreviewOK");
+    rDump.Add("ParserPreviewOK ");
 
   rDump.AddNewLine();
   {
