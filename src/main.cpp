@@ -386,7 +386,7 @@ int main(int argc, const char** argv)
   pServer->SetNonBlocking(true);
 
   Radio::SetParams(appurl, hostname, port, datapath);
-nglThread::Sleep(15);
+//nglThread::Sleep(15);
   Radio::InitCache(CacheSize, datapath, CachePath);
 
   NGL_OUT("Flush OK");
