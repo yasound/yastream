@@ -1161,6 +1161,7 @@ void Radio::Dump(nglString& rDump)
   if (mpParserPreview)
     rDump.Add("ParserPreviewOK");
 
+  rDump.AddNewLine();
   {
     nglCriticalSectionGuard guard(mClientListCS);
 
@@ -1188,6 +1189,7 @@ void Radio::Dump(nglString& rDump)
   }
 
   rDump.AddNewLine();
+  rDump.AddNewLine();
 }
 
 void Radio::DumpAll(nglString& rDump)
@@ -1195,6 +1197,7 @@ void Radio::DumpAll(nglString& rDump)
   nglCriticalSectionGuard guard(gCS);
 
   rDump.Add((int64)gRadios.size()).Add(" Radios").AddNewLine();
+  rDump.AddNewLine();
 
   RadioMap::const_iterator it = gRadios.begin();
   RadioMap::const_iterator end = gRadios.end();
