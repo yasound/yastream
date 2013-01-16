@@ -325,11 +325,12 @@ bool HTTPHandler::OnBodyStart()
 
 
 
-//  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart DoneOK");
+  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart DoneOK");
   //SetName(nglString("OnBodyStart OK ") + mURL);
   
-  if (!(IsReadConnected() && IsWriteConnected()))
+  if (!IsReadConnected() || !IsWriteConnected())
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart Died in init");
     ReplyError(404, "Init error");
     SetAutoDelete(true);
     return ReplyAndClose();
