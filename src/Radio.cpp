@@ -142,6 +142,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 
     mOnline = true;
     mGoOffline = false;
+    pClient->SetName(nglString("RegisterClient ") + pClient->GetURL() + nglString("  "));
     rClients.push_back(pClient);
 
     pClient->Log(200);
@@ -197,6 +198,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
       //NGL_LOG("radio", NGL_LOG_INFO, "Chunk %f\n", pChunk->GetTime());
     }
   }
+  
   //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) DONE", pClient);
 }
 
@@ -848,8 +850,8 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
       Radio* pRadio = CreateRadio(rURL, nglString::Null);
       if (pRadio)
       {
-        pRadio->RegisterClient(pClient, HQ);
         pClient->SetName(nglString("GetRadio OK 1 ") + rURL);
+        pRadio->RegisterClient(pClient, HQ);
       }
       else
       {
@@ -863,8 +865,8 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
   Radio* pRadio = it->second;
   if (pRadio)
   {
-    pRadio->RegisterClient(pClient, HQ);
     pClient->SetName(nglString("GetRadio OK 2 ") + rURL);
+    pRadio->RegisterClient(pClient, HQ);
   }
   else
   {
