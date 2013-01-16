@@ -54,7 +54,7 @@ bool HTTPHandler::OnMethod(const nglString& rValue)
 
 bool HTTPHandler::OnURL(const nglString& rValue)
 {
-  SetName(rValue);
+  SetName(nglString("OnURL ") + mURL);
   NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnURL(%s)", rValue.GetChars());
   if (mURL == "/favicon.ico")
   {
@@ -118,6 +118,7 @@ bool HTTPHandler::OnURL(const nglString& rValue)
     return ReplyAndClose();
   }
 
+  SetName(nglString("OnURLOK ") + mURL);
   return true;
 }
 
@@ -128,6 +129,7 @@ bool HTTPHandler::OnProtocol(const nglString& rValue, const nglString rVersion)
 
 bool HTTPHandler::OnHeader(const nglString& rKey, const nglString& rValue)
 {
+  SetName(nglString("OnHeader ") + mURL);
   if (rKey == "Cookie")
   {
     std::vector<nglString> cookies;
@@ -181,6 +183,7 @@ uint32 FakeRange(uint32 i)
 
 bool HTTPHandler::OnBodyStart()
 {
+  SetName(nglString("OnBodyStart ") + mURL);
   //NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart(%s)", mURL.GetChars());
 
 #if TEMPLATE_TEST
@@ -214,7 +217,10 @@ bool HTTPHandler::OnBodyStart()
   mURL.Tokenize(tokens, "/");
 
   if (tokens.size() < 1)
+  {
+    SetName(nglString("OnBodyStart TokenError ") + mURL);
     return false;
+  }
 
   mRadioID = tokens[0];
 
@@ -300,12 +306,14 @@ bool HTTPHandler::OnBodyStart()
     str.Format("Unable to find %s on this server", mURL.GetChars());
     ReplyError(404, str);
     mpRadio = NULL;
+    SetName(nglString("OnBodyStart RadioError ") + mURL);
     return ReplyAndClose();
   }
 
 
 
 //  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart DoneOK");
+  SetName(nglString("OnBodyStart OK ") + mURL);
   return true;
 }
 
