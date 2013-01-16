@@ -34,7 +34,7 @@ nglString hostname = "0.0.0.0";
 nglString appurl = "https://api.yasound.com";
 nglPath datapath = "/data/glusterfs-storage/replica2all/song/";
 nglPath CachePath = "/data/cache/";
-int64 CacheSize = 1024 * 1024 * 1024 * 1; // 1 Gb
+int64 CacheSize = 1024L * 1024L * 1024L * 1024L; // 1 Gb
 nglString redishost = "127.0.0.1";
 int redisport = 6379;
 int redisdb = 1;
@@ -386,7 +386,7 @@ int main(int argc, const char** argv)
   pServer->SetNonBlocking(true);
 
   Radio::SetParams(appurl, hostname, port, datapath);
-nglThread::Sleep(15);
+//nglThread::Sleep(15);
   Radio::InitCache(CacheSize, datapath, CachePath);
 
   NGL_OUT("Flush OK");

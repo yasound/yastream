@@ -135,7 +135,6 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
   ClientList& rClients            = highQuality ? mClients : mClientsPreview;
   std::deque<Mp3Chunk*>& rChunks  = highQuality ? mChunks : mChunksPreview;
 
-  if (pClient)
   {
     nglCriticalSectionGuard guard(mClientListCS);
     //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) CS OK", pClient);
@@ -1142,6 +1141,79 @@ void Radio::ReleaseCache()
 const FileCache& Radio::GetCache()
 {
   return *gpCache;
+}
+
+void Radio::Dump(nglString& rDump)
+{
+  nglCriticalSectionGuard guard(mCS);
+
+  rDump.Add(mID);
+  rDump.Add(" [ ").Add(mBufferDuration).Add(" / ").Add(mBufferDurationPreview).Add("] ");
+
+  if (mLive)
+    rDump.Add("Live ");
+
+  if (mOnline)
+    rDump.Add("Online ");
+
+  if (mGoOffline)
+    rDump.Add("GoOffline ");
+
+  if (mpParser)
+    rDump.Add("ParserOK ");
+
+  if (mpParserPreview)
+    rDump.Add("ParserPreviewOK ");
+
+  rDump.AddNewLine();
+  {
+    nglCriticalSectionGuard guard(mClientListCS);
+
+    {
+      ClientList::iterator it = mClients.begin();
+      ClientList::iterator end = mClients.end();
+
+      while (it != end)
+      {
+        rDump.Add("\tHQ").Add((*it)->GetDesc()).AddNewLine();
+        ++it;
+      }
+    }
+
+    {
+      ClientList::iterator it = mClientsPreview.begin();
+      ClientList::iterator end = mClientsPreview.end();
+
+      while (it != end)
+      {
+        rDump.Add("\tlq").Add((*it)->GetDesc()).AddNewLine();
+        ++it;
+      }
+    }
+  }
+
+  rDump.AddNewLine();
+  rDump.AddNewLine();
+}
+
+void Radio::DumpAll(nglString& rDump)
+{
+  nglCriticalSectionGuard guard(gCS);
+
+  rDump.Add((int64)gRadios.size()).Add(" Radios").AddNewLine();
+  rDump.AddNewLine();
+
+  RadioMap::const_iterator it = gRadios.begin();
+  RadioMap::const_iterator end = gRadios.end();
+
+  while (it != end)
+  {
+    it->second->Dump(rDump);
+    rDump.AddNewLine();
+
+    ++it;
+  }
+
 }
 
 
