@@ -834,6 +834,7 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
       NGL_LOG("radio", NGL_LOG_ERROR, "Time out from the scheduler for radio %s\n", rURL.GetChars());
 
       DelEvent(rURL);
+      pClient->SetName(nglString("GetRadio Error 1 ") + rURL);
       return NULL;
     }
     DelEvent(rURL);
@@ -846,7 +847,14 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
       //NGL_LOG("radio", NGL_LOG_INFO, "Trying to create the radio '%s'\n", rURL.GetChars());
       Radio* pRadio = CreateRadio(rURL, nglString::Null);
       if (pRadio)
+      {
         pRadio->RegisterClient(pClient, HQ);
+        pClient->SetName(nglString("GetRadio OK 1 ") + rURL);
+      }
+      else
+      {
+        pClient->SetName(nglString("GetRadio Error 2 ") + rURL);
+      }
       return pRadio;
     }
 
@@ -854,7 +862,14 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
   //NGL_LOG("radio", NGL_LOG_INFO, "Getting existing radio %s\n", rURL.GetChars());
   Radio* pRadio = it->second;
   if (pRadio)
+  {
     pRadio->RegisterClient(pClient, HQ);
+    pClient->SetName(nglString("GetRadio OK 2 ") + rURL);
+  }
+  else
+  {
+    pClient->SetName(nglString("GetRadio Error 3 ") + rURL);
+  }
   return pRadio;
 }
 

@@ -326,7 +326,7 @@ bool HTTPHandler::OnBodyStart()
 
 
 //  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart DoneOK");
-  SetName(nglString("OnBodyStart OK ") + mURL);
+  //SetName(nglString("OnBodyStart OK ") + mURL);
   return true;
 }
 
