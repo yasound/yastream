@@ -204,6 +204,8 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 
 void Radio::UnregisterClient(HTTPHandler* pClient)
 {
+  pClient->SetName(nglString("UNRegisterClient ") + pClient->GetURL() + nglString("  "));
+
   NGL_LOG("radio", NGL_LOG_INFO, "client is gone for radio %p %s\n", this, mID.GetChars());
   nglCriticalSectionGuard guard(mClientListCS);
   mClients.remove(pClient);
