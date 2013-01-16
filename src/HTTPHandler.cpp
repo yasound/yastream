@@ -331,8 +331,6 @@ bool HTTPHandler::OnBodyStart()
   if (!IsReadConnected() || !IsWriteConnected())
   {
     NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart Died in init");
-    ReplyError(404, "Init error");
-    SetAutoDelete(true);
     return ReplyAndClose();
   }
   
