@@ -134,7 +134,7 @@ private:
 
   static Radio* CreateRadio(const nglString& rURL, const nglString& rHost);
   static void RegisterRadio(const nglString& rURL, Radio* pRadio);
-  static void UnregisterRadio(const nglString& rURL);
+  static void UnregisterRadio(Radio* pRadio);
 
   static RedisThread* mpRedisThreadIn;
   static RedisThread* mpRedisThreadOut;

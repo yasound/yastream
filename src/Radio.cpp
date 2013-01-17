@@ -54,7 +54,7 @@ Radio::~Radio()
 {
   NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() [%p - %s]", this, mID.GetChars());
   // tell clients to stop:
-  UnregisterRadio(mID);
+  UnregisterRadio(this);
   KillClients();
 
   delete mpSource;
@@ -696,13 +696,14 @@ void Radio::OnStartProxy()
             
 void Radio::SetOnline(bool set)
 {
+  NGL_LOG("radio", NGL_LOG_INFO, "radio [%p -%s] set online %d\n", this, mID.GetChars(), set);
   if (mOnline == set)
     return;
 
   mOnline = set;
   
   if (!mOnline)
-    UnregisterRadio(mID);
+    UnregisterRadio(this);
 }
 
 void Radio::KillClients()
@@ -903,20 +904,27 @@ void Radio::RegisterRadio(const nglString& rURL, Radio* pRadio)
   gRadios[rURL] = pRadio;
 }
 
-void Radio::UnregisterRadio(const nglString& rURL)
+void Radio::UnregisterRadio(Radio* pRadio)
 {
+  nglString url = pRadio->mID;
+  NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s]\n", pRadio, url.GetChars());
+  
   nglCriticalSectionGuard guard(gCS);
-  NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio '%s'\n", rURL.GetChars());
-
-  RadioMap::const_iterator it = gRadios.find(rURL);
+  
+  RadioMap::const_iterator it = gRadios.find(url);
   if (it == gRadios.end())
   {
     //NGL_LOG("radio", NGL_LOG_ERROR, "Error, radio '%s' was never registered\n", rURL.GetChars());
     return;
   }
-  gRadios.erase(rURL);
-
-  mpRedisThreadOut->StopRadio(rURL);
+  if (it->second != pRadio)
+  {
+    NGL_LOG("radio", NGL_LOG_INFO, "Cancel radio unregistering '%s' (%p requested, %p in map)\n", url.GetChars(), pRadio, it->second);
+    return;
+  }
+  
+  gRadios.erase(url);
+  mpRedisThreadOut->StopRadio(url);
 }
 
 Radio* Radio::CreateRadio(const nglString& rURL, const nglString& rHost)
