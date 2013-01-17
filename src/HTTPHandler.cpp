@@ -24,6 +24,7 @@ nuiSocketPool* HTTPHandler::gmpPool = NULL;
 HTTPHandler::HTTPHandler(nuiSocket::SocketType s)
 : nuiHTTPHandler(s), mOnline(true), mLive(false), mpRadio(NULL), mCS(nglString("HTTPHandler(").Add(s).Add(")"))
 {
+  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::HTTPHandler() %p", this);
 #if TEMPLATE_TEST
   mpTemplate = new nuiStringTemplate("<html><body><br>This template is a test<br>ClassName: {{Class}}<br>ObjectName: {{Name}}<br>{%for elem in array%}{{elem}}<br>{%end%}Is it ok?<br></body></html>");
 #else
@@ -42,7 +43,7 @@ HTTPHandler::~HTTPHandler()
 //   if (mLive)
 //     pRadio->SetNetworkSource(NULL, NULL);
 
-    NGL_LOG("radio", NGL_LOG_INFO, "Client disconnecting from %s\n", mRadioID.GetChars());
+    NGL_LOG("radio", NGL_LOG_INFO, "Client (%p) disconnecting from %s\n", this, mRadioID.GetChars());
     mpRadio->UnregisterClient(this);
   }
 }
@@ -55,7 +56,7 @@ bool HTTPHandler::OnMethod(const nglString& rValue)
 bool HTTPHandler::OnURL(const nglString& rValue)
 {
   SetName(nglString("OnURL ") + mURL);
-  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnURL(%s)", rValue.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, " %p HTTPHandler::OnURL(%s)", this, rValue.GetChars());
   if (mURL == "/favicon.ico")
   {
     nglString str;
@@ -197,7 +198,7 @@ uint32 FakeRange(uint32 i)
 bool HTTPHandler::OnBodyStart()
 {
   SetName(nglString("OnBodyStart ") + mURL);
-  //NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart(%s)", mURL.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "%p HTTPHandler::OnBodyStart(%s)", this, mURL.GetChars());
 
 #if TEMPLATE_TEST
   if (mURL == "/")
@@ -314,7 +315,7 @@ bool HTTPHandler::OnBodyStart()
   mpRadio = Radio::GetRadio(mRadioID, this, hq);
   if (!mpRadio || !mpRadio->IsOnline())
   {
-    NGL_LOG("radio", NGL_LOG_ERROR, "HTTPHandler::Start unable to create radio %s\n", mRadioID.GetChars());
+    NGL_LOG("radio", NGL_LOG_ERROR, " %p HTTPHandler::Start unable to create radio %s\n", this, mRadioID.GetChars());
     nglString str;
     str.Format("Unable to find %s on this server", mURL.GetChars());
     ReplyError(404, str);
@@ -325,12 +326,12 @@ bool HTTPHandler::OnBodyStart()
 
 
 
-  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart DoneOK");
+  NGL_LOG("radio", NGL_LOG_INFO, "%p HTTPHandler::OnBodyStart DoneOK", this);
   //SetName(nglString("OnBodyStart OK ") + mURL);
   
   if (!IsReadConnected() || !IsWriteConnected())
   {
-    NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnBodyStart Died in init");
+    NGL_LOG("radio", NGL_LOG_INFO, "%p HTTPHandler::OnBodyStart Died in init", this);
     return ReplyAndClose();
   }
   

@@ -46,11 +46,13 @@ Radio::Radio(const nglString& rID, const nglString& rHost)
 
   RegisterRadio(mID, this);
   SetOnline(true);
+  
+  NGL_LOG("radio", NGL_LOG_INFO, "Radio::Radio() [%p - %s]", this, mID.GetChars());
 }
 
 Radio::~Radio()
 {
-  NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() [%s]", mID.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() [%p - %s]", this, mID.GetChars());
   // tell clients to stop:
   UnregisterRadio(mID);
   KillClients();
@@ -63,7 +65,7 @@ Radio::~Radio()
   delete mpParserPreview;
   delete mpStreamPreview;
 
-  NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() OK");
+  NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() OK [%p - %s]", this, mID.GetChars());
 }
 
 void Radio::SetNetworkSource(nuiTCPClient* pHQSource, nuiTCPClient* pLQSource)
@@ -134,7 +136,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 {
   pClient->SetAutoPool(NULL);
 
-  //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p)", pClient);
+  NGL_LOG("radio", NGL_LOG_INFO, "[%p - %s] RegisterClient(%p)", this, mID.GetChars(), pClient);
   ClientList& rClients            = highQuality ? mClients : mClientsPreview;
   std::deque<Mp3Chunk*>& rChunks  = highQuality ? mChunks : mChunksPreview;
 
@@ -182,7 +184,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
     pClient->ReplyLine("");
 
     // Do the streaming:
-    NGL_LOG("radio", NGL_LOG_ERROR, "Do the streaming\n");
+    NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Do the streaming\n", this, mID.GetChars());
 
   }
 
@@ -209,16 +211,16 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
 {
   pClient->SetName(nglString("UNRegisterClient ") + pClient->GetURL() + nglString("  "));
 
-  NGL_LOG("radio", NGL_LOG_INFO, "client is gone for radio %p %s\n", this, mID.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "client (%p) is gone for radio [%p - %s]\n", pClient, this, mID.GetChars());
   nglCriticalSectionGuard guard(mClientListCS);
   mClients.remove(pClient);
   mClientsPreview.remove(pClient);
-  NGL_LOG("radio", NGL_LOG_INFO, "    %d clients left in radio %s\n", mClientsPreview.size(), mID.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "    %d clients left in radio [%p - %s]\n", mClientsPreview.size(), this, mID.GetChars());
 
   if (mClients.empty() && mClientsPreview.empty())
   {
     //  Shutdown radio
-    NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio %s\n", mID.GetChars());
+    NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio [%p - %s]\n", this, mID.GetChars());
     // Now that the scheduler handles the programming of the radio, the stream just can drop the radio when no one listens anymore
     SetOnline(false);
     mGoOffline = true;
@@ -236,7 +238,7 @@ bool Radio::SetTrack(const Track& rTrack)
   //nglPath path = "/space/new/medias/song";
   nglPath path = p;
 
-  NGL_LOG("radio", NGL_LOG_INFO, "SetTrack %s\n", path.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "[%p - %s] SetTrack %s\n", this, mID.GetChars(), path.GetChars());
 
   nglPath previewPath = GetPreviewPath(path);
 
@@ -339,7 +341,7 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
   for (int i = 0; i < ClientsToKill.size(); i++)
   {
     HTTPHandler* pClient = ClientsToKill[i];
-    NGL_LOG("radio", NGL_LOG_ERROR, "Radio::AddChunk Kill client %p\n", pClient);
+    NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk Kill client %p\n", this, mID.GetChars(), pClient);
     delete pClient;
   }
 
@@ -588,12 +590,12 @@ void Radio::OnStart()
             //NGL_LOG("radio", NGL_LOG_INFO, "Radio source broken");
             if (!mOnline)
             {
-              NGL_LOG("radio", NGL_LOG_ERROR, "Radio offline");
+              NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio offline", this, mID.GetChars());
             }
           }
           else
           {
-            NGL_LOG("radio", NGL_LOG_ERROR, "Radio broken AND offline");
+            NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio broken AND offline", this, mID.GetChars());
             SetOnline(false); //#FIXME Handle HQ Stream: && mpSource->IsReadConnected();
           }
         }
@@ -621,7 +623,7 @@ void Radio::OnStart()
   // tell clients to stop:
   KillClients();
 
-  NGL_LOG("radio", NGL_LOG_ERROR, "radio '%s' is now offline\n", mID.GetChars());
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] radio is now offline\n", this, mID.GetChars());
 
   delete this;
 }
@@ -705,7 +707,7 @@ void Radio::SetOnline(bool set)
 
 void Radio::KillClients()
 {
-  NGL_LOG("radio", NGL_LOG_INFO, "Force '%d' clients to stop relaying our data\n", mClientsPreview.size() + mClients.size());
+  NGL_LOG("radio", NGL_LOG_INFO, "[%p - %s] Force '%d' clients to stop relaying our data\n", this, mID.GetChars(), mClientsPreview.size() + mClients.size());
   nglCriticalSectionGuard guard(mClientListCS);
   ClientList l = mClientsPreview;
 
@@ -835,7 +837,7 @@ bool Radio::GetUser(const nglString& rUsername, const nglString& rApiKey, RadioU
 
 Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
 {
-  //NGL_LOG("radio", NGL_LOG_INFO, "Getting radio %s\n", rURL.GetChars());
+  NGL_LOG("radio", NGL_LOG_INFO, "Getting radio %s (client %p)\n", rURL.GetChars(), pClient);
   nglCriticalSectionGuard guard(gCS);
 
   RadioMap::const_iterator it = gRadios.find(rURL);
@@ -885,6 +887,8 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
   {
     pClient->SetName(nglString("GetRadio Error 3 ") + rURL);
   }
+  
+  NGL_LOG("radio", NGL_LOG_INFO, "Get radio [%p - %s] (client %p)\n", pRadio, rURL.GetChars(), pClient);
   return pRadio;
 }
 
