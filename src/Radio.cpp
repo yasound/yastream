@@ -910,21 +910,27 @@ void Radio::UnregisterRadio(Radio* pRadio)
   NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s]\n", pRadio, url.GetChars());
   
   nglCriticalSectionGuard guard(gCS);
+  NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s] 1\n", pRadio, url.GetChars());
   
   RadioMap::const_iterator it = gRadios.find(url);
   if (it == gRadios.end())
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s] ERROR 1\n", pRadio, url.GetChars());
     //NGL_LOG("radio", NGL_LOG_ERROR, "Error, radio '%s' was never registered\n", rURL.GetChars());
     return;
   }
   if (it->second != pRadio)
   {
+    NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s] ERROR 2\n", pRadio, url.GetChars());
     NGL_LOG("radio", NGL_LOG_INFO, "Cancel radio unregistering '%s' (%p requested, %p in map)\n", url.GetChars(), pRadio, it->second);
     return;
   }
   
+  NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s] 2\n", pRadio, url.GetChars());
   gRadios.erase(url);
+  NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s] 3\n", pRadio, url.GetChars());
   mpRedisThreadOut->StopRadio(url);
+  NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s] 4\n", pRadio, url.GetChars());
 }
 
 Radio* Radio::CreateRadio(const nglString& rURL, const nglString& rHost)
