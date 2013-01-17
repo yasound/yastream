@@ -45,12 +45,16 @@ Radio::Radio(const nglString& rID, const nglString& rHost)
   }
 
   RegisterRadio(mID, this);
-  mOnline = true;
+  SetOnline(true);
 }
 
 Radio::~Radio()
 {
   NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() [%s]", mID.GetChars());
+  // tell clients to stop:
+  UnregisterRadio(mID);
+  KillClients();
+
   delete mpSource;
   delete mpPreviewSource;
 
@@ -59,7 +63,6 @@ Radio::~Radio()
   delete mpParserPreview;
   delete mpStreamPreview;
 
-  UnregisterRadio(mID);
   NGL_LOG("radio", NGL_LOG_INFO, "Radio::~Radio() OK");
 }
 
@@ -103,7 +106,7 @@ void Radio::Start()
 
   if (mpPreviewSource)
   {
-    mOnline = mpPreviewSource->IsReadConnected();
+    SetOnline(mpPreviewSource->IsReadConnected());
 
     if (mOnline)
     {
@@ -113,7 +116,7 @@ void Radio::Start()
   }
   else
   {
-    mOnline = true;
+    SetOnline(true);
     mpThread = new nglThreadDelegate(nuiMakeDelegate(this, &Radio::OnStart), name, nglThread::Normal, stacksize);
   }
 
@@ -140,7 +143,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
     //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) CS OK", pClient);
 
 
-    mOnline = true;
+    SetOnline(true);
     mGoOffline = false;
     pClient->SetName(nglString("RegisterClient ") + pClient->GetURL() + nglString("  "));
     rClients.push_back(pClient);
@@ -217,7 +220,7 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
     //  Shutdown radio
     NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio %s\n", mID.GetChars());
     // Now that the scheduler handles the programming of the radio, the stream just can drop the radio when no one listens anymore
-    mOnline = false;
+    SetOnline(false);
     mGoOffline = true;
   }
 
@@ -591,7 +594,7 @@ void Radio::OnStart()
           else
           {
             NGL_LOG("radio", NGL_LOG_ERROR, "Radio broken AND offline");
-            mOnline = false; //#FIXME Handle HQ Stream: && mpSource->IsReadConnected();
+            SetOnline(false); //#FIXME Handle HQ Stream: && mpSource->IsReadConnected();
           }
         }
         //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
@@ -676,7 +679,7 @@ void Radio::OnStartProxy()
       nexttime += duration;
       if (duration == 0)
       {
-        mOnline = false;
+        SetOnline(false);
       }
       //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
     }
@@ -684,12 +687,20 @@ void Radio::OnStartProxy()
     nglThread::MsSleep(100);
   }
 
-  // tell clients to stop:
-  KillClients();
-
   NGL_LOG("radio", NGL_LOG_INFO, "radio '%s' is now offline\n", mID.GetChars());
 
   delete this;
+}
+            
+void Radio::SetOnline(bool set)
+{
+  if (mOnline == set)
+    return;
+
+  mOnline = set;
+  
+  if (!mOnline)
+    UnregisterRadio(mID);
 }
 
 void Radio::KillClients()
@@ -896,6 +907,7 @@ void Radio::UnregisterRadio(const nglString& rURL)
   if (it == gRadios.end())
   {
     //NGL_LOG("radio", NGL_LOG_ERROR, "Error, radio '%s' was never registered\n", rURL.GetChars());
+    return;
   }
   gRadios.erase(rURL);
 

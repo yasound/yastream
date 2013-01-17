@@ -79,6 +79,8 @@ public:
   static void DumpAll(nglString& rDump);
   void Dump(nglString& rDump);
 private:
+  void SetOnline(bool set);
+
   static void HandleRedisMessage(const RedisReply& rReply);
   void RegisterClient(HTTPHandler* pClient, bool highQuality);
   bool SetTrack(const Track& rTrack);
