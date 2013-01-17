@@ -872,6 +872,7 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
       {
         pClient->SetName(nglString("GetRadio Error 2 ") + rURL);
       }
+      NGL_LOG("radio", NGL_LOG_INFO, "Get radio: radio created [%p - %s] (client %p)\n", pRadio, rURL.GetChars(), pClient);
       return pRadio;
     }
 
