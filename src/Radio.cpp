@@ -796,6 +796,7 @@ bool Radio::GetUser(const nglString& rToken, RadioUser& rUser)
   {
     NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK (GetUser token %s)\n", rToken.GetChars());
     nglCriticalSectionGuard guard(gCS);
+    NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK OK (GetUser token %s)\n", rToken.GetChars());
     std::map<nglString, RadioUser>::iterator it = gUsers.find(id);
     if (it != gUsers.end())
     {
@@ -827,6 +828,7 @@ bool Radio::GetUser(const nglString& rUsername, const nglString& rApiKey, RadioU
   {
     NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK (GetUser username %s)\n", rUsername.GetChars());
     nglCriticalSectionGuard guard(gCS);
+    NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK OK (GetUser username %s)\n", rUsername.GetChars());
     std::map<nglString, RadioUser>::iterator it = gUsers.find(id);
     if (it != gUsers.end())
     {
@@ -845,6 +847,7 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
   NGL_LOG("radio", NGL_LOG_INFO, "Getting radio %s (client %p)\n", rURL.GetChars(), pClient);
   NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK (GetRadio rURL %s)\n", rURL.GetChars());
   nglCriticalSectionGuard guard(gCS);
+  NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK OK (GetRadio rURL %s)\n", rURL.GetChars());
 
   RadioMap::const_iterator it = gRadios.find(rURL);
   if (it == gRadios.end())
@@ -909,6 +912,7 @@ void Radio::RegisterRadio(const nglString& rURL, Radio* pRadio)
 {
   NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK (RegisterRadio url %s)\n", rURL.GetChars());
   nglCriticalSectionGuard guard(gCS);
+  NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK OK (RegisterRadio url %s)\n", rURL.GetChars());
   RadioMap::const_iterator it = gRadios.find(rURL);
   if (it != gRadios.end())
     NGL_LOG("radio", NGL_LOG_ERROR, "the radio '%s' is already registered\n", rURL.GetChars());
@@ -925,6 +929,7 @@ void Radio::UnregisterRadio(Radio* pRadio)
   
   NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK (UnregisterRadio radio %p)\n", pRadio);
   nglCriticalSectionGuard guard(gCS);
+  NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK OK (UnregisterRadio radio %p)\n", pRadio);
   NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s] 1\n", pRadio, url.GetChars());
   
   RadioMap::const_iterator it = gRadios.find(url);
@@ -966,6 +971,7 @@ bool Radio::IsLive() const
 {
   NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK (IsLive radio %p)\n", this);
   nglCriticalSectionGuard guard(gCS);
+  NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK OK (IsLive radio %p)\n", this);
   NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK (IsLive radio %p)\n", this);
   return mLive;
 }
@@ -974,6 +980,7 @@ bool Radio::IsOnline() const
 {
   NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK (IsOnline radio %p)\n", this);
   nglCriticalSectionGuard guard(gCS);
+  NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK OK (IsOnline radio %p)\n", this);
   NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK (IsOnline radio %p)\n", this);
   return mOnline;
 }
@@ -1031,6 +1038,7 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
     {
       NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK (redis message play)\n");
       nglCriticalSectionGuard g(gCS);
+      NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK OK (redis message play)\n");
       RadioMap::const_iterator it = gRadios.find(uuid);
 
       if (it != gRadios.end())
@@ -1066,6 +1074,7 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
     {
       NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK (redis message user_authentication)\n");
       nglCriticalSectionGuard g(gCS);
+      NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK OK (redis message user_authentication)\n");
       RadioUser u;
       u.hd = hd;
       u.uuid = uuid;
@@ -1275,6 +1284,7 @@ void Radio::DumpAll(nglString& rDump)
 {
   NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK (DumpAll)\n");
   nglCriticalSectionGuard guard(gCS);
+  NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK OK (DumpAll)\n");
 
   rDump.Add((int64)gRadios.size()).Add(" Radios").AddNewLine();
   rDump.AddNewLine();
