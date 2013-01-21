@@ -172,17 +172,19 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
     pClient->ReplyLine("HTTP/1.0 200 OK");
     pClient->ReplyHeader("Cache-Control", "no-cache");
     pClient->ReplyHeader("Server", "Yastream 1.0.0");
+    
+    NGL_LOG("radio", NGL_LOG_INFO, "client %p: set content type ... for radio %s", pClient, pClient->GetURL().GetChars());
 
     if (!pClient->IsLive())
     {
-      NGL_OUT("radio", NGL_LOG_INFO, "client %p: set content type 'audio/mpeg' for radio %s", pClient, pClient->GetURL().GetChars());
+      NGL_OUT("radio", NGL_LOG_INFO, "client %p: set content type audio/mpeg for radio %s", pClient, pClient->GetURL().GetChars());
       pClient->ReplyHeader("Content-Type", "audio/mpeg");
       pClient->ReplyHeader("icy-name", "no name");
       pClient->ReplyHeader("icy-pub", "1");
     }
     else
     {
-      NGL_OUT("radio", NGL_LOG_INFO, "client %p: set content type 'text/plain' for radio %s", pClient, pClient->GetURL().GetChars());
+      NGL_OUT("radio", NGL_LOG_INFO, "client %p: set content type text/plain for radio %s", pClient, pClient->GetURL().GetChars());
       pClient->ReplyHeader("Content-Type", "text/plain");
     }
 
