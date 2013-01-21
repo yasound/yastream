@@ -143,19 +143,15 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
   {
     NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK [%p - %s] RegisterClient(%p)", this, mID.GetChars(), pClient);
 
-    {
-      nglCriticalSectionGuard guard(mClientListCS);
-      NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK OK [%p - %s] RegisterClient(%p)", this, mID.GetChars(), pClient);
-      //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) CS OK", pClient);
+    nglCriticalSectionGuard guard(mClientListCS);
+    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK OK [%p - %s] RegisterClient(%p)", this, mID.GetChars(), pClient);
+    //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) CS OK", pClient);
 
 
-      SetOnline(true);
-      mGoOffline = false;
-      pClient->SetName(nglString("RegisterClient ") + pClient->GetURL() + nglString("  "));
-      rClients.push_back(pClient);
-      
-      NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS UNLOCK [%p - %s] RegisterClient(%p)", this, mID.GetChars(), pClient);
-    }
+    SetOnline(true);
+    mGoOffline = false;
+    pClient->SetName(nglString("RegisterClient ") + pClient->GetURL() + nglString("  "));
+    rClients.push_back(pClient);
 
     pClient->Log(200);
 
@@ -194,6 +190,8 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 
     // Do the streaming:
     NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Do the streaming\n", this, mID.GetChars());
+    
+    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS UNLOCK [%p - %s] RegisterClient(%p)", this, mID.GetChars(), pClient);
   }
 
   //NGL_LOG("radio", NGL_LOG_INFO, "Prepare the new client:\n");
