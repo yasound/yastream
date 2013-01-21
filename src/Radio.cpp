@@ -216,21 +216,24 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   pClient->SetName(nglString("UNRegisterClient ") + pClient->GetURL() + nglString("  "));
 
   NGL_LOG("radio", NGL_LOG_INFO, "client (%p) is gone for radio [%p - %s]\n", pClient, this, mID.GetChars());
-  NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK [%p - %s] UnregisterClient(%p)", this, mID.GetChars(), pClient);
-  nglCriticalSectionGuard guard(mClientListCS);
-  NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK OK [%p - %s] UnregisterClient(%p)", this, mID.GetChars(), pClient);
-  mClients.remove(pClient);
-  mClientsPreview.remove(pClient);
-  NGL_LOG("radio", NGL_LOG_INFO, "    %d clients left in radio [%p - %s]\n", mClientsPreview.size(), this, mID.GetChars());
+  
+  {
+    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK [%p - %s] UnregisterClient(%p)", this, mID.GetChars(), pClient);
+    nglCriticalSectionGuard guard(mClientListCS);
+    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK OK [%p - %s] UnregisterClient(%p)", this, mID.GetChars(), pClient);
+    mClients.remove(pClient);
+    mClientsPreview.remove(pClient);
+    NGL_LOG("radio", NGL_LOG_INFO, "    %d clients left in radio [%p - %s]\n", mClientsPreview.size(), this, mID.GetChars());
+  }
 
-//  if (mClients.empty() && mClientsPreview.empty())
-//  {
-//    //  Shutdown radio
-//    NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio [%p - %s]\n", this, mID.GetChars());
-//    // Now that the scheduler handles the programming of the radio, the stream just can drop the radio when no one listens anymore
-//    SetOnline(false);
-//    mGoOffline = true;
-//  }
+  if (mClients.empty() && mClientsPreview.empty())
+  {
+    //  Shutdown radio
+    NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio [%p - %s]\n", this, mID.GetChars());
+    // Now that the scheduler handles the programming of the radio, the stream just can drop the radio when no one listens anymore
+    SetOnline(false);
+    mGoOffline = true;
+  }
 
   const RadioUser& rUser = pClient->GetUser();
   nglString sessionid;
@@ -589,18 +592,6 @@ void Radio::OnStart()
       while (mOnline && mLive && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || over >= 0))
       {
         nglCriticalSectionGuard guard(mCS);
-        
-        // Radio goes offline if there is no more clients
-        if (mClients.empty() && mClientsPreview.empty())
-        {
-          //  Shutdown radio
-          NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio [%p - %s]\n", this, mID.GetChars());
-          // Now that the scheduler handles the programming of the radio, the stream just can drop the radio when no one listens anymore
-          SetOnline(false);
-          mGoOffline = true;
-          continue;
-        }
-        
         double duration = ReadSetProxy(chunk_count_preview, chunk_count);
         nexttime += duration;
         if (duration == 0)
@@ -631,18 +622,6 @@ void Radio::OnStart()
       while (mOnline && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || now >= nexttime))
       {
         nglCriticalSectionGuard guard(mCS);
-        
-        // Radio goes offline if there is no more clients
-        if (mClients.empty() && mClientsPreview.empty())
-        {
-          //  Shutdown radio
-          NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio [%p - %s]\n", this, mID.GetChars());
-          // Now that the scheduler handles the programming of the radio, the stream just can drop the radio when no one listens anymore
-          SetOnline(false);
-          mGoOffline = true;
-          continue;
-        }
-        
         UpdateRadio();
         nexttime += ReadSet(chunk_count_preview, chunk_count);
         //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
