@@ -963,12 +963,9 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
       {
         // No proxy radio has been created... so it should be ok
         // Create the radio!
-        //NGL_LOG("radio", NGL_LOG_INFO, "Trying to create the radio '%s'\n", rURL.GetChars());
         pRadio = CreateRadio(rURL, nglString::Null);
         
         NGL_LOG("radio", NGL_LOG_INFO, "Get radio: radio created [%p - %s] (client %p)\n", pRadio, rURL.GetChars(), pClient);
-        
-        NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK (GetRadio rURL %s)\n", rURL.GetChars());
       }
       else
       {
@@ -1013,27 +1010,23 @@ void Radio::UnregisterRadio(Radio* pRadio)
   NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK (UnregisterRadio radio %p)\n", pRadio);
   nglCriticalSectionGuard guard(gCS);
   NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK OK (UnregisterRadio radio %p)\n", pRadio);
-  NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s] 1\n", pRadio, url.GetChars());
   
   RadioMap::const_iterator it = gRadios.find(url);
   if (it == gRadios.end())
   {
-    NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s] ERROR 1\n", pRadio, url.GetChars());
-    //NGL_LOG("radio", NGL_LOG_ERROR, "Error, radio '%s' was never registered\n", rURL.GetChars());
+    NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s] radio was never registered\n", pRadio, url.GetChars());
+    NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK unknown (UnregisterRadio radio %p)\n", pRadio);
     return;
   }
   if (it->second != pRadio)
   {
-    NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s] ERROR 2\n", pRadio, url.GetChars());
     NGL_LOG("radio", NGL_LOG_INFO, "Cancel radio unregistering '%s' (%p requested, %p in map)\n", url.GetChars(), pRadio, it->second);
+    NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK cancel (UnregisterRadio radio %p)\n", pRadio);
     return;
   }
   
-  NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s] 2\n", pRadio, url.GetChars());
   gRadios.erase(url);
-  NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s] 3\n", pRadio, url.GetChars());
   mpRedisThreadOut->StopRadio(url);
-  NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s] 4\n", pRadio, url.GetChars());
   
   NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK (UnregisterRadio radio %p)\n", pRadio);
 }
