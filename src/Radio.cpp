@@ -969,7 +969,6 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
         NGL_LOG("radio", NGL_LOG_INFO, "Get radio: radio created [%p - %s] (client %p)\n", pRadio, rURL.GetChars(), pClient);
         
         NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK (GetRadio rURL %s)\n", rURL.GetChars());
-        return pRadio;
       }
       else
       {
