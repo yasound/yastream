@@ -179,12 +179,14 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 
     if (!pClient->IsLive())
     {
+      NGL_OUT("radio", NGL_LOG_INFO, "client %p: set content type 'audio/mpeg' for radio %s", pClient, pClient->GetURL().GetChars());
       pClient->ReplyHeader("Content-Type", "audio/mpeg");
       pClient->ReplyHeader("icy-name", "no name");
       pClient->ReplyHeader("icy-pub", "1");
     }
     else
     {
+      NGL_OUT("radio", NGL_LOG_INFO, "client %p: set content type 'text/plain' for radio %s", pClient, pClient->GetURL().GetChars());
       pClient->ReplyHeader("Content-Type", "text/plain");
     }
 
@@ -864,128 +866,128 @@ bool Radio::GetUser(const nglString& rUsername, const nglString& rApiKey, RadioU
 }
 
 
-Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
-{
-  NGL_LOG("radio", NGL_LOG_INFO, "Getting radio %s (client %p)\n", rURL.GetChars(), pClient);
-  NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK (GetRadio rURL %s)\n", rURL.GetChars());
-  nglCriticalSectionGuard guard(gCS);
-  NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK OK (GetRadio rURL %s)\n", rURL.GetChars());
-
-  RadioMap::const_iterator it = gRadios.find(rURL);
-  if (it == gRadios.end())
-  {
-    nglSyncEvent* pEvent = AddEvent(rURL);
-    mpRedisThreadOut->PlayRadio(rURL);
-    if (!pEvent->Wait(YASCHEDULER_WAIT_TIME))
-    {
-      // Timeout... no reply from the scheduler
-      NGL_LOG("radio", NGL_LOG_ERROR, "Time out from the scheduler for radio %s\n", rURL.GetChars());
-
-      DelEvent(rURL);
-      pClient->SetName(nglString("GetRadio Error 1 ") + rURL);
-      
-      NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK (GetRadio rURL %s)\n", rURL.GetChars());
-      return NULL;
-    }
-    DelEvent(rURL);
-
-    it = gRadios.find(rURL);
-    if (it == gRadios.end())
-    {
-      // No proxy radio has been created... so it should be ok
-      // Create the radio!
-      //NGL_LOG("radio", NGL_LOG_INFO, "Trying to create the radio '%s'\n", rURL.GetChars());
-      Radio* pRadio = CreateRadio(rURL, nglString::Null);
-      if (pRadio)
-      {
-        pClient->SetName(nglString("GetRadio OK 1 ") + rURL);
-        pRadio->RegisterClient(pClient, HQ);
-      }
-      else
-      {
-        pClient->SetName(nglString("GetRadio Error 2 ") + rURL);
-      }
-      NGL_LOG("radio", NGL_LOG_INFO, "Get radio: radio created [%p - %s] (client %p)\n", pRadio, rURL.GetChars(), pClient);
-      
-      NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK (GetRadio rURL %s)\n", rURL.GetChars());
-      return pRadio;
-    }
-
-  }
-  //NGL_LOG("radio", NGL_LOG_INFO, "Getting existing radio %s\n", rURL.GetChars());
-  Radio* pRadio = it->second;
-  if (pRadio)
-  {
-    pClient->SetName(nglString("GetRadio OK 2 ") + rURL);
-    pRadio->RegisterClient(pClient, HQ);
-  }
-  else
-  {
-    pClient->SetName(nglString("GetRadio Error 3 ") + rURL);
-  }
-  
-  NGL_LOG("radio", NGL_LOG_INFO, "Get radio [%p - %s] (client %p)\n", pRadio, rURL.GetChars(), pClient);
-  
-  NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK (GetRadio rURL %s)\n", rURL.GetChars());
-  return pRadio;
-}
-
 //Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
 //{
 //  NGL_LOG("radio", NGL_LOG_INFO, "Getting radio %s (client %p)\n", rURL.GetChars(), pClient);
-//  Radio* pRadio = NULL;
-//  
+//  NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK (GetRadio rURL %s)\n", rURL.GetChars());
+//  nglCriticalSectionGuard guard(gCS);
+//  NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK OK (GetRadio rURL %s)\n", rURL.GetChars());
+//
+//  RadioMap::const_iterator it = gRadios.find(rURL);
+//  if (it == gRadios.end())
 //  {
-//    NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK (GetRadio rURL %s)\n", rURL.GetChars());
-//    nglCriticalSectionGuard guard(gCS);
-//    NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK OK (GetRadio rURL %s)\n", rURL.GetChars());
-//    
-//    RadioMap::const_iterator it = gRadios.find(rURL);
+//    nglSyncEvent* pEvent = AddEvent(rURL);
+//    mpRedisThreadOut->PlayRadio(rURL);
+//    if (!pEvent->Wait(YASCHEDULER_WAIT_TIME))
+//    {
+//      // Timeout... no reply from the scheduler
+//      NGL_LOG("radio", NGL_LOG_ERROR, "Time out from the scheduler for radio %s\n", rURL.GetChars());
+//
+//      DelEvent(rURL);
+//      pClient->SetName(nglString("GetRadio Error 1 ") + rURL);
+//      
+//      NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK (GetRadio rURL %s)\n", rURL.GetChars());
+//      return NULL;
+//    }
+//    DelEvent(rURL);
+//
+//    it = gRadios.find(rURL);
 //    if (it == gRadios.end())
 //    {
-//      nglSyncEvent* pEvent = AddEvent(rURL);
-//      mpRedisThreadOut->PlayRadio(rURL);
-//      if (!pEvent->Wait(YASCHEDULER_WAIT_TIME))
+//      // No proxy radio has been created... so it should be ok
+//      // Create the radio!
+//      //NGL_LOG("radio", NGL_LOG_INFO, "Trying to create the radio '%s'\n", rURL.GetChars());
+//      Radio* pRadio = CreateRadio(rURL, nglString::Null);
+//      if (pRadio)
 //      {
-//        // Timeout... no reply from the scheduler
-//        NGL_LOG("radio", NGL_LOG_ERROR, "Time out from the scheduler for radio %s\n", rURL.GetChars());
-//        
-//        DelEvent(rURL);
-//        
-//        NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK (GetRadio rURL %s)\n", rURL.GetChars());
-//        NGL_LOG("radio", NGL_LOG_INFO, "Get radio: FAILED [%s] (client %p)\n", rURL.GetChars(), pClient);
-//        return NULL;
-//      }
-//      DelEvent(rURL);
-//      
-//      it = gRadios.find(rURL);
-//      if (it == gRadios.end())
-//      {
-//        // No proxy radio has been created... so it should be ok
-//        // Create the radio!
-//        pRadio = CreateRadio(rURL, nglString::Null);
-//        NGL_LOG("radio", NGL_LOG_INFO, "Get radio: radio created [%p - %s] (client %p)\n", pRadio, rURL.GetChars(), pClient);
+//        pClient->SetName(nglString("GetRadio OK 1 ") + rURL);
+//        pRadio->RegisterClient(pClient, HQ);
 //      }
 //      else
 //      {
-//        pRadio = it->second;
+//        pClient->SetName(nglString("GetRadio Error 2 ") + rURL);
 //      }
+//      NGL_LOG("radio", NGL_LOG_INFO, "Get radio: radio created [%p - %s] (client %p)\n", pRadio, rURL.GetChars(), pClient);
+//      
+//      NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK (GetRadio rURL %s)\n", rURL.GetChars());
+//      return pRadio;
 //    }
-//    else
-//    {
-//      pRadio = it->second;
-//    }
-//    NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK (GetRadio rURL %s)\n", rURL.GetChars());
+//
 //  }
-//  
+//  //NGL_LOG("radio", NGL_LOG_INFO, "Getting existing radio %s\n", rURL.GetChars());
+//  Radio* pRadio = it->second;
 //  if (pRadio)
 //  {
+//    pClient->SetName(nglString("GetRadio OK 2 ") + rURL);
 //    pRadio->RegisterClient(pClient, HQ);
 //  }
+//  else
+//  {
+//    pClient->SetName(nglString("GetRadio Error 3 ") + rURL);
+//  }
 //  
-//  NGL_LOG("radio", NGL_LOG_INFO, "Get radio: OK [%p - %s] (client %p)\n", pRadio, rURL.GetChars(), pClient);
+//  NGL_LOG("radio", NGL_LOG_INFO, "Get radio [%p - %s] (client %p)\n", pRadio, rURL.GetChars(), pClient);
+//  
+//  NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK (GetRadio rURL %s)\n", rURL.GetChars());
 //  return pRadio;
 //}
+
+Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
+{
+  NGL_LOG("radio", NGL_LOG_INFO, "Getting radio %s (client %p)\n", rURL.GetChars(), pClient);
+  Radio* pRadio = NULL;
+  
+  {
+    NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK (GetRadio rURL %s)\n", rURL.GetChars());
+    nglCriticalSectionGuard guard(gCS);
+    NGL_LOG("radio", NGL_LOG_ERROR, "gCS LOCK OK (GetRadio rURL %s)\n", rURL.GetChars());
+    
+    RadioMap::const_iterator it = gRadios.find(rURL);
+    if (it == gRadios.end())
+    {
+      nglSyncEvent* pEvent = AddEvent(rURL);
+      mpRedisThreadOut->PlayRadio(rURL);
+      if (!pEvent->Wait(YASCHEDULER_WAIT_TIME))
+      {
+        // Timeout... no reply from the scheduler
+        NGL_LOG("radio", NGL_LOG_ERROR, "Time out from the scheduler for radio %s\n", rURL.GetChars());
+        
+        DelEvent(rURL);
+        
+        NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK (GetRadio rURL %s)\n", rURL.GetChars());
+        NGL_LOG("radio", NGL_LOG_INFO, "Get radio: FAILED [%s] (client %p)\n", rURL.GetChars(), pClient);
+        return NULL;
+      }
+      DelEvent(rURL);
+      
+      it = gRadios.find(rURL);
+      if (it == gRadios.end())
+      {
+        // No proxy radio has been created... so it should be ok
+        // Create the radio!
+        pRadio = CreateRadio(rURL, nglString::Null);
+        NGL_LOG("radio", NGL_LOG_INFO, "Get radio: radio created [%p - %s] (client %p)\n", pRadio, rURL.GetChars(), pClient);
+      }
+      else
+      {
+        pRadio = it->second;
+      }
+    }
+    else
+    {
+      pRadio = it->second;
+    }
+    NGL_LOG("radio", NGL_LOG_ERROR, "gCS UNLOCK (GetRadio rURL %s)\n", rURL.GetChars());
+  }
+  
+  if (pRadio)
+  {
+    pRadio->RegisterClient(pClient, HQ);
+  }
+  
+  NGL_LOG("radio", NGL_LOG_INFO, "Get radio: OK [%p - %s] (client %p)\n", pRadio, rURL.GetChars(), pClient);
+  return pRadio;
+}
 
 void Radio::RegisterRadio(const nglString& rURL, Radio* pRadio)
 {
