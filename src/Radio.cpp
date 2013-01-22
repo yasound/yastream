@@ -141,10 +141,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
   std::deque<Mp3Chunk*>& rChunks  = highQuality ? mChunks : mChunksPreview;
 
   {
-    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK [%p - %s] RegisterClient(%p)", this, mID.GetChars(), pClient);
-
     nglCriticalSectionGuard guard(mClientListCS);
-    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK OK [%p - %s] RegisterClient(%p)", this, mID.GetChars(), pClient);
     //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) CS OK", pClient);
 
 
@@ -191,7 +188,6 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
     // Do the streaming:
     NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Do the streaming\n", this, mID.GetChars());
     
-    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS UNLOCK [%p - %s] RegisterClient(%p)", this, mID.GetChars(), pClient);
   }
 
   //NGL_LOG("radio", NGL_LOG_INFO, "Prepare the new client:\n");
@@ -220,14 +216,11 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   NGL_LOG("radio", NGL_LOG_INFO, "client (%p) is gone for radio [%p - %s]\n", pClient, this, mID.GetChars());
   
   {
-    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK [%p - %s] UnregisterClient(%p)", this, mID.GetChars(), pClient);
     nglCriticalSectionGuard guard(mClientListCS);
-    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK OK [%p - %s] UnregisterClient(%p)", this, mID.GetChars(), pClient);
     mClients.remove(pClient);
     mClientsPreview.remove(pClient);
     NGL_LOG("radio", NGL_LOG_INFO, "    %d clients left in radio [%p - %s]\n", mClientsPreview.size(), this, mID.GetChars());
     
-    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS UNLOCK [%p - %s] UnregisterClient(%p)", this, mID.GetChars(), pClient);
   }
 
   if (mClients.empty() && mClientsPreview.empty())
@@ -342,9 +335,7 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
 
   // Push the new chunk to the current connections:
   {
-//    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK [%p - %s] AddChunk", this, mID.GetChars());
     nglCriticalSectionGuard guard(mClientListCS);
-//    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK OK [%p - %s] AddChunk", this, mID.GetChars());
     for (ClientList::const_iterator it = rClients.begin(); it != rClients.end(); ++it)
     {
       HTTPHandler* pClient = *it;
@@ -353,7 +344,6 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
       else
         ClientsToKill.push_back(pClient);
     }
-//    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS UNLOCK [%p - %s] AddChunk", this, mID.GetChars());
   }
 
   for (int i = 0; i < ClientsToKill.size(); i++)
@@ -643,25 +633,6 @@ void Radio::OnStart()
 
   NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] radio is now offline\n", this, mID.GetChars());
   
-  //#MATDEBUG
-  if (mCS.TryLock())
-  {
-    mCS.Unlock();
-  }
-  else
-  {
-    NGL_LOG("radio", NGL_LOG_INFO, "Radio::OnStart delete this => mCS is locked !!!");
-  }
-  
-  if (mClientListCS.TryLock())
-  {
-    mClientListCS.Unlock();
-  }
-  else
-  {
-    NGL_LOG("radio", NGL_LOG_INFO, "Radio::OnStart delete this => mClientListCS is locked !!!");
-  }
-
   delete this;
 }
 
@@ -726,33 +697,12 @@ void Radio::OnStartProxy()
     nglThread::MsSleep(100);
   }
 
-  NGL_LOG("radio", NGL_LOG_INFO, "radio '%s' is now offline\n", mID.GetChars());
-
-  //#MATDEBUG
-  if (mCS.TryLock())
-  {
-    mCS.Unlock();
-  }
-  else
-  {
-    NGL_LOG("radio", NGL_LOG_INFO, "Radio::OnStartProxy delete this => mCS is locked !!!");
-  }
-  
-  if (mClientListCS.TryLock())
-  {
-    mClientListCS.Unlock();
-  }
-  else
-  {
-    NGL_LOG("radio", NGL_LOG_INFO, "Radio::OnStartProxy delete this => mClientListCS is locked !!!");
-  }
-  
+  NGL_LOG("radio", NGL_LOG_INFO, "radio '%s' is now offline\n", mID.GetChars());  
   delete this;
 }
             
 void Radio::SetOnline(bool set)
 {
-  NGL_LOG("radio", NGL_LOG_INFO, "radio [%p -%s] set online %d\n", this, mID.GetChars(), set);
   if (mOnline == set)
     return;
 
@@ -765,9 +715,7 @@ void Radio::SetOnline(bool set)
 void Radio::KillClients()
 {
   NGL_LOG("radio", NGL_LOG_INFO, "[%p - %s] Force '%d' clients to stop relaying our data\n", this, mID.GetChars(), mClientsPreview.size() + mClients.size());
-//  NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK [%p - %s] KillClients", this, mID.GetChars());
   nglCriticalSectionGuard guard(mClientListCS);
-//  NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK OK [%p - %s] KillClients", this, mID.GetChars());
   ClientList l = mClientsPreview;
 
   for (ClientList::const_iterator it = l.begin(); it != l.end(); ++it)
@@ -782,8 +730,6 @@ void Radio::KillClients()
     HTTPHandler* pClient = *it;
     pClient->GoOffline();
   }
-  
-//  NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS UNLOCK [%p - %s] KillClients", this, mID.GetChars());
 }
 
 void Radio::UpdateRadio()
@@ -1364,9 +1310,7 @@ void Radio::Dump(nglString& rDump)
 
   rDump.AddNewLine();
   {
-//    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK [%p - %s] Dump", this, mID.GetChars());
     nglCriticalSectionGuard guard(mClientListCS);
-//    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS LOCK OK [%p - %s] Dump", this, mID.GetChars());
 
     {
       ClientList::iterator it = mClients.begin();
@@ -1389,7 +1333,6 @@ void Radio::Dump(nglString& rDump)
         ++it;
       }
     }
-//    NGL_LOG("radio", NGL_LOG_INFO, "mClientListCS UNLOCK [%p - %s] Dump", this, mID.GetChars());
   }
 
   rDump.AddNewLine();

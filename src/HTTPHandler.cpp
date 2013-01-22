@@ -390,23 +390,16 @@ Mp3Chunk* HTTPHandler::GetNextChunk()
 
 void HTTPHandler::GoOffline()
 {
+  NGL_LOG("radio", NGL_LOG_DEBUG, "HTTPHandler mCS LOCK GoOffline %p", this);
   mCS.Lock();
+  NGL_LOG("radio", NGL_LOG_DEBUG, "HTTPHandler mCS LOCK OK GoOffline %p", this);
   
   NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline");
   mOnline = false;
   Close();
   NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline OK");
-  
-//  //#MATDEBUG
-//  if (mCS.TryLock())
-//  {
-//    mCS.Unlock();
-//  }
-//  else
-//  {
-//    NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline delete this => mCS is locked !!!");
-//  }
 
+  NGL_LOG("radio", NGL_LOG_DEBUG, "HTTPHandler mCS UNLOCK GoOffline %p", this);
   mCS.Unlock();
   delete this;
 }
@@ -417,15 +410,6 @@ void HTTPHandler::OnWriteClosed()
   
   nuiTCPClient::OnWriteClosed();
   
-//  //#MATDEBUG
-//  if (mCS.TryLock())
-//  {
-//    mCS.Unlock();
-//  }
-//  else
-//  {
-//    NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnWriteClosed delete this => mCS is locked !!!");
-//  }
   mCS.Unlock();
   delete this;
 }
