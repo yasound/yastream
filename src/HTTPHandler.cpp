@@ -355,7 +355,9 @@ void HTTPHandler::OnBodyEnd()
 
 void HTTPHandler::AddChunk(Mp3Chunk* pChunk)
 {
+  NGL_LOG("radio", NGL_LOG_DEBUG, "HTTPHandler mCS LOCK AddChunk %p", this);
   nglCriticalSectionGuard guard(mCS);
+  NGL_LOG("radio", NGL_LOG_DEBUG, "HTTPHandler mCS LOCK OK AddChunk %p", this);
   //NGL_LOG("radio", NGL_LOG_INFO, "handle id = %d\n", pChunk->GetId());
   //pChunk->Acquire();
   BufferedSend(&pChunk->GetData()[0], pChunk->GetData().size(), false);
@@ -366,11 +368,15 @@ void HTTPHandler::AddChunk(Mp3Chunk* pChunk)
     Close();
   }
   //mChunks.push_back(pChunk);
+  
+  NGL_LOG("radio", NGL_LOG_DEBUG, "HTTPHandler mCS UNLOCK AddChunk %p", this);
 }
 
 Mp3Chunk* HTTPHandler::GetNextChunk()
 {
+  NGL_LOG("radio", NGL_LOG_DEBUG, "HTTPHandler mCS LOCK GetNextChunk %p", this);
   nglCriticalSectionGuard guard(mCS);
+  NGL_LOG("radio", NGL_LOG_DEBUG, "HTTPHandler mCS LOCK OK GetNextChunk %p", this);
 
   if (mChunks.empty())
     return NULL;
@@ -378,6 +384,7 @@ Mp3Chunk* HTTPHandler::GetNextChunk()
   Mp3Chunk* pChunk = mChunks.front();
   mChunks.pop_front();
 
+  NGL_LOG("radio", NGL_LOG_DEBUG, "HTTPHandler mCS UNLOCK GetNextChunk %p", this);
   return pChunk;
 }
 
