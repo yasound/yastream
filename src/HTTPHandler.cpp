@@ -387,6 +387,16 @@ void HTTPHandler::GoOffline()
   mOnline = false;
   Close();
   NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline OK");
+  
+  //#MATDEBUG
+  if (mCS.TryLock())
+  {
+    mCS.Unlock();
+  }
+  else
+  {
+    NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline delete this => mCS is locked !!!");
+  }
 
   delete this;
 }
@@ -394,6 +404,16 @@ void HTTPHandler::GoOffline()
 void HTTPHandler::OnWriteClosed()
 {
   nuiTCPClient::OnWriteClosed();
+  
+  //#MATDEBUG
+  if (mCS.TryLock())
+  {
+    mCS.Unlock();
+  }
+  else
+  {
+    NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnWriteClosed delete this => mCS is locked !!!");
+  }
   delete this;
 }
 

@@ -5,11 +5,11 @@
 # current est un symlink vers le dossier contenant l'application en prod.
 # pour changer de version il faut changer le symlink puis killer toutes les instances et les relancer.
 
-MAILDEST="seb@yasound.com"
+MAILDEST="mat@yasound.com"
 #MAILDEST="sebastien@iguanesolutions.com, dev@yasound.com"
 SUBJECT="[YASOUND][yastream-wrapper][FAILED] `hostname -f`"
-LOGS="/home/meeloo/work/yastream/yastream.log"
-USER="meeloo"
+LOGS="/Users/mat/work/dev/yastream/yastream.log"
+USER="mat"
 
 CMD="./yastream \
 -syslog \
@@ -21,12 +21,12 @@ CMD="./yastream \
 -redishost 127.0.0.1 \
 -redisport 6379 >>$LOGS"
 
-export LD_LIBRARY_PATH=/home/meeloo/work/nui3/bin/debug/:$LD_LIBRARY_PATH
-cd /home/meeloo/work/yastream/bin/debug/
+export LD_LIBRARY_PATH=/Users/mat/work/dev/nui3/bin/debug/:$LD_LIBRARY_PATH
+cd /Users/mat/work/dev/yastream/bin/debug/
 
 whoami=$(whoami)
 
-if ! [ "x${whoami}" = "xroot" -o "x${whoami}" = "xmeeloo" ];then
+if ! [ "x${whoami}" = "xroot" -o "x${whoami}" = "xmat" ];then
   echo "error id"
   exit 2
 fi

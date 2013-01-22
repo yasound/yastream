@@ -642,6 +642,25 @@ void Radio::OnStart()
   KillClients();
 
   NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] radio is now offline\n", this, mID.GetChars());
+  
+  //#MATDEBUG
+  if (mCS.TryLock())
+  {
+    mCS.Unlock();
+  }
+  else
+  {
+    NGL_LOG("radio", NGL_LOG_INFO, "Radio::OnStart delete this => mCS is locked !!!");
+  }
+  
+  if (mClientListCS.TryLock())
+  {
+    mClientListCS.Unlock();
+  }
+  else
+  {
+    NGL_LOG("radio", NGL_LOG_INFO, "Radio::OnStart delete this => mClientListCS is locked !!!");
+  }
 
   delete this;
 }
@@ -709,6 +728,25 @@ void Radio::OnStartProxy()
 
   NGL_LOG("radio", NGL_LOG_INFO, "radio '%s' is now offline\n", mID.GetChars());
 
+  //#MATDEBUG
+  if (mCS.TryLock())
+  {
+    mCS.Unlock();
+  }
+  else
+  {
+    NGL_LOG("radio", NGL_LOG_INFO, "Radio::OnStartProxy delete this => mCS is locked !!!");
+  }
+  
+  if (mClientListCS.TryLock())
+  {
+    mClientListCS.Unlock();
+  }
+  else
+  {
+    NGL_LOG("radio", NGL_LOG_INFO, "Radio::OnStartProxy delete this => mClientListCS is locked !!!");
+  }
+  
   delete this;
 }
             
