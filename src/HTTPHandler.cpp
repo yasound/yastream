@@ -390,7 +390,7 @@ Mp3Chunk* HTTPHandler::GetNextChunk()
 
 void HTTPHandler::GoOffline()
 {
-  nglCriticalSectionGuard guard(mCS);
+  mCS.Lock();
   
   NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline");
   mOnline = false;
@@ -407,12 +407,13 @@ void HTTPHandler::GoOffline()
 //    NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline delete this => mCS is locked !!!");
 //  }
 
+  mCS.Unlock();
   delete this;
 }
 
 void HTTPHandler::OnWriteClosed()
 {
-  nglCriticalSectionGuard guard(mCS);
+  mCS.Lock();
   
   nuiTCPClient::OnWriteClosed();
   
@@ -425,6 +426,7 @@ void HTTPHandler::OnWriteClosed()
 //  {
 //    NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::OnWriteClosed delete this => mCS is locked !!!");
 //  }
+  mCS.Unlock();
   delete this;
 }
 
