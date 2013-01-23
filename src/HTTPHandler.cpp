@@ -24,7 +24,6 @@ nuiSocketPool* HTTPHandler::gmpPool = NULL;
 HTTPHandler::HTTPHandler(nuiSocket::SocketType s)
 : nuiHTTPHandler(s), mOnline(true), mLive(false), mpRadio(NULL), mCS(nglString("HTTPHandler(").Add(s).Add(")"))
 {
-  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::HTTPHandler() %p", this);
 #if TEMPLATE_TEST
   mpTemplate = new nuiStringTemplate("<html><body><br>This template is a test<br>ClassName: {{Class}}<br>ObjectName: {{Name}}<br>{%for elem in array%}{{elem}}<br>{%end%}Is it ok?<br></body></html>");
 #else
@@ -34,7 +33,6 @@ HTTPHandler::HTTPHandler(nuiSocket::SocketType s)
 
 HTTPHandler::~HTTPHandler()
 {
-  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::~HTTPHandler() %p", this);
   if (mpTemplate)
     delete mpTemplate;
 
@@ -198,7 +196,6 @@ uint32 FakeRange(uint32 i)
 bool HTTPHandler::OnBodyStart()
 {
   SetName(nglString("OnBodyStart ") + mURL);
-  NGL_LOG("radio", NGL_LOG_INFO, "%p HTTPHandler::OnBodyStart(%s)", this, mURL.GetChars());
 
 #if TEMPLATE_TEST
   if (mURL == "/")
@@ -326,7 +323,6 @@ bool HTTPHandler::OnBodyStart()
 
 
 
-  NGL_LOG("radio", NGL_LOG_INFO, "%p HTTPHandler::OnBodyStart DoneOK", this);
   //SetName(nglString("OnBodyStart OK ") + mURL);
   
   if (!IsReadConnected() || !IsWriteConnected())
@@ -385,10 +381,8 @@ void HTTPHandler::GoOffline()
 {
   mCS.Lock();
   
-  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline");
   mOnline = false;
   Close();
-  NGL_LOG("radio", NGL_LOG_INFO, "HTTPHandler::GoOffline OK");
 
   mCS.Unlock();
   delete this;
