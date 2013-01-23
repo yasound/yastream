@@ -198,22 +198,22 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 
   //NGL_LOG("radio", NGL_LOG_INFO, "Prepare the new client:\n");
   // Fill the buffer:
-  {
-    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mCS LOCK RegisterClient (fill buffer)", this);
-    nglCriticalSectionGuard guard(mCS);
-    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mCS LOCK OK RegisterClient (fill buffer)", this);
-    for (std::deque<Mp3Chunk*>::const_iterator it = rChunks.begin();
-         it != rChunks.end()
-         && pClient->IsWriteConnected()
-         && pClient->IsReadConnected();
-         ++it)
-    {
-      Mp3Chunk* pChunk = *it;
-      pClient->AddChunk(pChunk);
-      //NGL_LOG("radio", NGL_LOG_INFO, "Chunk %f\n", pChunk->GetTime());
-    }
-    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mCS UNLOCK RegisterClient (fill buffer)", this);
-  }
+//  {
+//    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mCS LOCK RegisterClient (fill buffer)", this);
+//    nglCriticalSectionGuard guard(mCS);
+//    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mCS LOCK OK RegisterClient (fill buffer)", this);
+//    for (std::deque<Mp3Chunk*>::const_iterator it = rChunks.begin();
+//         it != rChunks.end()
+//         && pClient->IsWriteConnected()
+//         && pClient->IsReadConnected();
+//         ++it)
+//    {
+//      Mp3Chunk* pChunk = *it;
+//      pClient->AddChunk(pChunk);
+//      //NGL_LOG("radio", NGL_LOG_INFO, "Chunk %f\n", pChunk->GetTime());
+//    }
+//    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mCS UNLOCK RegisterClient (fill buffer)", this);
+//  }
   
   //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) DONE", pClient);
 }
