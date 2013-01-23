@@ -87,6 +87,7 @@ private:
   double ReadSet(int64& chunk_count_preview, int64& chunk_count);
   double ReadSetProxy(int64& chunk_count_preview, int64& chunk_count);
   void KillClients();
+  bool CheckClients();
 
   Mp3Chunk* GetChunk(nuiTCPClient* pClient);
 
