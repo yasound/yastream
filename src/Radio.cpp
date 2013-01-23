@@ -847,43 +847,41 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
   NGL_LOG("radio", NGL_LOG_INFO, "Getting radio %s (client %p)\n", rURL.GetChars(), pClient);
   Radio* pRadio = NULL;
   
+  nglCriticalSectionGuard guard(gRadioAndUserListsCS);
+  
+  RadioMap::const_iterator it = gRadios.find(rURL);
+  if (it == gRadios.end())
   {
-    nglCriticalSectionGuard guard(gRadioAndUserListsCS);
-    
-    RadioMap::const_iterator it = gRadios.find(rURL);
-    if (it == gRadios.end())
+    nglSyncEvent* pEvent = AddEvent(rURL);
+    mpRedisThreadOut->PlayRadio(rURL);
+    if (!pEvent->Wait(YASCHEDULER_WAIT_TIME))
     {
-      nglSyncEvent* pEvent = AddEvent(rURL);
-      mpRedisThreadOut->PlayRadio(rURL);
-      if (!pEvent->Wait(YASCHEDULER_WAIT_TIME))
-      {
-        // Timeout... no reply from the scheduler
-        NGL_LOG("radio", NGL_LOG_ERROR, "Time out from the scheduler for radio %s\n", rURL.GetChars());
-        
-        DelEvent(rURL);
-        
-        NGL_LOG("radio", NGL_LOG_INFO, "Get radio: FAILED [%s] (client %p)\n", rURL.GetChars(), pClient);
-        return NULL;
-      }
+      // Timeout... no reply from the scheduler
+      NGL_LOG("radio", NGL_LOG_ERROR, "Time out from the scheduler for radio %s\n", rURL.GetChars());
+      
       DelEvent(rURL);
       
-      it = gRadios.find(rURL);
-      if (it == gRadios.end())
-      {
-        // No proxy radio has been created... so it should be ok
-        // Create the radio!
-        pRadio = CreateRadio(rURL, nglString::Null);
-        NGL_LOG("radio", NGL_LOG_INFO, "Get radio: radio created [%p - %s] (client %p)\n", pRadio, rURL.GetChars(), pClient);
-      }
-      else
-      {
-        pRadio = it->second;
-      }
+      NGL_LOG("radio", NGL_LOG_INFO, "Get radio: FAILED [%s] (client %p)\n", rURL.GetChars(), pClient);
+      return NULL;
+    }
+    DelEvent(rURL);
+    
+    it = gRadios.find(rURL);
+    if (it == gRadios.end())
+    {
+      // No proxy radio has been created... so it should be ok
+      // Create the radio!
+      pRadio = CreateRadio(rURL, nglString::Null);
+      NGL_LOG("radio", NGL_LOG_INFO, "Get radio: radio created [%p - %s] (client %p)\n", pRadio, rURL.GetChars(), pClient);
     }
     else
     {
       pRadio = it->second;
     }
+  }
+  else
+  {
+    pRadio = it->second;
   }
   
   if (pRadio)
