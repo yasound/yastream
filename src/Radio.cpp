@@ -246,7 +246,7 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   sessionid.Add(pClient);
   mpRedisThreadOut->UnregisterListener(mID, sessionid, rUser.uuid);
   
-  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p gRadioAndUserListsCS LOCK UnregisterClient %p", this, pClient);
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p gRadioAndUserListsCS UNLOCK UnregisterClient %p", this, pClient);
 }
 
 bool Radio::SetTrack(const Track& rTrack)
