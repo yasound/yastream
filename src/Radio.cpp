@@ -21,6 +21,7 @@ Radio::Radio(const nglString& rID, const nglString& rHost)
   mLive(false),
   mOnline(false),
   mGoOffline(false),
+  mNoClients(false),
   mpParser(NULL),
   mpStream(NULL),
   mBufferDuration(0),
@@ -232,6 +233,9 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
     mClients.remove(pClient);
     mClientsPreview.remove(pClient);
     NGL_LOG("radio", NGL_LOG_INFO, "    %d clients left in radio [%p - %s]\n", mClientsPreview.size(), this, mID.GetChars());
+    
+    if (mClients.empty() && mClientsPreview.empty())
+      mNoClients = true;
     
 //    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mClientListCS UNLOCK UnregisterClient %p", this, pClient);
   }
@@ -761,7 +765,7 @@ bool Radio::CheckClients()
   nglCriticalSectionGuard guard(gRadioAndUserListsCS);
   NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p gRadioAndUserListsCS LOCK OK CheckClients %p", this);
   
-  if (mClients.empty() && mClientsPreview.empty())
+  if (mNoClients)
   {
     //  Shutdown radio
     NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio [%p - %s]\n", this, mID.GetChars());

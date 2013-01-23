@@ -94,6 +94,7 @@ private:
   bool mLive;
   bool mOnline;
   bool mGoOffline;
+  bool mNoClients;
   nglCriticalSection mCS;
   nglCriticalSection mClientListCS; // Protects the list of clients for one radio
   nglString mID;
