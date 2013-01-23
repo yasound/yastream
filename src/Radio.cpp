@@ -214,6 +214,9 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
 
 void Radio::UnregisterClient(HTTPHandler* pClient)
 {
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p gRadioAndUserListsCS LOCK UnregisterClient %p", this, pClient);
+  nglCriticalSectionGuard guard(gRadioAndUserListsCS);
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p gRadioAndUserListsCS LOCK OK UnregisterClient %p", this, pClient);
   pClient->SetName(nglString("UNRegisterClient ") + pClient->GetURL() + nglString("  "));
 
   NGL_LOG("radio", NGL_LOG_INFO, "client (%p) is gone for radio [%p - %s]\n", pClient, this, mID.GetChars());
@@ -243,7 +246,7 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   sessionid.Add(pClient);
   mpRedisThreadOut->UnregisterListener(mID, sessionid, rUser.uuid);
   
-  
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p gRadioAndUserListsCS LOCK UnregisterClient %p", this, pClient);
 }
 
 bool Radio::SetTrack(const Track& rTrack)
