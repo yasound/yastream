@@ -123,7 +123,7 @@ private:
 
 //  uint64 mTime;
 
-  static nglCriticalSection gCS; // Protect lists of radios and users
+  static nglCriticalSection gRadioAndUserListsCS; // Protect lists of radios and users
   typedef std::map<nglString, Radio*> RadioMap;
   static RadioMap gRadios;
   static nglString mHostname;
