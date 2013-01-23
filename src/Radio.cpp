@@ -141,7 +141,9 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
   std::deque<Mp3Chunk*>& rChunks  = highQuality ? mChunks : mChunksPreview;
 
   {
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mClientListCS LOCK RegisterClient %p", this, pClient);
     nglCriticalSectionGuard guard(mClientListCS);
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mClientListCS LOCK OK RegisterClient %p", this, pClient);
     //NGL_LOG("radio", NGL_LOG_INFO, "RegisterClient(%p) CS OK", pClient);
 
 
@@ -188,6 +190,7 @@ void Radio::RegisterClient(HTTPHandler* pClient, bool highQuality)
     // Do the streaming:
     NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Do the streaming\n", this, mID.GetChars());
     
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mClientListCS UNLOCK RegisterClient %p", this, pClient);
   }
 
   //NGL_LOG("radio", NGL_LOG_INFO, "Prepare the new client:\n");
@@ -216,11 +219,14 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
   NGL_LOG("radio", NGL_LOG_INFO, "client (%p) is gone for radio [%p - %s]\n", pClient, this, mID.GetChars());
   
   {
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mClientListCS LOCK UnregisterClient %p", this, pClient);
     nglCriticalSectionGuard guard(mClientListCS);
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mClientListCS LOCK OK UnregisterClient %p", this, pClient);
     mClients.remove(pClient);
     mClientsPreview.remove(pClient);
     NGL_LOG("radio", NGL_LOG_INFO, "    %d clients left in radio [%p - %s]\n", mClientsPreview.size(), this, mID.GetChars());
     
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mClientListCS UNLOCK UnregisterClient %p", this, pClient);
   }
 
   if (mClients.empty() && mClientsPreview.empty())
@@ -335,7 +341,9 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
 
   // Push the new chunk to the current connections:
   {
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mClientListCS LOCK AddChunk", this);
     nglCriticalSectionGuard guard(mClientListCS);
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mClientListCS LOCK OK AddChunk", this);
     for (ClientList::const_iterator it = rClients.begin(); it != rClients.end(); ++it)
     {
       HTTPHandler* pClient = *it;
@@ -344,6 +352,8 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
       else
         ClientsToKill.push_back(pClient);
     }
+    
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mClientListCS UNLOCK AddChunk", this);
   }
 
   for (int i = 0; i < ClientsToKill.size(); i++)
@@ -715,7 +725,9 @@ void Radio::SetOnline(bool set)
 void Radio::KillClients()
 {
   NGL_LOG("radio", NGL_LOG_INFO, "[%p - %s] Force '%d' clients to stop relaying our data\n", this, mID.GetChars(), mClientsPreview.size() + mClients.size());
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mClientListCS LOCK KillClients", this);
   nglCriticalSectionGuard guard(mClientListCS);
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mClientListCS LOCK OK KillClients", this);
   ClientList l = mClientsPreview;
 
   for (ClientList::const_iterator it = l.begin(); it != l.end(); ++it)
@@ -730,6 +742,8 @@ void Radio::KillClients()
     HTTPHandler* pClient = *it;
     pClient->GoOffline();
   }
+  
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mClientListCS UNLOCK KillClients", this);
 }
 
 void Radio::UpdateRadio()
@@ -800,13 +814,16 @@ bool Radio::GetUser(const nglString& rToken, RadioUser& rUser)
   DelEvent(id);
 
   {
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS LOCK GetUser ");
     nglCriticalSectionGuard guard(gRadioAndUserListsCS);
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS LOCK OK GetUser ");
     std::map<nglString, RadioUser>::iterator it = gUsers.find(id);
     if (it != gUsers.end())
     {
       rUser = it->second;
       gUsers.erase(it);
     }
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS UNLOCK GetUser ");
   }
 
   return true;
@@ -829,13 +846,17 @@ bool Radio::GetUser(const nglString& rUsername, const nglString& rApiKey, RadioU
   DelEvent(id);
 
   {
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS LOCK GetUser 2");
     nglCriticalSectionGuard guard(gRadioAndUserListsCS);
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS LOCK OK GetUser 2");
     std::map<nglString, RadioUser>::iterator it = gUsers.find(id);
     if (it != gUsers.end())
     {
       rUser = it->second;
       gUsers.erase(it);
     }
+    
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS UNLOCK GetUser 2");
   }
 
   return true;
@@ -847,7 +868,9 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
   NGL_LOG("radio", NGL_LOG_INFO, "Getting radio %s (client %p)\n", rURL.GetChars(), pClient);
   Radio* pRadio = NULL;
   
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS LOCK GetRadio");
   nglCriticalSectionGuard guard(gRadioAndUserListsCS);
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS LOCK OK GetRadio");
   
   RadioMap::const_iterator it = gRadios.find(rURL);
   if (it == gRadios.end())
@@ -862,6 +885,7 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
       DelEvent(rURL);
       
       NGL_LOG("radio", NGL_LOG_INFO, "Get radio: FAILED [%s] (client %p)\n", rURL.GetChars(), pClient);
+      NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS UNLOCK GetRadio");
       return NULL;
     }
     DelEvent(rURL);
@@ -890,18 +914,21 @@ Radio* Radio::GetRadio(const nglString& rURL, HTTPHandler* pClient, bool HQ)
   }
   
   NGL_LOG("radio", NGL_LOG_INFO, "Get radio: OK [%p - %s] (client %p)\n", pRadio, rURL.GetChars(), pClient);
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS UNLOCK GetRadio");
   return pRadio;
 }
 
 void Radio::RegisterRadio(const nglString& rURL, Radio* pRadio)
 {
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS LOCK RegisterRadio %p", pRadio);
   nglCriticalSectionGuard guard(gRadioAndUserListsCS);
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS LOCK OK RegisterRadio %p", pRadio);
   RadioMap::const_iterator it = gRadios.find(rURL);
   if (it != gRadios.end())
     NGL_LOG("radio", NGL_LOG_ERROR, "the radio '%s' is already registered\n", rURL.GetChars());
 
   gRadios[rURL] = pRadio;
-  
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS UNLOCK RegisterRadio %p", pRadio);
 }
 
 void Radio::UnregisterRadio(Radio* pRadio)
@@ -909,22 +936,27 @@ void Radio::UnregisterRadio(Radio* pRadio)
   nglString url = pRadio->mID;
   NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s]\n", pRadio, url.GetChars());
   
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS LOCK UnregisterRadio %p", pRadio);
   nglCriticalSectionGuard guard(gRadioAndUserListsCS);
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS LOCK OK UnregisterRadio %p", pRadio);
   
   RadioMap::const_iterator it = gRadios.find(url);
   if (it == gRadios.end())
   {
     NGL_LOG("radio", NGL_LOG_INFO, "Unregistering radio [%p - %s] radio was never registered\n", pRadio, url.GetChars());
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS UNLOCK UnregisterRadio %p", pRadio);
     return;
   }
   if (it->second != pRadio)
   {
     NGL_LOG("radio", NGL_LOG_INFO, "Cancel radio unregistering '%s' (%p requested, %p in map)\n", url.GetChars(), pRadio, it->second);
+    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS UNLOCK UnregisterRadio %p", pRadio);
     return;
   }
   
   gRadios.erase(url);
   mpRedisThreadOut->StopRadio(url);
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS UNLOCK UnregisterRadio %p", pRadio);
 }
 
 Radio* Radio::CreateRadio(const nglString& rURL, const nglString& rHost)
@@ -1000,7 +1032,9 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
 
     NGL_LOG("radio", NGL_LOG_INFO, "Redis: play %s %s d:%f o:%f f:%f\n", uuid.GetChars(), filename.GetChars(), delay, offset, crossfade);
     {
+      NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS LOCK HandleRedisMessage");
       nglCriticalSectionGuard g(gRadioAndUserListsCS);
+      NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS LOCK OK HandleRedisMessage");
       RadioMap::const_iterator it = gRadios.find(uuid);
 
       if (it != gRadios.end())
@@ -1017,6 +1051,7 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
       {
         NGL_LOG("radio", NGL_LOG_INFO, "Redis: unkown radio %s\n", uuid.GetChars());
       }
+      NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS UNLOCK HandleRedisMessage");
     }
   }
   else if (type == "user_authentication")
@@ -1033,11 +1068,14 @@ void Radio::HandleRedisMessage(const RedisReply& rReply)
     id.Add(auth_token).Add(username).Add(api_key);
 
     {
+      NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS LOCK HandleRedisMessage 2");
       nglCriticalSectionGuard g(gRadioAndUserListsCS);
+      NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS LOCK OK HandleRedisMessage 2");
       RadioUser u;
       u.hd = hd;
       u.uuid = uuid;
       gUsers[id] = u;
+      NGL_LOG("radio", NGL_LOG_DEBUG, "Radio gRadioAndUserListsCS UNLOCK HandleRedisMessage 2");
     }
     SignallEvent(id);
   }
