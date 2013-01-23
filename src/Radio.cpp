@@ -21,7 +21,7 @@ Radio::Radio(const nglString& rID, const nglString& rHost)
   mLive(false),
   mOnline(false),
   mGoOffline(false),
-  mNoClients(false),
+  mCheckClients(false),
   mpParser(NULL),
   mpStream(NULL),
   mBufferDuration(0),
@@ -234,11 +234,10 @@ void Radio::UnregisterClient(HTTPHandler* pClient)
     mClientsPreview.remove(pClient);
     NGL_LOG("radio", NGL_LOG_INFO, "    %d clients left in radio [%p - %s]\n", mClientsPreview.size(), this, mID.GetChars());
     
-    if (mClients.empty() && mClientsPreview.empty())
-      mNoClients = true;
-    
 //    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mClientListCS UNLOCK UnregisterClient %p", this, pClient);
   }
+  
+  mCheckClients = true;
 
 //  {
 //    NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p gRadioAndUserListsCS LOCK UnregisterClient %p (check existing clients)", this, pClient);
@@ -642,7 +641,8 @@ void Radio::OnStart()
           //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
         }
         
-        CheckClients();
+        if (mCheckClients)
+          CheckClients();
       }
     }
     else
@@ -664,7 +664,8 @@ void Radio::OnStart()
           NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p mCS UNLOCK OnStart", this);
         }
         
-        CheckClients();
+        if (mCheckClients)
+          CheckClients();
       }
     }
     nglThread::MsSleep(10);
@@ -735,7 +736,8 @@ void Radio::OnStartProxy()
       }
       //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
       
-      CheckClients();
+      if (mCheckClients)
+        CheckClients();
     }
 
     nglThread::MsSleep(100);
@@ -758,23 +760,25 @@ void Radio::SetOnline(bool set)
 
 bool Radio::CheckClients()
 {
-  // Check if there is no more clients
+  if (!mCheckClients)
+    return true;
   
   bool res = true;
-  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p gRadioAndUserListsCS LOCK CheckClients %p", this);
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p gRadioAndUserListsCS LOCK CheckClients", this);
   nglCriticalSectionGuard guard(gRadioAndUserListsCS);
-  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p gRadioAndUserListsCS LOCK OK CheckClients %p", this);
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p gRadioAndUserListsCS LOCK OK CheckClients", this);
   
-  if (mNoClients)
+  if (mClients.empty() && mClientsPreview.empty())
   {
     //  Shutdown radio
     NGL_LOG("radio", NGL_LOG_INFO, "Last client is gone: Shutting down radio [%p - %s]\n", this, mID.GetChars());
     // Now that the scheduler handles the programming of the radio, the stream just can drop the radio when no one listens anymore
     SetOnline(false);
     mGoOffline = true;
-    res = false;
   }
-  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p gRadioAndUserListsCS UNLOCK CheckClients %p", this);
+  NGL_LOG("radio", NGL_LOG_DEBUG, "Radio %p gRadioAndUserListsCS UNLOCK CheckClients", this);
+
+  mCheckClients = false;
   return res;
 }
 
