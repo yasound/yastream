@@ -78,6 +78,8 @@ public:
 
   static void DumpAll(nglString& rDump);
   void Dump(nglString& rDump);
+  
+  static void DumpTimeProfile(nglString& rDump);
 private:
   void SetOnline(bool set);
 
@@ -163,5 +165,7 @@ private:
   static int gRedisDB;
 
   static FileCache* gpCache;
+  
+  static std::map<nglString, double> gReadSetTimeProfile;
 };
 

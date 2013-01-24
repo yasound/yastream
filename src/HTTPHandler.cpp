@@ -107,6 +107,19 @@ bool HTTPHandler::OnURL(const nglString& rValue)
 
     return ReplyAndClose();
   }
+  else if (mURL == "/times")
+  {
+    ReplyLine("HTTP/1.1 200 OK");
+    ReplyHeader("Content-Type", "text/plain");
+    ReplyLine("");
+    
+    nglString report;
+    Radio::DumpTimeProfile(report);
+    
+    ReplyLine(report);
+    
+    return ReplyAndClose();
+  }
   else if (mURL == "/cache")
   {
     ReplyLine("HTTP/1.1 200 OK");

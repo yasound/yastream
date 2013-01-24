@@ -14,6 +14,8 @@
 int Radio::gRedisDB = 3;
 nglString Radio::gRedisHost = "127.0.0.1";
 
+std::map<nglString, double> Radio::gReadSetTimeProfile;
+
 ///////////////////////////////////////////////////
 //class Radio
 Radio::Radio(const nglString& rID, const nglString& rHost)
@@ -417,6 +419,7 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
 
 double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 {
+  nglTime t0;
   if (!mpParser)
   {
     return 0;
@@ -428,6 +431,8 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
   
   Mp3Chunk* pChunk = mpParser->GetChunk();
   Mp3Chunk* pChunkPreview = mpParserPreview->GetChunk();
+  
+  nglTime t1;
 
   if (pChunk)
   {
@@ -449,9 +454,13 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
     AddChunk(pChunkPreview, true);
     duration += pChunkPreview->GetDuration();
   }
+  
+  nglTime t2;
 
   nextFrameOK = mpParser->GoToNextFrame();
   nextFramePreviewOK = mpParserPreview->GoToNextFrame();
+  
+  nglTime t3;
 
   if (!pChunk || !nextFramePreviewOK || !nextFrameOK)
   {
@@ -469,7 +478,35 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
       NGL_LOG("radio", NGL_LOG_ERROR, "Error while getting next song for radio '%s'. Shutting down...\n", mID.GetChars());
       return 0;
     }
-  }  
+  }
+  
+  nglTime t4;
+  {
+    double total_duration = t4 - t0;
+    double getChunk_duration = t1 - t0;
+    double addChunk_duration = t2 - t1;
+    double goToNextFrame_duration = t3 - t1;
+    double cleanup_duration = t4 - t3;
+    
+    if (gReadSetTimeProfile.empty())
+    {
+      gReadSetTimeProfile["count"] = 1;
+      gReadSetTimeProfile["total_duration"] = total_duration;
+      gReadSetTimeProfile["get_chunk_duration"] = getChunk_duration;
+      gReadSetTimeProfile["add_chunk_duration"] = addChunk_duration;
+      gReadSetTimeProfile["go_to_next_frame_duration"] = goToNextFrame_duration;
+      gReadSetTimeProfile["cleanup_duration"] = cleanup_duration;
+    }
+    else
+    {
+      gReadSetTimeProfile["count"]++;
+      gReadSetTimeProfile["total_duration"] += total_duration;
+      gReadSetTimeProfile["get_chunk_duration"] += getChunk_duration;
+      gReadSetTimeProfile["add_chunk_duration"] += addChunk_duration;
+      gReadSetTimeProfile["go_to_next_frame_duration"] += goToNextFrame_duration;
+      gReadSetTimeProfile["cleanup_duration"] += cleanup_duration;
+    }
+  }
 
   //NGL_LOG("radio", NGL_LOG_INFO, "mBufferDurationPreview: %f / mBufferDuration: %f\n", mBufferDurationPreview, mBufferDuration);
   return duration;
@@ -1296,6 +1333,36 @@ void Radio::DumpAll(nglString& rDump)
     ++it;
   }
 
+}
+
+void Radio::DumpTimeProfile(nglString& rDump)
+{
+  rDump.Add("TIME PROFILE:").AddNewLine().AddNewLine();
+  
+  
+  
+  rDump.Add("Radio::ReadSet").AddNewLine();
+  
+  if (gReadSetTimeProfile.empty())
+  {
+    rDump.Add("???");
+  }
+  else
+  {
+    double count = gReadSetTimeProfile["count"];
+    double total = gReadSetTimeProfile["total_duration"] / count;
+    double getChunk = gReadSetTimeProfile["get_chunk_duration"] / count;
+    double addChunk = gReadSetTimeProfile["add_chunk_duration"] / count;
+    double gotToNextFrame = gReadSetTimeProfile["go_to_next_frame_duration"] / count;
+    double cleanup = gReadSetTimeProfile["cleanup_duration"] / count;
+    rDump.Add("\ttotal            : %lf seconds", total).AddNewLine();
+    rDump.Add("\tget chunk        : %lf seconds", getChunk).AddNewLine();
+    rDump.Add("\tadd chunk        : %lf seconds", addChunk).AddNewLine();
+    rDump.Add("\tgo to next frame : %lf seconds", gotToNextFrame).AddNewLine();
+    rDump.Add("\tcleanup          : %lf seconds", cleanup).AddNewLine();
+  }
+  
+  
 }
 
 
