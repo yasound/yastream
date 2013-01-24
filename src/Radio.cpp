@@ -415,6 +415,7 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
 
 double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 {
+  nglTime t0;
   if (!mpParser)
   {
     return 0;
@@ -424,8 +425,12 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
   bool nextFrameOK = true;
   bool nextFramePreviewOK = true;
 
+  nglTime t1;
+  
   Mp3Chunk* pChunk = mpParser->GetChunk();
+  nglTime t2;
   Mp3Chunk* pChunkPreview = mpParserPreview->GetChunk();
+  nglTime t3;
 
   if (pChunk)
   {
@@ -436,6 +441,7 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
     // Store this chunk locally for incomming connections and push it to current clients:
     AddChunk(pChunk, false);
   }
+  nglTime t4;
 
   if (pChunkPreview)
   {
@@ -447,9 +453,12 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
     AddChunk(pChunkPreview, true);
     duration += pChunkPreview->GetDuration();
   }
+  nglTime t5;
 
   nextFrameOK = mpParser->GoToNextFrame();
+  nglTime t6;
   nextFramePreviewOK = mpParserPreview->GoToNextFrame();
+  nglTime t7;
 
   if (!pChunk || !nextFramePreviewOK || !nextFrameOK)
   {
@@ -468,6 +477,27 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
       return 0;
     }
   }
+  nglTime t8;
+  
+  double t = t8 - t0;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: TOTAL  : %lf seconds\n", this, mID.GetChars(), t);
+  t = t1 - t0;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 0 : %lf seconds\n", this, mID.GetChars(), t);
+  t = t2 - t1;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 1 : %lf seconds\n", this, mID.GetChars(), t);
+  t = t3 - t2;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 2 : %lf seconds\n", this, mID.GetChars(), t);
+  t = t4 - t3;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 3 : %lf seconds\n", this, mID.GetChars(), t);
+  t = t5 - t4;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 4 : %lf seconds\n", this, mID.GetChars(), t);
+  t = t6 - t5;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 5 : %lf seconds\n", this, mID.GetChars(), t);
+  t = t7 - t6;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 6 : %lf seconds\n", this, mID.GetChars(), t);
+  t = t8 - t7;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 7 : %lf seconds\n", this, mID.GetChars(), t);
+  
 
   //NGL_LOG("radio", NGL_LOG_INFO, "mBufferDurationPreview: %f / mBufferDuration: %f\n", mBufferDurationPreview, mBufferDuration);
   return duration;
@@ -610,13 +640,9 @@ void Radio::OnStart()
       while (mOnline && ((mBufferDurationPreview < IDEAL_BUFFER_SIZE) || now >= nexttime))
       {
         {
-          nglTime t0;
           nglCriticalSectionGuard guard(mCS);
-          nglTime t1;
           UpdateRadio();
-          nglTime t2;
           double duration = ReadSet(chunk_count_preview, chunk_count);
-          nglTime t3;
           nexttime += duration;
           //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
           
@@ -627,24 +653,12 @@ void Radio::OnStart()
           double elapsed = nglTime() - mStreamingStart;
           NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::OnStart:   elapsed = %lf s  /  sent = %lf s\n", this, mID.GetChars(), elapsed, mSentDataDuration);
           
-          nglTime t4;
           if (!mpParser) // we're waiting for the scheduler to send us something to do so let's not tax the CPU for nothing
           {
             NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::OnStart wait for the scheduler to have a parser\n", this, mID.GetChars());
             nglThread::MsSleep(1);
           }
-          nglTime t5;
-          
-          double t = t1 - t0;
-          NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::OnStart: step 0 : %lf seconds\n", this, mID.GetChars(), t);
-          t = t2 - t1;
-          NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::OnStart: step 1 : %lf seconds\n", this, mID.GetChars(), t);
-          t = t3 - t2;
-          NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::OnStart: step 2 : %lf seconds\n", this, mID.GetChars(), t);
-          t = t4 - t3;
-          NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::OnStart: step 3 : %lf seconds\n", this, mID.GetChars(), t);
-          t = t5 - t4;
-          NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::OnStart: step 4 : %lf seconds\n", this, mID.GetChars(), t);
+
         }
         
         if (mCheckClients)
