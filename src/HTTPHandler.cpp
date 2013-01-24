@@ -445,7 +445,7 @@ const RadioUser& HTTPHandler::GetUser() const
   return mUser;
 }
 
-void HTTPHandler::DummpTimeProfile(nglString& rDump)
+void HTTPHandler::DumpTimeProfile(nglString& rDump)
 {
   rDump.Add("TIME PROFILE:").AddNewLine().AddNewLine();
   

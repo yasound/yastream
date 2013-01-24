@@ -33,7 +33,7 @@ public:
 
   static void SetPool(nuiSocketPool* pPool);
   
-  static void DummpTimeProfile(nglString& rReport);
+  static void DumpTimeProfile(nglString& rDump);
 private:
   nglCriticalSection mCS;
   std::deque<Mp3Chunk*> mChunks;
