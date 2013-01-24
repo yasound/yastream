@@ -1337,8 +1337,6 @@ void Radio::DumpAll(nglString& rDump)
 
 void Radio::DumpTimeProfile(nglString& rDump)
 {
-  rDump.Add("TIME PROFILE:").AddNewLine().AddNewLine();
-  
   rDump.Add("Radio::ReadSet").AddNewLine();
   if (gReadSetTimeProfile.empty())
   {
@@ -1358,8 +1356,6 @@ void Radio::DumpTimeProfile(nglString& rDump)
     rDump.Add("\tgo to next frame : ").Add(gotToNextFrame).Add(" seconds").AddNewLine();
     rDump.Add("\tcleanup          : ").Add(cleanup).Add(" seconds").AddNewLine();
   }
-  
-  
 }
 
 

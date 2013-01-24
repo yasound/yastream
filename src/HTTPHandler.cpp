@@ -18,6 +18,7 @@ void HTTPHandler::SetPool(nuiSocketPool* pPool)
 }
 
 nuiSocketPool* HTTPHandler::gmpPool = NULL;
+std::map<nglString, double> HTTPHandler::gAddChunkTimeProfile;
 
 ///////////////////////////////////////////////////
 //class HTTPHandler : public nuiHTTPHandler
@@ -114,7 +115,7 @@ bool HTTPHandler::OnURL(const nglString& rValue)
     ReplyLine("");
     
     nglString report;
-    Radio::DumpTimeProfile(report);
+    HTTPHandler::DumpTimeProfile(report);
     
     ReplyLine(report);
     
@@ -380,24 +381,29 @@ void HTTPHandler::AddChunk(Mp3Chunk* pChunk)
   nglTime t3;
   //mChunks.push_back(pChunk);
   
-  double t = t3 - t0;
-  NGL_LOG("radio", NGL_LOG_ERROR, "%p HTTPHandler::AddChunk: TOTAL  : %lf seconds\n", this, t);
-  t = t1 - t0;
-  NGL_LOG("radio", NGL_LOG_ERROR, "%p HTTPHandler::AddChunk: step 0 : %lf seconds\n", this, t);
-  t = t2 - t1;
-  NGL_LOG("radio", NGL_LOG_ERROR, "%p HTTPHandler::AddChunk: step 1 : %lf seconds\n", this, t);
-  t = t3 - t2;
-  NGL_LOG("radio", NGL_LOG_ERROR, "%p HTTPHandler::AddChunk: step 2 : %lf seconds\n", this, t);
-//  t = t4 - t3;
-//  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 3 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
-//  t = t5 - t4;
-//  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 4 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
-//  t = t6 - t5;
-//  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 5 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
-//  t = t7 - t6;
-//  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 6 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
-//  t = t8 - t7;
-//  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 7 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
+  {
+    double total_duration = t3 - t0;
+    double wait_duration = t1 - t0;
+    double send_data_duration = t2 - t1;
+    double cleanup_duration = t3 - t2;
+    
+    if (gAddChunkTimeProfile.empty())
+    {
+      gAddChunkTimeProfile["count"] = 1;
+      gAddChunkTimeProfile["total_duration"] = total_duration;
+      gAddChunkTimeProfile["wait_duration"] = wait_duration;
+      gAddChunkTimeProfile["send_data_duration"] = send_data_duration;
+      gAddChunkTimeProfile["cleanup_duration"] = cleanup_duration;
+    }
+    else
+    {
+      gAddChunkTimeProfile["count"]++;
+      gAddChunkTimeProfile["total_duration"] += total_duration;
+      gAddChunkTimeProfile["wait_duration"] += wait_duration;
+      gAddChunkTimeProfile["send_data_duration"] += send_data_duration;
+      gAddChunkTimeProfile["cleanup_duration"] += cleanup_duration;
+    }
+  }
 }
 
 Mp3Chunk* HTTPHandler::GetNextChunk()
@@ -437,5 +443,36 @@ void HTTPHandler::OnWriteClosed()
 const RadioUser& HTTPHandler::GetUser() const
 {
   return mUser;
+}
+
+void HTTPHandler::DummpTimeProfile(nglString& rDump)
+{
+  rDump.Add("TIME PROFILE:").AddNewLine().AddNewLine();
+  
+  nglString radioReport;
+  Radio::DumpTimeProfile(radioReport);
+  rDump.Add(radioReport);
+  rDump.AddNewLine();
+  
+  {
+    rDump.Add("HTTPHandler::AddChunk").AddNewLine();
+    if (gAddChunkTimeProfile.empty())
+    {
+      rDump.Add("???");
+    }
+    else
+    {
+      double count = gAddChunkTimeProfile["count"];
+      double total = gAddChunkTimeProfile["total_duration"] / count;
+      double wait = gAddChunkTimeProfile["wait_duration"] / count;
+      double send = gAddChunkTimeProfile["send_data_duration"] / count;
+      double cleanup = gAddChunkTimeProfile["cleanup_duration"] / count;
+      rDump.Add("\ttotal     : ").Add(total).Add(" seconds").AddNewLine();
+      rDump.Add("\twait      : ").Add(wait).Add(" seconds").AddNewLine();
+      rDump.Add("\tsend data : ").Add(send).Add(" seconds").AddNewLine();
+      rDump.Add("\tcleanup   : ").Add(cleanup).Add(" seconds").AddNewLine();
+      rDump.AddNewLine();
+    }
+  }
 }
 

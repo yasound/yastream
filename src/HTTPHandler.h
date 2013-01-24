@@ -32,6 +32,8 @@ public:
   const RadioUser& GetUser() const;
 
   static void SetPool(nuiSocketPool* pPool);
+  
+  static void DummpTimeProfile(nglString& rReport);
 private:
   nglCriticalSection mCS;
   std::deque<Mp3Chunk*> mChunks;
@@ -54,5 +56,7 @@ private:
   nuiStringTemplate* mpTemplate;
 
   Radio* mpRadio;
+  
+  static std::map<nglString, double> gAddChunkTimeProfile;
 };
 
