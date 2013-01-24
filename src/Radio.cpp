@@ -485,7 +485,7 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
     double total_duration = t4 - t0;
     double getChunk_duration = t1 - t0;
     double addChunk_duration = t2 - t1;
-    double goToNextFrame_duration = t3 - t1;
+    double goToNextFrame_duration = t3 - t2;
     double cleanup_duration = t4 - t3;
     
     if (gReadSetTimeProfile.empty())
