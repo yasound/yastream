@@ -351,17 +351,40 @@ void HTTPHandler::OnBodyEnd()
 
 void HTTPHandler::AddChunk(Mp3Chunk* pChunk)
 {
+  nglTime t0;
   nglCriticalSectionGuard guard(mCS);
+  nglTime t1;
   //NGL_LOG("radio", NGL_LOG_INFO, "handle id = %d\n", pChunk->GetId());
   //pChunk->Acquire();
   BufferedSend(&pChunk->GetData()[0], pChunk->GetData().size(), false);
+  nglTime t2;
   if (mOut.GetSize() > 3600 * pChunk->GetData().size())
   {
     // more than 30 frames? Kill!!!
     NGL_LOG("radio", NGL_LOG_ERROR, "Killing client %p (%d bytes stalled)", this, pChunk->GetData().size());
     Close();
   }
+  nglTime t3;
   //mChunks.push_back(pChunk);
+  
+  double t = t3 - t0;
+  NGL_LOG("radio", NGL_LOG_ERROR, "%p HTTPHandler::AddChunk: TOTAL  : %lf seconds\n", this, t);
+  t = t1 - t0;
+  NGL_LOG("radio", NGL_LOG_ERROR, "%p HTTPHandler::AddChunk: step 0 : %lf seconds\n", this, t);
+  t = t2 - t1;
+  NGL_LOG("radio", NGL_LOG_ERROR, "%p HTTPHandler::AddChunk: step 1 : %lf seconds\n", this, t);
+  t = t3 - t2;
+  NGL_LOG("radio", NGL_LOG_ERROR, "%p HTTPHandler::AddChunk: step 2 : %lf seconds\n", this, t);
+//  t = t4 - t3;
+//  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 3 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
+//  t = t5 - t4;
+//  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 4 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
+//  t = t6 - t5;
+//  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 5 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
+//  t = t7 - t6;
+//  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 6 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
+//  t = t8 - t7;
+//  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 7 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
 }
 
 Mp3Chunk* HTTPHandler::GetNextChunk()

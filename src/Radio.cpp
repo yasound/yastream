@@ -306,22 +306,18 @@ nglPath Radio::GetPreviewPath(const nglPath& rOriginalPath)
 
 void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
 {
-  nglTime t0;
   pChunk->Acquire();
-  nglTime t1;
 
   ClientList& rClients            = previewMode ? mClientsPreview : mClients;
   std::deque<Mp3Chunk*>& rChunks  = previewMode ? mChunksPreview : mChunks;
   double& rBufferDuration         = previewMode ? mBufferDurationPreview : mBufferDuration;
   std::vector<HTTPHandler*> ClientsToKill;
   
-  nglTime t2;
 
   rChunks.push_back(pChunk);
   double duration = pChunk->GetDuration();
   rBufferDuration += duration;
   
-  nglTime t3;
 
   //NGL_LOG("radio", NGL_LOG_INFO, "AddChunk %p -> %f\n", pChunk, rBufferDuration);
   if (previewMode)
@@ -329,12 +325,9 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
     //NGL_LOG("radio", NGL_LOG_INFO, "AddChunk %p to %d clients\n", pChunk, rClients.size());
   }
 
-  nglTime t4;
-  nglTime t5;
   // Push the new chunk to the current connections:
   {
     nglCriticalSectionGuard guard(mClientListCS);
-    t5 = nglTime();
     for (ClientList::const_iterator it = rClients.begin(); it != rClients.end(); ++it)
     {
       HTTPHandler* pClient = *it;
@@ -344,7 +337,6 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
         ClientsToKill.push_back(pClient);
     }
   }
-  nglTime t6;
 
   for (int i = 0; i < ClientsToKill.size(); i++)
   {
@@ -352,7 +344,6 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
     NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk Kill client %p\n", this, mID.GetChars(), pClient);
     delete pClient;
   }
-  nglTime t7;
 
   while (rBufferDuration > MAX_BUFFER_SIZE)
   {
@@ -363,26 +354,6 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
 
     pChunk->Release();
   }
-  nglTime t8;
-  
-  double t = t8 - t0;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): TOTAL  : %lf seconds\n", this, mID.GetChars(), previewMode, t);
-  t = t1 - t0;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 0 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
-  t = t2 - t1;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 1 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
-  t = t3 - t2;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 2 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
-  t = t4 - t3;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 3 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
-  t = t5 - t4;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 4 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
-  t = t6 - t5;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 5 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
-  t = t7 - t6;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 6 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
-  t = t8 - t7;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 7 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
 }
 
 
