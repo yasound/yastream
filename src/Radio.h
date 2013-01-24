@@ -98,6 +98,10 @@ private:
   nglCriticalSection mCS;
   nglCriticalSection mClientListCS; // Protects the list of clients for one radio
   nglString mID;
+  
+// #MATDEBUG
+  nglTime mStreamingStart;
+  double mSentDataDuration;
 
   typedef std::list<HTTPHandler*> ClientList;
 

@@ -35,6 +35,7 @@ Radio::Radio(const nglString& rID, const nglString& rHost)
   mCS(nglString("RadioCS (").Add(rID).Add(")")),
   mClientListCS(nglString("RadioClientList (").Add(rID).Add(")"))
 {
+  mSentDataDuration = 0;
   if (!rHost.IsNull())
   {
     // Proxy mode
@@ -313,7 +314,8 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
   std::vector<HTTPHandler*> ClientsToKill;
 
   rChunks.push_back(pChunk);
-  rBufferDuration += pChunk->GetDuration();
+  double duration = pChunk->GetDuration();
+  rBufferDuration += duration;
 
   //NGL_LOG("radio", NGL_LOG_INFO, "AddChunk %p -> %f\n", pChunk, rBufferDuration);
   if (previewMode)
@@ -350,6 +352,13 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
 
     pChunk->Release();
   }
+  
+// #MATDEBUG
+  if (mSentDataDuration == 0)
+    mStreamingStart = nglTime();
+  mSentDataDuration += duration;
+  double elapsed = nglTime() - mStreamingStart;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk:   elapsed = %lf s  /  sent = %lf s\n", this, mID.GetChars(), elapsed, mSentDataDuration);
 }
 
 
