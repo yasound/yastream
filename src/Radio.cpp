@@ -306,16 +306,22 @@ nglPath Radio::GetPreviewPath(const nglPath& rOriginalPath)
 
 void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
 {
+  nglTime t0;
   pChunk->Acquire();
+  nglTime t1;
 
   ClientList& rClients            = previewMode ? mClientsPreview : mClients;
   std::deque<Mp3Chunk*>& rChunks  = previewMode ? mChunksPreview : mChunks;
   double& rBufferDuration         = previewMode ? mBufferDurationPreview : mBufferDuration;
   std::vector<HTTPHandler*> ClientsToKill;
+  
+  nglTime t2;
 
   rChunks.push_back(pChunk);
   double duration = pChunk->GetDuration();
   rBufferDuration += duration;
+  
+  nglTime t3;
 
   //NGL_LOG("radio", NGL_LOG_INFO, "AddChunk %p -> %f\n", pChunk, rBufferDuration);
   if (previewMode)
@@ -323,9 +329,12 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
     //NGL_LOG("radio", NGL_LOG_INFO, "AddChunk %p to %d clients\n", pChunk, rClients.size());
   }
 
+  nglTime t4;
+  nglTime t5;
   // Push the new chunk to the current connections:
   {
     nglCriticalSectionGuard guard(mClientListCS);
+    t5 = nglTime();
     for (ClientList::const_iterator it = rClients.begin(); it != rClients.end(); ++it)
     {
       HTTPHandler* pClient = *it;
@@ -335,6 +344,7 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
         ClientsToKill.push_back(pClient);
     }
   }
+  nglTime t6;
 
   for (int i = 0; i < ClientsToKill.size(); i++)
   {
@@ -342,6 +352,7 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
     NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk Kill client %p\n", this, mID.GetChars(), pClient);
     delete pClient;
   }
+  nglTime t7;
 
   while (rBufferDuration > MAX_BUFFER_SIZE)
   {
@@ -352,6 +363,26 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
 
     pChunk->Release();
   }
+  nglTime t8;
+  
+  double t = t8 - t0;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): TOTAL  : %lf seconds\n", this, mID.GetChars(), previewMode, t);
+  t = t1 - t0;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 0 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
+  t = t2 - t1;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 1 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
+  t = t3 - t2;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 2 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
+  t = t4 - t3;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 3 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
+  t = t5 - t4;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 4 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
+  t = t6 - t5;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 5 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
+  t = t7 - t6;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 6 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
+  t = t8 - t7;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk (preview = %d): step 7 : %lf seconds\n", this, mID.GetChars(), previewMode, t);
 }
 
 
@@ -415,7 +446,6 @@ Mp3Chunk* Radio::GetChunk(nuiTCPClient* pClient)
 
 double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
 {
-  nglTime t0;
   if (!mpParser)
   {
     return 0;
@@ -424,13 +454,9 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
   double duration = 0;
   bool nextFrameOK = true;
   bool nextFramePreviewOK = true;
-
-  nglTime t1;
   
   Mp3Chunk* pChunk = mpParser->GetChunk();
-  nglTime t2;
   Mp3Chunk* pChunkPreview = mpParserPreview->GetChunk();
-  nglTime t3;
 
   if (pChunk)
   {
@@ -441,9 +467,6 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
     // Store this chunk locally for incomming connections and push it to current clients:
     AddChunk(pChunk, false);
   }
-  nglTime t4;
-  nglTime t4_1;
-  nglTime t4_2;
 
   if (pChunkPreview)
   {
@@ -452,17 +475,12 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
     //NGL_LOG("radio", NGL_LOG_INFO, "%ld chunks preview\n", chunk_count_preview);
 
     // Store this chunk locally for incomming connections and push it to current clients:
-    t4_1 = nglTime();
     AddChunk(pChunkPreview, true);
-    t4_2 = nglTime();
     duration += pChunkPreview->GetDuration();
   }
-  nglTime t5;
 
   nextFrameOK = mpParser->GoToNextFrame();
-  nglTime t6;
   nextFramePreviewOK = mpParserPreview->GoToNextFrame();
-  nglTime t7;
 
   if (!pChunk || !nextFramePreviewOK || !nextFrameOK)
   {
@@ -480,34 +498,7 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
       NGL_LOG("radio", NGL_LOG_ERROR, "Error while getting next song for radio '%s'. Shutting down...\n", mID.GetChars());
       return 0;
     }
-  }
-  nglTime t8;
-  
-  double t = t8 - t0;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: TOTAL  : %lf seconds\n", this, mID.GetChars(), t);
-  t = t1 - t0;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 0 : %lf seconds\n", this, mID.GetChars(), t);
-  t = t2 - t1;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 1 : %lf seconds\n", this, mID.GetChars(), t);
-  t = t3 - t2;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 2 : %lf seconds\n", this, mID.GetChars(), t);
-  t = t4 - t3;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 3 : %lf seconds\n", this, mID.GetChars(), t);
-  t = t5 - t4;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 4 : %lf seconds\n", this, mID.GetChars(), t);
-  
-  t = t4_1 - t4;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet:   step 4.1 : %lf seconds\n", this, mID.GetChars(), t);
-  t = t4_2 - t4_1;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet:   step 4.2 : %lf seconds\n", this, mID.GetChars(), t);
-  
-  t = t6 - t5;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 5 : %lf seconds\n", this, mID.GetChars(), t);
-  t = t7 - t6;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 6 : %lf seconds\n", this, mID.GetChars(), t);
-  t = t8 - t7;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 7 : %lf seconds\n", this, mID.GetChars(), t);
-  
+  }  
 
   //NGL_LOG("radio", NGL_LOG_INFO, "mBufferDurationPreview: %f / mBufferDuration: %f\n", mBufferDurationPreview, mBufferDuration);
   return duration;
