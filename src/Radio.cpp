@@ -633,6 +633,8 @@ void Radio::OnStart()
         
         if (mCheckClients)
           CheckClients();
+        
+        now = nglTime();
       }
       
       NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] buffer duration = %lf / next time = %lf (now = %lf)\n", this, mID.GetChars(), mBufferDurationPreview, nexttime, (double)now);
