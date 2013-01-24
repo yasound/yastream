@@ -442,6 +442,8 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
     AddChunk(pChunk, false);
   }
   nglTime t4;
+  nglTime t4_1;
+  nglTime t4_2;
 
   if (pChunkPreview)
   {
@@ -450,7 +452,9 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
     //NGL_LOG("radio", NGL_LOG_INFO, "%ld chunks preview\n", chunk_count_preview);
 
     // Store this chunk locally for incomming connections and push it to current clients:
+    t4_1 = nglTime();
     AddChunk(pChunkPreview, true);
+    t4_2 = nglTime();
     duration += pChunkPreview->GetDuration();
   }
   nglTime t5;
@@ -491,6 +495,12 @@ double Radio::ReadSet(int64& chunk_count_preview, int64& chunk_count)
   NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 3 : %lf seconds\n", this, mID.GetChars(), t);
   t = t5 - t4;
   NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 4 : %lf seconds\n", this, mID.GetChars(), t);
+  
+  t = t4_1 - t4;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet:   step 4.1 : %lf seconds\n", this, mID.GetChars(), t);
+  t = t4_2 - t4_1;
+  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet:   step 4.2 : %lf seconds\n", this, mID.GetChars(), t);
+  
   t = t6 - t5;
   NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::ReadSet: step 5 : %lf seconds\n", this, mID.GetChars(), t);
   t = t7 - t6;
