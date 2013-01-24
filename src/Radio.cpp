@@ -352,13 +352,6 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
 
     pChunk->Release();
   }
-  
-// #MATDEBUG
-  if (mSentDataDuration == 0)
-    mStreamingStart = nglTime();
-  mSentDataDuration += duration;
-  double elapsed = nglTime() - mStreamingStart;
-  NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk:   elapsed = %lf s  /  sent = %lf s\n", this, mID.GetChars(), elapsed, mSentDataDuration);
 }
 
 
@@ -619,11 +612,22 @@ void Radio::OnStart()
         {
           nglCriticalSectionGuard guard(mCS);
           UpdateRadio();
-          nexttime += ReadSet(chunk_count_preview, chunk_count);
+          double duration = ReadSet(chunk_count_preview, chunk_count);
+          nexttime += duration;
           //NGL_LOG("radio", NGL_LOG_INFO, "buffer duration: %f / %f\n", mBufferDurationPreview, IDEAL_BUFFER_SIZE);
           
+          // #MATDEBUG
+          if (mSentDataDuration == 0)
+            mStreamingStart = nglTime();
+          mSentDataDuration += duration;
+          double elapsed = nglTime() - mStreamingStart;
+          NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::OnStart:   elapsed = %lf s  /  sent = %lf s\n", this, mID.GetChars(), elapsed, mSentDataDuration);
+          
           if (!mpParser) // we're waiting for the scheduler to send us something to do so let's not tax the CPU for nothing
+          {
+            NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::OnStart wait for the scheduler to have a parser\n", this, mID.GetChars());
             nglThread::MsSleep(1);
+          }
           
         }
         
