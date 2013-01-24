@@ -167,5 +167,6 @@ private:
   static FileCache* gpCache;
   
   static std::map<nglString, double> gReadSetTimeProfile;
+  static std::map<nglString, double> gAddChunkTimeProfile;
 };
 

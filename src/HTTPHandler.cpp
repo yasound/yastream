@@ -452,7 +452,6 @@ void HTTPHandler::DumpTimeProfile(nglString& rDump)
   nglString radioReport;
   Radio::DumpTimeProfile(radioReport);
   rDump.Add(radioReport);
-  rDump.AddNewLine();
   
   {
     rDump.Add("HTTPHandler::AddChunk").AddNewLine();

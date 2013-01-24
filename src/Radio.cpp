@@ -15,6 +15,7 @@ int Radio::gRedisDB = 3;
 nglString Radio::gRedisHost = "127.0.0.1";
 
 std::map<nglString, double> Radio::gReadSetTimeProfile;
+std::map<nglString, double> Radio::gAddChunkTimeProfile;
 
 ///////////////////////////////////////////////////
 //class Radio
@@ -308,6 +309,7 @@ nglPath Radio::GetPreviewPath(const nglPath& rOriginalPath)
 
 void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
 {
+  nglTime t0;
   pChunk->Acquire();
 
   ClientList& rClients            = previewMode ? mClientsPreview : mClients;
@@ -326,10 +328,14 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
   {
     //NGL_LOG("radio", NGL_LOG_INFO, "AddChunk %p to %d clients\n", pChunk, rClients.size());
   }
+  
+  nglTime t1;
+  nglTime t2;
 
   // Push the new chunk to the current connections:
   {
     nglCriticalSectionGuard guard(mClientListCS);
+    t2 = nglTime();
     for (ClientList::const_iterator it = rClients.begin(); it != rClients.end(); ++it)
     {
       HTTPHandler* pClient = *it;
@@ -339,6 +345,7 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
         ClientsToKill.push_back(pClient);
     }
   }
+  nglTime t3;
 
   for (int i = 0; i < ClientsToKill.size(); i++)
   {
@@ -346,6 +353,7 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
     NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::AddChunk Kill client %p\n", this, mID.GetChars(), pClient);
     delete pClient;
   }
+  nglTime t4;
 
   while (rBufferDuration > MAX_BUFFER_SIZE)
   {
@@ -355,6 +363,37 @@ void Radio::AddChunk(Mp3Chunk* pChunk, bool previewMode)
     rBufferDuration -= pChunk->GetDuration();
 
     pChunk->Release();
+  }
+  
+  nglTime t5;
+  {
+    double total_duration = t5 - t0;
+    double init_duration = t1 - t0;
+    double wait_duration = t2 - t1;
+    double add_chunk_duration = t3 - t2;
+    double kill_clients_duration = t4 - t3;
+    double update_buffer_duration = t5 - t4;
+    
+    if (gAddChunkTimeProfile.empty())
+    {
+      gAddChunkTimeProfile["count"] = 1;
+      gAddChunkTimeProfile["total_duration"] = total_duration;
+      gAddChunkTimeProfile["init_duration"] = init_duration;
+      gAddChunkTimeProfile["wait_duration"] = wait_duration;
+      gAddChunkTimeProfile["add_chunk_duration"] = add_chunk_duration;
+      gAddChunkTimeProfile["kill_clients_duration"] = kill_clients_duration;
+      gAddChunkTimeProfile["update_buffer_duration"] = update_buffer_duration;
+    }
+    else
+    {
+      gAddChunkTimeProfile["count"]++;
+      gAddChunkTimeProfile["total_duration"] += total_duration;
+      gAddChunkTimeProfile["init_duration"] += init_duration;
+      gAddChunkTimeProfile["wait_duration"] += wait_duration;
+      gAddChunkTimeProfile["add_chunk_duration"] += add_chunk_duration;
+      gAddChunkTimeProfile["kill_clients_duration"] += kill_clients_duration;
+      gAddChunkTimeProfile["update_buffer_duration"] += update_buffer_duration;
+    }
   }
 }
 
@@ -1356,6 +1395,31 @@ void Radio::DumpTimeProfile(nglString& rDump)
     rDump.Add("\tgo to next frame : ").Add(gotToNextFrame).Add(" seconds").AddNewLine();
     rDump.Add("\tcleanup          : ").Add(cleanup).Add(" seconds").AddNewLine();
   }
+  rDump.AddNewLine();
+  
+  rDump.Add("Radio::AddChunk").AddNewLine();
+  if (gAddChunkTimeProfile.empty())
+  {
+    rDump.Add("???");
+  }
+  else
+  {
+    double count = gAddChunkTimeProfile["count"];
+    double total = gAddChunkTimeProfile["total_duration"] / count;
+    double init = gAddChunkTimeProfile["init_duration"] / count;
+    double wait = gAddChunkTimeProfile["wait_duration"] / count;
+    double addChunk = gAddChunkTimeProfile["add_chunk_duration"] / count;
+    double killClients = gAddChunkTimeProfile["kill_clients_duration"] / count;
+    double updateBuffer = gAddChunkTimeProfile["update_buffer_duration"] / count;
+    
+    rDump.Add("\ttotal                            : ").Add(total).Add(" seconds").AddNewLine();
+    rDump.Add("\tinit                             : ").Add(init).Add(" seconds").AddNewLine();
+    rDump.Add("\twait                             : ").Add(wait).Add(" seconds").AddNewLine();
+    rDump.Add("\tsend chunks to clients           : ").Add(addChunk).Add(" seconds").AddNewLine();
+    rDump.Add("\tkill dead clients                : ").Add(killClients).Add(" seconds").AddNewLine();
+    rDump.Add("\tupdate internal buffer           : ").Add(updateBuffer).Add(" seconds").AddNewLine();
+  }
+  rDump.AddNewLine();
 }
 
 
