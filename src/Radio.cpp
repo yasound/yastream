@@ -1339,10 +1339,7 @@ void Radio::DumpTimeProfile(nglString& rDump)
 {
   rDump.Add("TIME PROFILE:").AddNewLine().AddNewLine();
   
-  
-  
   rDump.Add("Radio::ReadSet").AddNewLine();
-  
   if (gReadSetTimeProfile.empty())
   {
     rDump.Add("???");
@@ -1355,11 +1352,11 @@ void Radio::DumpTimeProfile(nglString& rDump)
     double addChunk = gReadSetTimeProfile["add_chunk_duration"] / count;
     double gotToNextFrame = gReadSetTimeProfile["go_to_next_frame_duration"] / count;
     double cleanup = gReadSetTimeProfile["cleanup_duration"] / count;
-    rDump.Add("\ttotal            : %lf seconds", total).AddNewLine();
-    rDump.Add("\tget chunk        : %lf seconds", getChunk).AddNewLine();
-    rDump.Add("\tadd chunk        : %lf seconds", addChunk).AddNewLine();
-    rDump.Add("\tgo to next frame : %lf seconds", gotToNextFrame).AddNewLine();
-    rDump.Add("\tcleanup          : %lf seconds", cleanup).AddNewLine();
+    rDump.Add("\ttotal            : ").Add(total).Add(" seconds").AddNewLine();
+    rDump.Add("\tget chunk        : ").Add(getChunk).Add(" seconds").AddNewLine();
+    rDump.Add("\tadd chunk        : ").Add(addChunk).Add(" seconds").AddNewLine();
+    rDump.Add("\tgo to next frame : ").Add(gotToNextFrame).Add(" seconds").AddNewLine();
+    rDump.Add("\tcleanup          : ").Add(cleanup).Add(" seconds").AddNewLine();
   }
   
   
