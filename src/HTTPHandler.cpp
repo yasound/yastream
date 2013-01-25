@@ -387,13 +387,17 @@ void HTTPHandler::AddChunk(Mp3Chunk* pChunk)
   nglTime t5;
   //mChunks.push_back(pChunk);
   
+  
+  
   {
-    double total_duration = t3 - t0;
+    double total_duration = t5 - t0;
     double wait_duration = t1 - t0;
     double get_buffer_duration = t2 - t1;
     double get_buffer_size_duration = t3 - t2;
     double send_data_duration = t4 - t3;
     double cleanup_duration = t5 - t4;
+    
+    NGL_LOG("radio", NGL_LOG_ERROR, "BufferedSend %lf seconds", send_data_duration);
     
     if (gAddChunkTimeProfile.empty())
     {
