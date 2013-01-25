@@ -362,7 +362,11 @@ void HTTPHandler::AddChunk(Mp3Chunk* pChunk)
   nglCriticalSectionGuard guard(mCS);
   //NGL_LOG("radio", NGL_LOG_INFO, "handle id = %d\n", pChunk->GetId());
   //pChunk->Acquire();
+  nglTime t0;
   BufferedSend(&pChunk->GetData()[0], pChunk->GetData().size(), false);
+  nglTime t1;
+  double elapsed = t1 - t0;
+  NGL_LOG("radio", NGL_LOG_ERROR, "BufferedSend %lf seconds", elapsed);
   if (mOut.GetSize() > 3600 * pChunk->GetData().size())
   {
     // more than 30 frames? Kill!!!
