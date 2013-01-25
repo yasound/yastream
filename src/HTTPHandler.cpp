@@ -370,28 +370,38 @@ void HTTPHandler::AddChunk(Mp3Chunk* pChunk)
   nglTime t1;
   //NGL_LOG("radio", NGL_LOG_INFO, "handle id = %d\n", pChunk->GetId());
   //pChunk->Acquire();
-  BufferedSend(&pChunk->GetData()[0], pChunk->GetData().size(), false);
+  
+  const uint8* pBuffer = &pChunk->GetData()[0];
   nglTime t2;
+  size_t size = pChunk->GetData().size();
+  nglTime t3;
+  
+  BufferedSend(pBuffer, size, false);
+  nglTime t4;
   if (mOut.GetSize() > 3600 * pChunk->GetData().size())
   {
     // more than 30 frames? Kill!!!
     NGL_LOG("radio", NGL_LOG_ERROR, "Killing client %p (%d bytes stalled)", this, pChunk->GetData().size());
     Close();
   }
-  nglTime t3;
+  nglTime t5;
   //mChunks.push_back(pChunk);
   
   {
     double total_duration = t3 - t0;
     double wait_duration = t1 - t0;
-    double send_data_duration = t2 - t1;
-    double cleanup_duration = t3 - t2;
+    double get_buffer_duration = t2 - t1;
+    double get_buffer_size_duration = t3 - t2;
+    double send_data_duration = t4 - t3;
+    double cleanup_duration = t5 - t4;
     
     if (gAddChunkTimeProfile.empty())
     {
       gAddChunkTimeProfile["count"] = 1;
       gAddChunkTimeProfile["total_duration"] = total_duration;
       gAddChunkTimeProfile["wait_duration"] = wait_duration;
+      gAddChunkTimeProfile["get_buffer_duration"] = get_buffer_duration;
+      gAddChunkTimeProfile["get_buffer_size_duration"] = get_buffer_size_duration;
       gAddChunkTimeProfile["send_data_duration"] = send_data_duration;
       gAddChunkTimeProfile["cleanup_duration"] = cleanup_duration;
     }
@@ -400,6 +410,8 @@ void HTTPHandler::AddChunk(Mp3Chunk* pChunk)
       gAddChunkTimeProfile["count"]++;
       gAddChunkTimeProfile["total_duration"] += total_duration;
       gAddChunkTimeProfile["wait_duration"] += wait_duration;
+      gAddChunkTimeProfile["get_buffer_duration"] += get_buffer_duration;
+      gAddChunkTimeProfile["get_buffer_size_duration"] += get_buffer_size_duration;
       gAddChunkTimeProfile["send_data_duration"] += send_data_duration;
       gAddChunkTimeProfile["cleanup_duration"] += cleanup_duration;
     }
@@ -464,12 +476,16 @@ void HTTPHandler::DumpTimeProfile(nglString& rDump)
       double count = gAddChunkTimeProfile["count"];
       double total = gAddChunkTimeProfile["total_duration"] / count;
       double wait = gAddChunkTimeProfile["wait_duration"] / count;
+      double get_buffer = gAddChunkTimeProfile["get_buffer_duration"] / count;
+      double get_buffer_size = gAddChunkTimeProfile["get)_buffer_size_duration"] / count;
       double send = gAddChunkTimeProfile["send_data_duration"] / count;
       double cleanup = gAddChunkTimeProfile["cleanup_duration"] / count;
-      rDump.Add("\ttotal     : ").Add(total).Add(" seconds").AddNewLine();
-      rDump.Add("\twait      : ").Add(wait).Add(" seconds").AddNewLine();
-      rDump.Add("\tsend data : ").Add(send).Add(" seconds").AddNewLine();
-      rDump.Add("\tcleanup   : ").Add(cleanup).Add(" seconds").AddNewLine();
+      rDump.Add("\ttotal            : ").Add(total).Add(" seconds").AddNewLine();
+      rDump.Add("\twait             : ").Add(wait).Add(" seconds").AddNewLine();
+      rDump.Add("\tget buffer       : ").Add(get_buffer).Add(" seconds").AddNewLine();
+      rDump.Add("\tget buffer size  : ").Add(get_buffer_size).Add(" seconds").AddNewLine();
+      rDump.Add("\tsend data        : ").Add(send).Add(" seconds").AddNewLine();
+      rDump.Add("\tcleanup          : ").Add(cleanup).Add(" seconds").AddNewLine();
       rDump.AddNewLine();
     }
   }
