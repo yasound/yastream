@@ -699,7 +699,6 @@ void Radio::OnStart()
             mStreamingStart = nglTime();
           mSentDataDuration += duration;
           double elapsed = nglTime() - mStreamingStart;
-          NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] Radio::OnStart:   elapsed = %lf s  /  sent = %lf s\n", this, mID.GetChars(), elapsed, mSentDataDuration);
           
           if (!mpParser) // we're waiting for the scheduler to send us something to do so let's not tax the CPU for nothing
           {
@@ -714,8 +713,6 @@ void Radio::OnStart()
         
         now = nglTime();
       }
-      
-      NGL_LOG("radio", NGL_LOG_ERROR, "[%p - %s] buffer duration = %lf / next time = %lf (now = %lf)\n", this, mID.GetChars(), mBufferDurationPreview, nexttime, (double)now);
     }
     nglThread::MsSleep(10);
   }
