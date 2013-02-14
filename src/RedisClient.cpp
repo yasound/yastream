@@ -155,6 +155,7 @@ RedisReplyType RedisClient::SendCommand(RedisRequest& rRequest)
 
 RedisReplyType RedisClient::GetReply(RedisReply& rReply)
 {
+  NGL_LOG("radio", NGL_LOG_DEBUG, "RedisClient::GetReply");
   std::vector<uint8> data;
   nglChar cur = 0;
   data.resize(1);
@@ -164,6 +165,7 @@ RedisReplyType RedisClient::GetReply(RedisReply& rReply)
   bool eolfound = false;
   while (mpClient->Receive(data))
   {
+    NGL_LOG("radio", NGL_LOG_DEBUG, "RedisClient::GetReply client received data (%d bytes)", data.size());
     size_t index = 0;
     while (index < data.size())
     {
@@ -250,6 +252,7 @@ RedisReplyType RedisClient::GetReply(RedisReply& rReply)
       }
     }
   }
+  NGL_LOG("radio", NGL_LOG_DEBUG, "RedisClient::GetReply DONE");
   return rReply.mReplyType;
 }
 
