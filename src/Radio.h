@@ -26,7 +26,7 @@ public:
   double mFade;
 };
 
-#define YASCHEDULER_WAIT_TIME 1000
+#define YASCHEDULER_WAIT_TIME 2000
 
 class Radio
 {
