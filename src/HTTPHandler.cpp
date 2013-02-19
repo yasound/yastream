@@ -295,12 +295,12 @@ bool HTTPHandler::OnBodyStart()
     {
       nglString token = it->second;
       // check if the user is allowed to play high quality stream
-      Radio::GetUser(token, mUser);
+      Radio::GetUser(mRadioID, token, mUser);
     }
     else
     {
       // check with old method if the user is allowed to play high quality stream
-      Radio::GetUser(mUsername, mApiKey, mUser);
+      Radio::GetUser(mRadioID, mUsername, mApiKey, mUser);
     }
 
     it = params.find("hd");
