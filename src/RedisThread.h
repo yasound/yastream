@@ -38,8 +38,8 @@ public:
   void UnregisterStreamer(const nglString& rStreamerID);
   void Pong();
   void Test(const nglString& rInfo);
-  void UserAuthentication(const nglString& rAuthToken);
-  void UserAuthentication(const nglString& rUserName, const nglString& rAPIKey);
+  void UserAuthentication(const nglString& rRadioId, const nglString& rAuthToken);
+  void UserAuthentication(const nglString& rRadioId, const nglString& rUserName, const nglString& rAPIKey);
   void PlayRadio(const nglString& rRadioID);
   void StopRadio(const nglString& rRadioID);
   void RegisterListener(const nglString& rRadioID, const nglString& rSessionID, int32 UserID);

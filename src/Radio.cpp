@@ -897,12 +897,12 @@ void Radio::SetParams(const nglString& appurl, const nglString& hostname, int po
   mDataPath = rDataPath;
 }
 
-bool Radio::GetUser(const nglString& rToken, RadioUser& rUser)
+bool Radio::GetUser(const nglString& rRadioId, const nglString& rToken, RadioUser& rUser)
 {
   nglString id("auth_");
   id.Add(rToken);
   nglSyncEvent* pEvent = AddEvent(id);
-  mpRedisThreadOut->UserAuthentication(rToken);
+  mpRedisThreadOut->UserAuthentication(rRadioId, rToken);
   if (!pEvent->Wait(YASCHEDULER_WAIT_TIME))
   {
     // Timeout... no reply from the scheduler
@@ -926,12 +926,12 @@ bool Radio::GetUser(const nglString& rToken, RadioUser& rUser)
   return true;
 }
 
-bool Radio::GetUser(const nglString& rUsername, const nglString& rApiKey, RadioUser& rUser)
+bool Radio::GetUser(const nglString& rRadioId, const nglString& rUsername, const nglString& rApiKey, RadioUser& rUser)
 {
   nglString id("auth_");
   id.Add(rUsername).Add(rApiKey);
   nglSyncEvent* pEvent = AddEvent(id);
-  mpRedisThreadOut->UserAuthentication(rUsername, rApiKey);
+  mpRedisThreadOut->UserAuthentication(rRadioId, rUsername, rApiKey);
   if (!pEvent->Wait(YASCHEDULER_WAIT_TIME))
   {
     // Timeout... no reply from the scheduler

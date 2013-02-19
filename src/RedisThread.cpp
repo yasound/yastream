@@ -220,22 +220,24 @@ void RedisThread::Test(const nglString& rInfo)
   Post(val);
 }
 
-void RedisThread::UserAuthentication(const nglString& rAuthToken)
+void RedisThread::UserAuthentication(const nglString& rRadioId, const nglString& rAuthToken)
 {
   nuiJson::Value val;
   val["type"] = "user_authentication";
   val["streamer"] = mID.GetChars();
   val["auth_token"] = rAuthToken.GetChars();
+  val["radio_uuid"] = rRadioId.GetChars();
   Post(val);
 }
 
-void RedisThread::UserAuthentication(const nglString& rUserName, const nglString& rAPIKey)
+void RedisThread::UserAuthentication(const nglString& rRadioId, const nglString& rUserName, const nglString& rAPIKey)
 {
   nuiJson::Value val;
   val["type"] = "user_authentication";
   val["streamer"] = mID.GetChars();
   val["username"] = rUserName.GetChars();
   val["api_key"] = rAPIKey.GetChars();
+  val["radio_uuid"] = rRadioId.GetChars();
   Post(val);
 }
 
